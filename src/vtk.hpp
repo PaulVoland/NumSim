@@ -48,7 +48,7 @@ private:
 	const multi_real_t& _h;
 	const multi_real_t& _length;
 	multi_real_t _offset;
-  multi_index_t _size;
+    multi_index_t _size;
 	FILE* _handle;
 
 	static uint32_t _cnt;

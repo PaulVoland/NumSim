@@ -65,6 +65,7 @@ template <typename _type, uint32_t _dim> struct array_t {
     for (uint32_t i = 0; i < _dim; ++i)
       x[i] = cp[i];
   }
+  
   // Copy-constructor: array_t
   array_t(const array_t<_type, _dim> &cp) {
     for (uint32_t i = 0; i < _dim; ++i)
