@@ -37,14 +37,14 @@ option (DEBUG_VISU
 option (VTK_VISU
   "Enable VTK visualization" ON)
 
-# find sdl 2
+# find sdl2
 INCLUDE(FindPkgConfig)
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
 INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${SDL2_INCLUDE_DIRS})
 
 # find mpi
-find_package (MPI REQUIRED)
-INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${MPI_INCLUDE_PATH})
+#find_package (MPI REQUIRED)
+#INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${MPI_INCLUDE_PATH})
 
 # Using glob is discouraged in cmake.
 set (HEADERS
@@ -91,14 +91,14 @@ endif (VTK_VISU)
 
 # build executable and link libs against it
 add_executable (NumSim ${SOURCES})
-target_link_libraries (NumSim ${SDL2_LIBRARIES} ${MPI_LIBRARIES})
+target_link_libraries (NumSim ${SDL2_LIBRARIES}) #${MPI_LIBRARIES})
 
-if (MPI_COMPILE_FLAGS)
-  set_target_properties(NumSim PROPERTIES
-    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
-endif()
+#if (MPI_COMPILE_FLAGS)
+#  set_target_properties(NumSim PROPERTIES
+#    COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
+#endif()
 
-if (MPI_LINK_FLAGS)
-  set_target_properties (NumSim PROPERTIES
-    LINK_FLAGS "${MPI_LINK_FLAGS}")
-endif()
+#if (MPI_LINK_FLAGS)
+#  set_target_properties (NumSim PROPERTIES
+#    LINK_FLAGS "${MPI_LINK_FLAGS}")
+#endif()
