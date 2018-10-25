@@ -1,5 +1,8 @@
 #include "parameter.hpp"
 #include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 using namespace std;
 //------------------------------------------------------------------------------
@@ -18,9 +21,25 @@ Parameter::Parameter() {
 }
 
 /// Loads the parameter values from a specified file
-// @param file ToDo
+// @param file filename including path information
 void Parameter::Load(const char* file) {
-	//ToDo
+	FILE* handle = fopen(file,"r");
+	double inval;
+	char name[20];
+		while (!feof(handle)) {
+		if (!fscanf(handle, "%s = %lf\n", name, &inval)) continue;
+		if (strcmp(name,"re") == 0) _re = inval;
+		else if (strcmp(name,"omg") == 0) _omega = inval;
+		else if (strcmp(name,"alpha") == 0) _alpha = inval;
+		else if (strcmp(name,"dt") == 0) _dt = inval;
+		else if (strcmp(name,"tend") == 0) _tend = inval;
+		else if (strcmp(name,"iter") == 0) _itermax = inval;
+		else if (strcmp(name,"eps") == 0) _eps = inval;
+		else if (strcmp(name,"tau") == 0) _tau = inval;
+		else printf("Unknown parameter %s\n",name);
+	}
+	fclose(handle);
+	cout << "Loaded parameters from file " << file << "." << endl;
 }
 
 /// Prints the parameter set
