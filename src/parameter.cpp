@@ -13,11 +13,12 @@ Parameter::Parameter() {
 	_eps     = 0.001;
 	_tau     = 0.5;
 	_itermax = 100;
-
+	// Message of success
 	cout << "Loaded default parameters." << endl;
 }
 
 /// Loads the parameter values from a specified file
+// @param file ToDo
 void Parameter::Load(const char* file) {
 	//ToDo
 }
@@ -32,7 +33,7 @@ void Parameter::PrintVariables() {
 	cout << "tend = " 							<< _tend	  << endl;
 	cout << "eps = "						    << _eps   	  << endl;
 	cout << "tau = "						    << _tau 	  << endl;
-	cout << "itermax = "						<< _itermax   << endl;
+	cout << "itermax = "						<< _itermax   << endl; //<< endl ?!
 }
 
 /// Getter functions for all parameters
