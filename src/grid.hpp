@@ -50,9 +50,9 @@ public:
   /// Computes the right-sided difference quatient in x-dim at [it]
   real_t dx_r(const Iterator &it) const;
   /// Computes the left-sided difference quatient in y-dim at [it]
-  real_t dy_l(const Iterator &it) const;
+  real_t dy_d(const Iterator &it) const;
   /// Computes the right-sided difference quatient in x-dim at [it]
-  real_t dy_r(const Iterator &it) const;
+  real_t dy_t(const Iterator &it) const;
   /// Computes the central difference quatient of 2nd order in x-dim at [it]
   real_t dxx(const Iterator &it) const;
   /// Computes the central difference quatient of 2nd order in y-dim at [it]
@@ -69,6 +69,8 @@ public:
 
   /// Returns the maximal value of the grid
   real_t Max() const;
+  /// Returns the maximal value of the interior points
+  real_t InteriorMax() const;
   /// Returns the minimal value of the grid
   real_t Min() const;
   /// Returns the absolute maximal value
