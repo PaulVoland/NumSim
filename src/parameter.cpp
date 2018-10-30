@@ -33,12 +33,12 @@ void Parameter::PrintVariables() {
 	cout << "tend = " 							<< _tend	  << endl;
 	cout << "eps = "						    << _eps   	  << endl;
 	cout << "tau = "						    << _tau 	  << endl;
-	cout << "itermax = "						<< _itermax   << endl; //<< endl ?!
+	cout << "itermax = "						<< _itermax   << endl;
 }
 
 /// Getter functions for all parameters
 const real_t&  Parameter::Re()      const {return _re;}
-const real_t&  Parameter::Omega()   const {return _omega;
+const real_t&  Parameter::Omega()   const {return _omega;}
 const real_t&  Parameter::Alpha()   const {return _alpha;}
 const real_t&  Parameter::Dt()      const {return _dt;}
 const real_t&  Parameter::Tend()    const {return _tend;}
