@@ -2,6 +2,9 @@
 #include "grid.hpp"
 #include "iterator.hpp"
 #include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 using namespace std;
 //------------------------------------------------------------------------------
@@ -26,9 +29,45 @@ Geometry::Geometry() {
 }
 
 /// Loads a geometry setting from a specified file
-// @param file ToDo
+// @param file filename including path information
 void Geometry::Load(const char* file) {
-  //ToDo
+  FILE* handle = fopen(file,"r");
+  double inval[2];
+  char name[20];
+  while (!feof(handle)) {
+    if (!fscanf(handle, "%s =", name)) continue;
+    if (strcmp(name,"size") == 0) {
+     if (fscanf(handle," %lf %lf\n",&inval[0],&inval[1])) {
+        _size[0] = inval[0];
+        _size[1] = inval[1];
+      }
+      continue;
+    }
+    if (strcmp(name,"length") == 0) {
+      if (fscanf(handle," %lf %lf\n",&inval[0],&inval[1])) {
+        _length[0] = inval[0];
+        _length[1] = inval[1];
+      }
+      continue;
+    }
+    if (strcmp(name,"velocity") == 0) {
+      if (fscanf(handle," %lf %lf\n",&inval[0],&inval[1])) {
+        _velocity[0] = inval[0];
+        _velocity[1] = inval[1];
+      }
+      continue;
+    }
+    if (strcmp(name,"pressure") == 0) {
+      if (fscanf(handle," %lf\n",&inval[0]))
+        _pressure = inval[0];
+      continue;
+    }
+  }
+  fclose(handle);
+  // Set width values of the grid
+  _h[0] = _length[0]/_size[0];
+  _h[1] = _length[1]/_size[1];
+  cout << "Loaded geometry data from file " << file << "." << endl;
 }
 
 /// Prints the geometry data
@@ -42,7 +81,7 @@ void Geometry::PrintData() {
   cout << "l_x = "                        << _length[0]   << endl;
   cout << "l_y = "                        << _length[1]   << endl;
   cout << "h_x = "                        << _h[0]        << endl;
-  cout << "h_y = "                        << _h[1]        << endl; //<< endl ?!
+  cout << "h_y = "                        << _h[1]        << endl;
 }
 
 /// Getter functions for all class attributes
@@ -51,7 +90,7 @@ const multi_index_t& Geometry::Size()  const {return _size;}
 // Physical length of the domain
 const multi_real_t& Geometry::Length() const {return _length;}
 // Width of the resulting mesh
-const multi_real_t Geometry::Mesh()    const {return _h;}
+const multi_real_t& Geometry::Mesh()    const {return _h;}
 
 /// Updates the velocity field u on the boundary
 // @param u grid for the velocity in x-direction
