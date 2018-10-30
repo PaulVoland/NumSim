@@ -40,6 +40,9 @@ public:
   /// Loads a geometry from a file
   void Load(const char *file);
 
+  /// Prints the geometry data
+  void PrintData();
+
   /// Returns the number of cells in each dimension
   const multi_index_t &Size() const;
   /// Returns the length of the domain
