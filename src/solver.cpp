@@ -65,26 +65,17 @@ real_t SOR::Cycle(Grid* p, const Grid* rhs) const {
 
     while(intit.Valid()) {
         n++;
-        // Define corresponding p values
-        real_t p_ij  = p->Cell(intit);
-        real_t p_ijl = p->Cell(intit.Left());
-        real_t p_ijr = p->Cell(intit.Right());
-        real_t p_ijd = p->Cell(intit.Down());
-        real_t p_ijt = p->Cell(intit.Top());
-        // Corrector
-        corr = (p_ijl + p_ijr)/(dx*dx) + (p_ijd + p_ijt)/(dy*dy) - rhs->Cell(intit);
+        // Calcute the corrector
+        corr = p->dxx(intit) + p->dyy(intit) - rhs->Cell(it);
         // New inner p values with SOR solver approach
-        p->Cell(intit) = (1 - _omega)*p_ij + _omega*norm*corr;
+        p->Cell(intit) += _omega*norm*corr;
         // Compute the local residual and sum
-        real_t res_loc = localRes(intit, p, rhs);
-        res_tot += res_loc;
+        res_tot += localRes(intit, p, rhs);
         // Interior Iterator goes to the next cell
         intit.Next();
     }
-    /* NOT HERE!
     // Update boundary values for pressure
     _geom->Update_P(p);
-    */
     // Compute norm residual (weighted with number of grid cells)
     return res_tot/n;
 }
