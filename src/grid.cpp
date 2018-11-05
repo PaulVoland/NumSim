@@ -1,5 +1,7 @@
 #include "grid.hpp"
 #include <cmath>
+
+using namespace std;
 //------------------------------------------------------------------------------
 /// Constructs a grid based on a geometry
 // @param geom information about the geometry
@@ -8,7 +10,8 @@ Grid::Grid(const Geometry* geom) {
   offset[0] = 0;
   offset[1] = 0;
   // Allocate pointer for the raw data with fixed size (=length) given by geometry
-  _data = new real_t[geom->Size()[0]*_geom->Size()[1]];
+  // including halo zone
+  _data = new real_t[(geom->Size()[0] + 2)*(_geom->Size()[1] + 2)];
   _geom = geom;
   _offset = offset;
 }
@@ -19,7 +22,8 @@ Grid::Grid(const Geometry* geom) {
 //               (anchor point = lower left corner)
 Grid::Grid(const Geometry* geom, const multi_real_t& offset) {
   // Allocate pointer for the raw data with fixed size (=length) given by geometry
-  _data = new real_t[geom->Size()[0]*_geom->Size()[1]];
+  // including halo zone
+  _data = new real_t[(geom->Size()[0] + 2)*(_geom->Size()[1] + 2)];
   _geom = geom;
   _offset = offset;
 }
@@ -30,9 +34,7 @@ Grid::~Grid() {delete[] _data;}
 /// Initializes the grid with a given value
 // @param value initial value for the whole grid
 void Grid::Initialize(const real_t& value) {
-  for (index_t i = 0; i < _geom->Size()[0]*_geom->Size()[1]; i++) {
-    _data[i] = value;
-  }
+  fill_n(_data, (geom->Size()[0] + 2)*(_geom->Size()[1] + 2), value);
 }
 
 /// Write access to the grid cell at position [it]
@@ -51,7 +53,44 @@ const real_t& Grid::Cell(const Iterator& it) const {
 /// for the affiliated cells using iterators
 // @param pos given position in [0,1]x[0,1]
 real_t Grid::Interpolate(const multi_real_t& pos) const {
-  // ToDo
+  real_t x          = pos[0] - _offset[0];
+  real_t y          = pos[1] - _offset[1];
+  multi_real_t h    = _geom->Mesh();
+  index_t _increm_y = _geom->Size()[0] + 2;
+
+  // find inner cell index for anchor cell in format
+  // h(0)*[i,i+1) x h(1)*[j,j+1) (i,j = 0,...,_geom->Size()[0,1])-1) (inner numbering)
+  // if x,y >= 0
+  if (x < 0) {
+    index_t i = 0; // is in outer index format
+    real_t dx1 = h[0] - pos[0];
+    real_t dx2 = pos[0];
+  } else {
+    index_t i = (index_t) x/h[0]; // is in inner index format
+    // calculate distances to anchor point
+    real_t dx1 = x - i*h[0];
+    real_t dx2 = (i + 1)*h[0] - x;
+    i++; // convert to outer index format
+  }
+  if (y < 0) {
+    index_t j = 0; // is in outer index format
+    real_t dy1 = h[1] - pos[1];
+    real_t dy2 = pos[1];
+  } else {
+    index_t j = (index_t) y/h[1]; // is in inner index format
+    // calculate distances to anchor point
+    real_t dy1 = y - j*h[1];
+    real_t dy2 = (j + 1)*h[1] - y;
+    j++; // convert to outer index format
+  }
+
+  Iterator it = Iterator(_geom, i + j*_increm_y);
+  // bilinear interpolation
+  return 1.0/(h[0]*h[1])*(
+    _data[it]              *dx2  *dy2 + 
+    _data[it.Right()]      *dx1  *dy2 + 
+    _data[it.Top()]        *dx2  *dy1 + 
+    _data[it.Right().Top()]*dx1  *dy1 );
 }
 
 /* Calculate differential operators
@@ -147,7 +186,7 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const {
  /// Returns the maximal value of the grid
 real_t Grid::Max() const {
   real_t max = _data[0];
-  for (index_t i = 1; i < _geom->Size()[0]*_geom->Size()[1]; i++) {
+  for (index_t i = 1; i < (geom->Size()[0] + 2)*(_geom->Size()[1] + 2); i++) {
     if (_data[i] > max)
       max = _data[i];
   }
@@ -168,16 +207,27 @@ real_t Grid::InteriorMax() const {
 /// Returns the minimal value of the grid
 real_t Grid::Min() const {
   real_t min = _data[0];
-  for (index_t i = 1; i < _geom->Size()[0]*_geom->Size()[1]; i++) {
-    if (_data[i] <= min)
+  for (index_t i = 1; i < (geom->Size()[0] + 2)*(_geom->Size()[1] + 2); i++) {
+    if (_data[i] < min)
       min = _data[i];
+  }
+  return min;
+}
+
+/// Returns the minimal value of the interior points
+real_t Grid::InteriorMin() const {
+  InteriorIterator intit(_geom);
+  real_t min = 0;
+  while (intit.Valid()) {
+    min = fmin(min, _data[it]);
+    intit.Next();
   }
   return min;
 }
 
 /// Returns the absolute maximal value
 real_t Grid::AbsMax() const {
-  real_t max = this->InteriorMax();
+  real_t max = this->Max();
   real_t min = this->Min();
   if ((max + min) > 0)
     return max;
