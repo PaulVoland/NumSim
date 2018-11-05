@@ -30,13 +30,13 @@
 #endif // USE_VTK
 
 int main (int argc, char** argv) {
-  // Create parameter and geometry instances with default values
-  Parameter param;
-  Geometry geom;
-  // Create the fluid solver
-  Compute comp(&geom, &param);
+// Create parameter and geometry instances with default values
+Parameter param;
+Geometry geom;
+// Create the fluid solver
+Compute comp(&geom, &param);
 
-  // works with Linux
+// works with Linux
 #ifdef USE_VTK
   // check if folder VTK exists
   struct stat info;
@@ -46,7 +46,7 @@ int main (int argc, char** argv) {
   }
 #endif // USE_VTK
 
-  // Create and initialize the visualization
+// Create and initialize the visualization
 #ifdef USE_DEBUG_VISU
   // Create and initialize the visualization
   Renderer visu(geom.Length(), geom.Mesh());
@@ -63,10 +63,10 @@ int main (int argc, char** argv) {
   visugrid = comp.GetVelocity();
 #endif // USE_DEBUG_VISU
 
-  // Run the time steps until the end is reached
-  bool run = true;
-  while (comp.GetTime() < param.Tend() && run) {
-#ifdef USE_DEBUG_VISU
+// Run the time steps until the end is reached
+bool run = true;
+while (comp.GetTime() < param.Tend() && run) {
+  #ifdef USE_DEBUG_VISU
     // Render and check if window is closed
     switch (visu.Render(visugrid)) {
     case -1:
@@ -87,20 +87,21 @@ int main (int argc, char** argv) {
     default:
       break;
     };
-#endif // DEBUG_VISU
+  #endif // DEBUG_VISU
 
-#ifdef USE_VTK
+  #ifdef USE_VTK
     // Create a VTK File in the folder VTK (must exist)
     vtk.Init("VTK/field");
     vtk.AddField("Velocity", comp.GetU(), comp.GetV());
     vtk.AddScalar("Pressure", comp.GetP());
     vtk.Finish();
-#endif // USE_VTK
+  #endif // USE_VTK
     
-    // Run a few steps
-    for (uint32_t i = 0; i < 9; ++i)
-      comp.TimeStep(false);
-    comp.TimeStep(true);
+  // Run a few steps
+  for (uint32_t i = 0; i < 9; i++)
+    comp.TimeStep(false);
+  
+  comp.TimeStep(true);
   }
   return 0;
 }
