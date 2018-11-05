@@ -63,6 +63,12 @@ public:
 protected:
   const Geometry *_geom;
   index_t _value;
+  // _increm_x gives the number of cells per column
+  index_t _increm_x;
+  // _increm_y gives the number of cells per row
+  index_t _increm_y;
+  // _num_cell  total number of cells, including halo zone
+  index_t _num_cell;
   bool _valid;
 };
 
