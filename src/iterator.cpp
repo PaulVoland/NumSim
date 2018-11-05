@@ -1,10 +1,14 @@
 #include "iterator.hpp"
+#include "geometry.hpp"
 //------------------------------------------------------------------------------
 /// Constructs a new Iterator depending on a geometry
 // @param geom input geometry to iterate over
 Iterator::Iterator(const Geometry* geom) {
   _geom = geom;
   First();
+  _increm_x = geom->Size()[1] + 2;
+  _increm_y = geom->Size()[0] + 2;
+  _num_cell = _increm_x*_increm_y;
 }
 
 /// Constructs a new Iterator on a geometry with a defined starting value
@@ -14,6 +18,9 @@ Iterator::Iterator(const Geometry* geom, const index_t& value) {
   _geom = geom;
   _value = value;
   _valid = true;
+  _increm_x = geom->Size()[1] + 2;
+  _increm_y = geom->Size()[0] + 2;
+  _num_cell = _increm_x*_increm_y;
 }
 
 /// Returns the current position value
@@ -25,8 +32,8 @@ Iterator::operator const index_t&() const {return _value;}
 /// Returns the position coordinates
 multi_index_t Iterator::Pos() const {
   multi_index_t pos;
-  pos[0] = _value % _geom->Size()[0];
-  pos[1] = (_value - pos[0]) / _geom->Size()[1];
+  pos[0] = _value % _increm_y;
+  pos[1] = (_value - pos[0]) / _increm_x;
   return pos;
 }
 
@@ -38,11 +45,10 @@ void Iterator::First() {
 
 /// Goes to the next element of the iterator, disables it if position is end
 void Iterator::Next() {
-  multi_index_t size = _geom->Size();
-  if (_value + 1 > size[0]*size[1] - 1)
-    _valid = false;
-  else
+  if (_value < _num_cell - 1)
     _value++;
+  else
+    _valid = false;
 }
 
 /// Checks if the iterator still has a valid value
@@ -53,8 +59,8 @@ bool Iterator::Valid() const {
 /// Returns an Iterator that is located left from this one.
 // If we are at the left boundary, the cell sees itself.
 Iterator Iterator::Left() const {
-  if (_value % _geom->Size()[0] == 0)
-    return Iterator(_geom, _value);
+  if (_value % _increm_y == 0)
+    return *this;
   else
     return Iterator(_geom, _value--);
 }
@@ -62,8 +68,8 @@ Iterator Iterator::Left() const {
 /// Returns an Iterator that is located right from this one.
 // If we are at the right boundary, the cell sees itself.
 Iterator Iterator::Right() const {
-  if ((_value + 1) % _geom->Size()[0] == 0)
-    return Iterator(_geom, _value);
+  if ((_value + 1) % _increm_y == 0)
+    return *this;
   else
     return Iterator(_geom, _value++);
 }
@@ -71,9 +77,9 @@ Iterator Iterator::Right() const {
 /// Returns an Iterator that is located above this one.
 // If we are at the upper domain boundary, the cell sees itself.
 Iterator Iterator::Top() const {
-  index_t _value_top = _value + _geom->Size()[1];
-  if (_value_top > (_geom->Size()[0]*_geom->Size()[1] - 1))
-    return Iterator(_geom, _value);
+  index_t _value_top = _value + _increm_y;
+  if (_value_top > (_num_cell - 1))
+    return *this;
   else
     return Iterator(_geom, _value_top);
 }
@@ -81,9 +87,9 @@ Iterator Iterator::Top() const {
 /// Returns an Iterator that is located below this one.
 // If we are at the lower domain boundary, the cell sees itself.
 Iterator Iterator::Down() const {
-  int32_t _value_down = _value - _geom->Size()[1];
+  int32_t _value_down = _value - _increm_y;
   if (_value_down < 0)
-    return Iterator(_geom, _value);
+    return *this;
   else
     return Iterator(_geom, _value_down);
 }
@@ -99,15 +105,15 @@ InteriorIterator::InteriorIterator(const Geometry* geom) : Iterator(geom) {
 
 /// Sets the iterator to the first element
 void InteriorIterator::First() {
-  _value = _geom->Size()[0] + 1;
+  _value = 1 + _increm_y;
   _valid = true;
 }
 
 /// Goes to the next element of the iterator, disables it if position is end
 void InteriorIterator::Next() {
-  if ((_value + 1) >= (_geom->Size()[0]*(_geom->Size()[1] - 1) - 1))
+  if ((_value + 1) >= _num_cell - 1 - _increm_y)
     _valid = false;
-  else if ((_value + 2) % _geom->Size()[0] == 0)
+  else if ((_value + 2) % _increm_y == 0)
     _value += 3;
   else
     _value++;
@@ -143,42 +149,51 @@ void BoundaryIterator::First() {
     _value = 0;
   // Right boundary
   else if (_boundary == 1)
-    _value = 2*_geom->Size()[0] - 1;
+    _value = 2*_increm_y- 1;
   // Top boundary
   else if (_boundary == 2)
-    _value = _geom->Size()[0]*_geom->Size()[1] - 1;
+    _value = _num_cell - 1;
   // Left boundary
   else if (_boundary == 3)
-    _value = _geom->Size()[0]*(_geom->Size()[1] - 2);
+    _value = _increm_y*(_increm_x - 2);
 }
+
 /// Goes to the next element of the iterator, disables it if position is end
 void BoundaryIterator::Next() {
   // Bottom boundary
   if (_boundary == 0) {
-    _value++;
-    if (_value >= _geom->Size()[0]) {
-      _valid = false
+    if (_value + 1 >= _increm_y) {
+      _valid = false;
+    }
+    else {
+      _value++;
     }
   }
   // Right boundary
   if (_boundary == 1) {
-    _value += _geom->Size()[1];
-    if (_value > _geom->Size()[0]*(_geom->Size()[1] - 1)) {
-      _valid = false
+    if (_value + _increm_y >= _num_cell - 1) {
+      _valid = false;
+    }
+    else {
+      _value += _increm_y;
     }
   }
   // Top boundary
   if (_boundary == 2) {
-    _value--;
-    if (_value < _geom->Size()[0]*(_geom->Size()[1] - 1)) {
+    if (_value - 1 <= _num_cell - 1 - _increm_y) {
       _valid = false;
+    }
+    else {
+      _value--;
     }
   }
   // Left boundary
   if (_boundary == 3) {
-    _value -= _geom->Size()[1];
-    if (_value < _geom->Size()[0]) {
+    if (_value - _increm_y <= 0) {
       _valid = false;
+    }
+    else {
+      _value -= _increm_y;
     }
   }
 }
