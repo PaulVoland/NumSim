@@ -73,6 +73,8 @@ public:
   real_t InteriorMax() const;
   /// Returns the minimal value of the grid
   real_t Min() const;
+  /// Returns the minimal value of the interior points
+  real_t InteriorMin() const;
   /// Returns the absolute maximal value
   real_t AbsMax() const;
 
