@@ -30,7 +30,7 @@ public:
   /// Destructor of the Solver Class
   virtual ~Solver();
 
-  /// This function must be implemented in a child class
+  /// This function must be implemented in a child class.
   // @param [in][out] grid current values
   // @param [in]      rhs  right hand side values
   // @returns accumulated residual
@@ -45,7 +45,7 @@ protected:
 
 //------------------------------------------------------------------------------
 
-/** concrete SOR solver
+/* concrete SOR solver
 */
 class SOR : public Solver {
 public:
