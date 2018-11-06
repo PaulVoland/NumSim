@@ -62,7 +62,7 @@ Iterator Iterator::Left() const {
   if (_value % _increm_y == 0)
     return *this;
   else
-    return Iterator(_geom, _value--);
+    return Iterator(_geom, _value - 1);
 }
 
 /// Returns an Iterator that is located right from this one.
@@ -71,7 +71,7 @@ Iterator Iterator::Right() const {
   if ((_value + 1) % _increm_y == 0)
     return *this;
   else
-    return Iterator(_geom, _value++);
+    return Iterator(_geom, _value + 1);
 }
 
 /// Returns an Iterator that is located above this one.

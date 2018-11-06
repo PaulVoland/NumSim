@@ -49,10 +49,10 @@ INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${SDL2_INCLUDE_DIRS})
 # Using glob is discouraged in cmake.
 set (HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/compute.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/grid.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/iterator.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/parameter.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/iterator.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/grid.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/solver.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/typedef.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.hpp
@@ -61,10 +61,10 @@ set (HEADERS
 set (SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/compute.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/grid.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/iterator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/parameter.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/iterator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/grid.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/solver.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.cpp
   )

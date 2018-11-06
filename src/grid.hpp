@@ -16,6 +16,7 @@
  */
 
 #include "typedef.hpp"
+#include "iterator.hpp"
 //------------------------------------------------------------------------------
 #ifndef __GRID_HPP
 #define __GRID_HPP

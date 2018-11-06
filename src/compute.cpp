@@ -81,7 +81,7 @@ void Compute::TimeStep(bool printInfo) {
   real_t dt_2 = _param->Tau()*_param->Re()*
     (_geom->Mesh()[0]*_geom->Mesh()[0]*_geom->Mesh()[1]*_geom->Mesh()[1])/
     (2*(_geom->Mesh()[0]*_geom->Mesh()[0] + _geom->Mesh()[1]*_geom->Mesh()[1]));
-  dt = min(dt_2, min(dt_1, _param->Dt()));
+  real_t dt = min(dt_2, min(dt_1, _param->Dt()));
 
   // Compute temporary velocities F, G using difference schemes
   MomentumEqu(dt);
@@ -93,7 +93,7 @@ void Compute::TimeStep(bool printInfo) {
   real_t res = 1000000.0;
   index_t i  = 0;
   while (res > _param->Eps() && i < _param->IterMax()) {
-    res = _solver->Cicle(_p, _rhs);
+    res = _solver->Cycle(_p, _rhs);
     /*
     // Update boundary values for pressure
     _geom->Update_P(_p);

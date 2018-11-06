@@ -11,7 +11,7 @@ Grid::Grid(const Geometry* geom) {
   offset[1] = 0;
   // Allocate pointer for the raw data with fixed size (=length) given by geometry
   // including halo zone
-  _data = new real_t[(geom->Size()[0] + 2)*(_geom->Size()[1] + 2)];
+  _data = new real_t[(geom->Size()[0] + 2)*(geom->Size()[1] + 2)];
   _geom = geom;
   _offset = offset;
 }
@@ -23,7 +23,7 @@ Grid::Grid(const Geometry* geom) {
 Grid::Grid(const Geometry* geom, const multi_real_t& offset) {
   // Allocate pointer for the raw data with fixed size (=length) given by geometry
   // including halo zone
-  _data = new real_t[(geom->Size()[0] + 2)*(_geom->Size()[1] + 2)];
+  _data = new real_t[(geom->Size()[0] + 2)*(geom->Size()[1] + 2)];
   _geom = geom;
   _offset = offset;
 }
@@ -34,7 +34,7 @@ Grid::~Grid() {delete[] _data;}
 /// Initializes the grid with a given value
 // @param value initial value for the whole grid
 void Grid::Initialize(const real_t& value) {
-  fill_n(_data, (geom->Size()[0] + 2)*(_geom->Size()[1] + 2), value);
+  fill_n(_data, (_geom->Size()[0] + 2)*(_geom->Size()[1] + 2), value);
 }
 
 /// Write access to the grid cell at position [it]
@@ -186,7 +186,7 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const {
  /// Returns the maximal value of the grid
 real_t Grid::Max() const {
   real_t max = _data[0];
-  for (index_t i = 1; i < (geom->Size()[0] + 2)*(_geom->Size()[1] + 2); i++) {
+  for (index_t i = 1; i < (_geom->Size()[0] + 2)*(_geom->Size()[1] + 2); i++) {
     if (_data[i] > max)
       max = _data[i];
   }
@@ -207,7 +207,7 @@ real_t Grid::InteriorMax() const {
 /// Returns the minimal value of the grid
 real_t Grid::Min() const {
   real_t min = _data[0];
-  for (index_t i = 1; i < (geom->Size()[0] + 2)*(_geom->Size()[1] + 2); i++) {
+  for (index_t i = 1; i < (_geom->Size()[0] + 2)*(_geom->Size()[1] + 2); i++) {
     if (_data[i] < min)
       min = _data[i];
   }
