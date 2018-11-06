@@ -106,9 +106,12 @@ void Compute::TimeStep(bool printInfo) {
 
   // (optionally) printing informations
   if (printInfo) {
-    cout << "_t = " << _t << " \tres = " << scientific << res
-      << " \tprogress: " << fixed << 100*_t/_param->Tend() << " %" << endl;
+    cout << "_t = " << fixed << _t << "\tdt = " << scientific << dt << " \tres = " << res
+      << " \tprogress: " << fixed << (uint32_t) 100*_t/_param->Tend() << "%\n" << endl;
   }
+
+  // Next timestep
+  _t += dt;
 }
 /* Getter functions
 */

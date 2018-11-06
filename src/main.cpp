@@ -32,7 +32,9 @@
 int main (int argc, char** argv) {
 // Create parameter and geometry instances with default values
 Parameter param;
+param.Load("../default.param");
 Geometry geom;
+geom.Load("../default.geom");
 // Create the fluid solver
 Compute comp(&geom, &param);
 

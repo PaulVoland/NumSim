@@ -118,8 +118,11 @@ void Geometry::Update_U(Grid* u) const {
   bit.SetBoundary(2);
   while (bit.Valid()) {
     u->Cell(bit) = 2*vel_x - u->Cell(bit.Down());
+    // cout << "Value of u on upper boundary: " << u->Cell(bit) << "\n" << endl;
     bit.Next();
   }
+
+  // cout << "----------\n" << endl; 
 
   // Update on left boundary
   bit.SetBoundary(3);
