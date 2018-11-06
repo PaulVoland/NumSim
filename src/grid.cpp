@@ -1,5 +1,6 @@
 #include "grid.hpp"
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 //------------------------------------------------------------------------------
@@ -57,30 +58,33 @@ real_t Grid::Interpolate(const multi_real_t& pos) const {
   real_t y          = pos[1] - _offset[1];
   multi_real_t h    = _geom->Mesh();
   index_t _increm_y = _geom->Size()[0] + 2;
+  // Instantiate indices and distances
+  index_t i, j;
+  real_t dx1, dx2, dy1, dy2;
 
   // find inner cell index for anchor cell in format
   // h(0)*[i,i+1) x h(1)*[j,j+1) (i,j = 0,...,_geom->Size()[0,1])-1) (inner numbering)
   // if x,y >= 0
   if (x < 0) {
-    index_t i = 0; // is in outer index format
-    real_t dx1 = h[0] - pos[0];
-    real_t dx2 = pos[0];
+    i = 0; // is in outer index format
+    dx1 = h[0] - pos[0];
+    dx2 = pos[0];
   } else {
-    index_t i = (index_t) x/h[0]; // is in inner index format
+    i = (index_t) x/h[0]; // is in inner index format
     // calculate distances to anchor point
-    real_t dx1 = x - i*h[0];
-    real_t dx2 = (i + 1)*h[0] - x;
+    dx1 = x - i*h[0];
+    dx2 = (i + 1)*h[0] - x;
     i++; // convert to outer index format
   }
   if (y < 0) {
-    index_t j = 0; // is in outer index format
-    real_t dy1 = h[1] - pos[1];
-    real_t dy2 = pos[1];
+    j = 0; // is in outer index format
+    dy1 = h[1] - pos[1];
+    dy2 = pos[1];
   } else {
-    index_t j = (index_t) y/h[1]; // is in inner index format
+    j = (index_t) y/h[1]; // is in inner index format
     // calculate distances to anchor point
-    real_t dy1 = y - j*h[1];
-    real_t dy2 = (j + 1)*h[1] - y;
+    dy1 = y - j*h[1];
+    dy2 = (j + 1)*h[1] - y;
     j++; // convert to outer index format
   }
 
@@ -198,7 +202,7 @@ real_t Grid::InteriorMax() const {
   InteriorIterator intit(_geom);
   real_t max = 0;
   while (intit.Valid()) {
-    max = fmax(max, _data[it]);
+    max = fmax(max, _data[intit]);
     intit.Next();
   }
   return max;
@@ -219,7 +223,7 @@ real_t Grid::InteriorMin() const {
   InteriorIterator intit(_geom);
   real_t min = 0;
   while (intit.Valid()) {
-    min = fmin(min, _data[it]);
+    min = fmin(min, _data[intit]);
     intit.Next();
   }
   return min;

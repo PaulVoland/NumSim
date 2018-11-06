@@ -51,6 +51,8 @@ class SOR : public Solver {
 public:
   /// Constructs an actual SOR solver
   SOR(const Geometry *geom, const real_t &omega);
+  /// Constructs an actual SOR solver 'overloaded' (without an omega input)
+  SOR(const Geometry *geom);
   /// Destructor
   ~SOR();
 

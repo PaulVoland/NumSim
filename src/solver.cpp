@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iostream>
 
+using namespace std;
 //----------------------------------------------------------------------------
 /// Constructor of the abstract Solver class
 //@param geom information about the geometry
@@ -30,8 +31,7 @@ real_t Solver::localRes(const Iterator& it, const Grid* p, const Grid* rhs) cons
 /// Constructs an actual SOR solver
 //@param geom  information about the geometry
 //@param omega factor for the correction
-SOR::SOR(const Geometry* geom, const real_t& omega) {
-    _geom = geom;
+SOR::SOR(const Geometry* geom, const real_t& omega) : Solver(geom) {
     _omega = omega;
     cout << "Constructed a SOR solver for the given geometry and omega = " << _omega << "." << endl;
 }
@@ -40,9 +40,8 @@ SOR::SOR(const Geometry* geom, const real_t& omega) {
 // => compute optimal omega
 // ... improvement around factor 2  => try out for the work sheet
 //@param geom information about the geometry
-SOR::SOR(const Geometry* geom) {
+SOR::SOR(const Geometry* geom) : Solver(geom) {
     const real_t PI = M_PI;
-    _geom = geom;
     _omega = 2.0/(1.0 + sin(PI*geom->Mesh()[0]));
     cout << "Constructed the SOR solver for the given geometry with a computed optimal omega = " << _omega << "." << endl;
 }
@@ -60,13 +59,14 @@ real_t SOR::Cycle(Grid* p, const Grid* rhs) const {
     // Preparations
     real_t dx = _geom->Mesh()[0];
     real_t dy = _geom->Mesh()[1];
+    real_t corr    = 0.0;
     real_t res_tot = 0.0;
     real_t norm = (dx*dx*dy*dy)/(2*(dx*dx + dy*dy));
 
     while(intit.Valid()) {
         n++;
         // Calcute the corrector
-        corr = p->dxx(intit) + p->dyy(intit) - rhs->Cell(it);
+        corr = p->dxx(intit) + p->dyy(intit) - rhs->Cell(intit);
         // New inner p values with SOR solver approach
         p->Cell(intit) += _omega*norm*corr;
         // Compute the local residual and sum
