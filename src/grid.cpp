@@ -67,8 +67,8 @@ real_t Grid::Interpolate(const multi_real_t& pos) const {
   // if x,y >= 0
   if (x < 0) {
     i = 0; // is in outer index format
-    dx1 = h[0] - pos[0];
-    dx2 = pos[0];
+    dx1 = x + h[0];
+    dx2 = -x;
   } else {
     i = (index_t) x/h[0]; // is in inner index format
     // calculate distances to anchor point
@@ -78,8 +78,8 @@ real_t Grid::Interpolate(const multi_real_t& pos) const {
   }
   if (y < 0) {
     j = 0; // is in outer index format
-    dy1 = h[1] - pos[1];
-    dy2 = pos[1];
+    dy1 = y + h[1];
+    dy2 = -y;
   } else {
     j = (index_t) y/h[1]; // is in inner index format
     // calculate distances to anchor point
@@ -236,7 +236,7 @@ real_t Grid::AbsMax() const {
   if ((max + min) > 0)
     return max;
   else
-    return min;
+    return -min;
 }
 
 /// Returns a pointer to the raw data
