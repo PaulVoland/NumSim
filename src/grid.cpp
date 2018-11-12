@@ -70,7 +70,7 @@ real_t Grid::Interpolate(const multi_real_t& pos) const {
     dx1 = x + h[0];
     dx2 = -x;
   } else {
-    i = (index_t) x/h[0]; // is in inner index format
+    i = (index_t) (x/h[0]); // is in inner index format
     // calculate distances to anchor point
     dx1 = x - i*h[0];
     dx2 = (i + 1)*h[0] - x;
@@ -81,7 +81,7 @@ real_t Grid::Interpolate(const multi_real_t& pos) const {
     dy1 = y + h[1];
     dy2 = -y;
   } else {
-    j = (index_t) y/h[1]; // is in inner index format
+    j = (index_t) (y/h[1]); // is in inner index format
     // calculate distances to anchor point
     dy1 = y - j*h[1];
     dy2 = (j + 1)*h[1] - y;
@@ -94,7 +94,7 @@ real_t Grid::Interpolate(const multi_real_t& pos) const {
     _data[it]              *dx2  *dy2 + 
     _data[it.Right()]      *dx1  *dy2 + 
     _data[it.Top()]        *dx2  *dy1 + 
-    _data[it.Right().Top()]*dx1  *dy1 );
+  _data[it.Right().Top()]*dx1 *dy1 );
 }
 
 /* Calculate differential operators

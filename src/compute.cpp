@@ -81,7 +81,11 @@ void Compute::TimeStep(bool printInfo) {
   real_t dt_2 = _param->Tau()*_param->Re()*
     (_geom->Mesh()[0]*_geom->Mesh()[0]*_geom->Mesh()[1]*_geom->Mesh()[1])/
     (2*(_geom->Mesh()[0]*_geom->Mesh()[0] + _geom->Mesh()[1]*_geom->Mesh()[1]));
-  real_t dt = min(dt_2, min(dt_1, _param->Dt()));
+  real_t dt = min(dt_1, dt_2);
+  // If explicit timestep > 0 is given in the paramater file, use this instead
+  if (_param->Dt() > 0) {
+    dt = _param->Dt();
+  }
 
   // Compute temporary velocities F, G using difference schemes
   MomentumEqu(dt);
@@ -94,10 +98,7 @@ void Compute::TimeStep(bool printInfo) {
   index_t i  = 0;
   while (res > _param->Eps() && i < _param->IterMax()) {
     res = _solver->Cycle(_p, _rhs);
-    /*
-    // Update boundary values for pressure
-    _geom->Update_P(_p);
-    */
+    
     i++;
   }
 
@@ -137,7 +138,9 @@ const Grid* Compute::GetVelocity() {
 
   // Go through all cells
   while (it.Valid()) {
-    _tmp->Cell(it) = sqrt(_u->Cell(it)*_u->Cell(it) + _v->Cell(it)*_v->Cell(it));
+    real_t _u_m = (_u->Cell(it.Left()) + _u->Cell(it))/2;
+    real_t _v_m = (_v->Cell(it.Down()) + _v->Cell(it))/2;
+    _tmp->Cell(it) = sqrt(_u_m*_u_m + _v_m*_v_m);
     it.Next();
   }
 
