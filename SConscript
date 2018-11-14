@@ -1,3 +1,4 @@
+#
 # Copyright (C) 2015   Michael Lahnert
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,14 +13,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
-# import exported environment
-Import('env')
+Import('*')
 
-# collect sources.
-# do not use glob here, because else you have to fiddle out visu.cpp if it
-# should not be built
+# get sources.
 srcs = ['src/main.cpp',
+        'src/communicator.cpp',
         'src/compute.cpp',
         'src/geometry.cpp',
         'src/grid.cpp',
@@ -27,17 +27,13 @@ srcs = ['src/main.cpp',
         'src/parameter.cpp',
         'src/solver.cpp',
         'src/vtk.cpp',
-        ]
+       ]
 
 # check if debug-visualization should be build.
 # if so, append its source file to sources and set preproc. define
 if env['visu'] == 1:
     srcs.append('src/visu.cpp')
-    env.Append(LIBS = ['SDL2'])
     env.Append(CPPDEFINES = ['USE_DEBUG_VISU'])
-
-if env['vtk'] == 1:
-    env.Append(CPPDEFINES = ['USE_VTK'])
 
 # give the program a name
 name = 'NumSim'

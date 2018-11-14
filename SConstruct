@@ -1,3 +1,4 @@
+#
 # Copyright (C) 2015   Michael Lahnert
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,22 +17,17 @@
 # add possibility to add a debug visu
 vars = Variables('custom.py')
 vars.Add (BoolVariable('visu', 'Set to 1 for enabling debug visu', 0))
-vars.Add (BoolVariable('vtk', 'Set to 1 for enabling VTK', 0))
 
 env = Environment(variables=vars)
 
 # do debug build?
 debug = ARGUMENTS.get('debug', 0)
 
-# set the compiler.
-# For using clang in parallel you have to set all flags by hand or define a
-# macro similar to mpic++
-
 # parallel
-# env.Replace(CXX='mpic++')
+env.Replace(CXX='mpic++')
 
-# serial
-env.Replace(CXX='g++')
+#serial
+# env.Replace(CXX='g++')
 
 # define some general compiler flags
 env.Append(
@@ -40,6 +36,10 @@ env.Append(
                      "-Wextra",
                      "-pedantic",
                      "-std=c++11",
+           ],
+           LIBS=[
+                 "mpi",
+                 "SDL2",
            ]
           )
 

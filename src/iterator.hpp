@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include "typedef.hpp"
 //------------------------------------------------------------------------------
@@ -21,7 +21,7 @@
 #define __ITERATOR_HPP
 //------------------------------------------------------------------------------
 /** Iterator base class
-*/
+ */
 class Iterator {
 public:
   /// Constructs a new Iterator depending on a geometry
@@ -29,7 +29,7 @@ public:
   /// Constructs a new Iterator on a geometry with a defined starting value
   Iterator(const Geometry *geom, const index_t &value);
 
-  ///     Returns the current position value
+  ///	Returns the current position value
   virtual const index_t &Value() const;
   /// Cast operator to convert Iterators to integers
   virtual operator const index_t &() const;
@@ -63,18 +63,12 @@ public:
 protected:
   const Geometry *_geom;
   index_t _value;
-  // _increm_x gives the number of cells per column
-  index_t _increm_x;
-  // _increm_y gives the number of cells per row
-  index_t _increm_y;
-  // _num_cell  total number of cells, including halo zone
-  index_t _num_cell;
   bool _valid;
 };
 
 //------------------------------------------------------------------------------
 /** Iterator for interior cells
-*/
+ */
 class InteriorIterator : public Iterator {
 public:
   /// Construct a new InteriorIterator
@@ -88,9 +82,15 @@ public:
 
 //------------------------------------------------------------------------------
 /** Iterator for domain boundary cells.
-*/
+ */
 class BoundaryIterator : public Iterator {
 public:
+  enum {
+    boundaryBottom = 0,
+    boundaryLeft = 1,
+    boundaryTop = 2,
+    boundaryRight = 3
+  };
   /// Constructs a new BoundaryIterator
   BoundaryIterator(const Geometry *geom);
 

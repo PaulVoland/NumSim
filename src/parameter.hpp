@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include "typedef.hpp"
 //------------------------------------------------------------------------------
@@ -28,9 +28,6 @@ public:
 
   /// Loads the parameter values from a file
   void Load(const char *file);
-
-  /// Prints the parameter set
-  void PrintVariables();
 
   /// Getter functions for all parameters
   const real_t &Re() const;

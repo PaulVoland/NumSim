@@ -1,2 +1,2 @@
 visu = 1 # do build a debug visualization
-vtk = 1
+# visu = 0 # do not build a debug visualization

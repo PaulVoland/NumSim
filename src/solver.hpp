@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-//------------------------------------------------------------------------------
+
 #include "typedef.hpp"
 //------------------------------------------------------------------------------
 #ifndef __SOLVER_HPP
@@ -22,7 +22,7 @@
 //------------------------------------------------------------------------------
 
 /** abstract base class for an iterative solver
-*/
+ */
 class Solver {
 public:
   /// Constructor of the abstract Solver class
@@ -30,7 +30,7 @@ public:
   /// Destructor of the Solver Class
   virtual ~Solver();
 
-  /// This function must be implemented in a child class.
+  /// This function must be implemented in a child class
   // @param [in][out] grid current values
   // @param [in]      rhs  right hand side values
   // @returns accumulated residual
@@ -45,14 +45,12 @@ protected:
 
 //------------------------------------------------------------------------------
 
-/* concrete SOR solver
-*/
+/** concrete SOR solver
+ */
 class SOR : public Solver {
 public:
   /// Constructs an actual SOR solver
   SOR(const Geometry *geom, const real_t &omega);
-  /// Constructs an actual SOR solver 'overloaded' (without an omega input)
-  SOR(const Geometry *geom);
   /// Destructor
   ~SOR();
 
@@ -63,6 +61,20 @@ public:
 
 protected:
   real_t _omega;
+};
+//------------------------------------------------------------------------------
+
+/** concrete Red or Balck SOR solver
+ */
+class RedOrBlackSOR : public SOR {
+public:
+  /// Constructs an actual SOR solver
+  RedOrBlackSOR(const Geometry *geom, const real_t &omega);
+  /// Destructor
+  ~RedOrBlackSOR();
+
+  real_t RedCycle(Grid *grid, const Grid *rhs) const;
+  real_t BlackCycle(Grid *grid, const Grid *rhs) const;
 };
 //------------------------------------------------------------------------------
 #endif // __SOLVER_HPP
