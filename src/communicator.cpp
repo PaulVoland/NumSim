@@ -17,19 +17,36 @@ using namespace std;
    */
   Communicator::Communicator(int *argc, char ***argv){
 
+      // inizialize size and rank of each run
       MPI_Init(argc,argv);
       MPI_Comm_size(MPI_COMM_WORLD, &_size);
       MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
 
+      // size of parallel fields 
       for (int i= (int)sqrt(_size); i>=1 ; i--){
         if((real_t)(_size)/real_t(i) == _size/i){
           _tdim = multi_index_t(i,_size/i);
           break;
         }
       }
+      // location of mainfield
 
+      /**
+      only for information: location of the fields with this algorithmus
+       ------------ ------------
+   *  |    2      x|y     3     |
+   *  |           x|y           |
+   *  |--------------------------  
+      |           x|y           |
+   *  |    0      x|y      1    |
+   *  |           x|y           |
+   *   ------------ ------------
+
+      */
       _tidx[0] = _rank%_tdim[0];
+      printf("für rank %d folgt %d in x richtung \n",_rank,_tidx[0] );
       _tidx[1] = (index_t)(_rank/_tdim[0]);
+      printf("für rank %d folgt %d in y richtung \n",_rank,_tidx[1] );
   }
   /** Communicator destructor; finalizes MPI Environment
    */
@@ -92,19 +109,19 @@ using namespace std;
 
   /** Decide whether our left boundary is a domain boundary
    */
-  const bool Communicator::isLeft() const{ return _evenodd; }
+  const bool Communicator::isLeft() const{ return (_tidx[0] == 0)? true:false;}
 
   /** Decide whether our right boundary is a domain boundary
    */
-  const bool Communicator::isRight() const{ return _evenodd; }
+  const bool Communicator::isRight() const{ return (_tidx[0] == _tdim[0]-1)? true:false;}
 
   /** Decide whether our top boundary is a domain boundary
    */
-  const bool Communicator::isTop() const{ return _evenodd; }
+  const bool Communicator::isTop() const{ return (_tidx[1] == _tdim[0]-1)? true:false;}
 
   /** Decide whether our bottom boundary is a domain boundary
    */
-  const bool Communicator::isBottom() const{ return _evenodd; }
+  const bool Communicator::isBottom() const{ return (_tidx[1] == 0)? true:false;}
 
   /** Get MPI rank of current process
    */
