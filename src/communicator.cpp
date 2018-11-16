@@ -102,7 +102,7 @@ using namespace std;
 
   /** Get number of MPI processes
    */
-  const int& Communicator::getSize() const{return _rank; }
+  const int& Communicator::getSize() const{return _size; }
 
 
 
