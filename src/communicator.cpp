@@ -20,11 +20,21 @@ using namespace std;
       MPI_Init(argc,argv);
       MPI_Comm_size(MPI_COMM_WORLD, &_size);
       MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
+
+      for (int i= (int)sqrt(_size); i>=1 ; i--){
+        if((real_t)(_size)/real_t(i) == _size/i){
+          _tdim = multi_index_t(i,_size/i);
+          break;
+        }
+      }
+
+      _tidx[0] = _rank%_tdim[0];
+      _tidx[1] = (index_t)(_rank/_tdim[0]);
   }
   /** Communicator destructor; finalizes MPI Environment
    */
   Communicator::~Communicator(){
-
+    MPI_Finalize();
   }
 
   /** Returns the position of the current process with respect to the
