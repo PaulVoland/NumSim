@@ -29,7 +29,7 @@
 
 int main(int argc, char **argv) {
 
-  // Create parameter and geometry instances with default values
+  // Create parameter and geometry instances with default values, set up a communicator
   Communicator comm(&argc, &argv);
   Parameter param;
   Geometry geom(&comm);
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
   Compute comp(&geom, &param, &comm);
 
   if (comm.getRank() == 0) {
-    // check if folder "VTK" exists
+    // Check if folder "VTK" exists
     struct stat info;
 
     if (stat("VTK", &info) != 0) {
@@ -45,50 +45,50 @@ int main(int argc, char **argv) {
     }
   }
 
-// Create and initialize the visualization
-#ifdef USE_DEBUG_VISU
-  Renderer visu(geom.Length(), geom.Mesh());
-  visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1],
-            comm.getRank() + 1);
-#endif // USE_DEBUG_VISU
+  // Create and initialize the visualization
+  #ifdef USE_DEBUG_VISU
+    Renderer visu(geom.Length(), geom.Mesh());
+    visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1],
+      comm.getRank() + 1);
+  #endif // USE_DEBUG_VISU
 
   // Create a VTK generator;
   // use offset as the domain shift
   multi_real_t offset;
-  offset[0] = comm.ThreadIdx()[0] * (geom.Mesh()[0] * (double)(geom.Size()[0] - 2));
-  offset[1] = comm.ThreadIdx()[1] * (geom.Mesh()[1] * (double)(geom.Size()[1] - 2));
+  offset[0] = comm.ThreadIdx()[0]*(geom.Mesh()[0]*(double)(geom.Size()[0] - 2));
+  offset[1] = comm.ThreadIdx()[1]*(geom.Mesh()[1]*(double)(geom.Size()[1] - 2));
   VTK vtk(geom.Mesh(), geom.Length(), geom.TotalLength(), offset, comm.getRank(),
-          comm.getSize(), comm.ThreadDim());
+    comm.getSize(), comm.ThreadDim());
 
-#ifdef USE_DEBUG_VISU
-  const Grid *visugrid;
+  #ifdef USE_DEBUG_VISU
+    const Grid *visugrid;
 
-  visugrid = comp.GetVelocity();
-#endif // USE_DEBUG_VISU
+    visugrid = comp.GetVelocity();
+  #endif // USE_DEBUG_VISU
 
   // Run the time steps until the end is reached
   while (comp.GetTime() < param.Tend()) {
-#ifdef USE_DEBUG_VISU
-    // Render and check if window is closed
-    switch (visu.Render(visugrid)) {
-    case -1:
-      return -1;
-    case 0:
-      visugrid = comp.GetVelocity();
-      break;
-    case 1:
-      visugrid = comp.GetU();
-      break;
-    case 2:
-      visugrid = comp.GetV();
-      break;
-    case 3:
-      visugrid = comp.GetP();
-      break;
-    default:
-      break;
-    };
-#endif // USE_DEBUG_VISU
+    #ifdef USE_DEBUG_VISU
+      // Render and check if window is closed
+      switch (visu.Render(visugrid)) {
+        case -1:
+          return -1;
+        case 0:
+          visugrid = comp.GetVelocity();
+          break;
+        case 1:
+          visugrid = comp.GetU();
+          break;
+        case 2:
+          visugrid = comp.GetV();
+          break;
+        case 3:
+          visugrid = comp.GetP();
+          break;
+        default:
+          break;
+      };
+    #endif // USE_DEBUG_VISU
 
     // Create VTK Files in the folder VTK
     // Note that when using VTK module as it is you first have to write cell
@@ -104,6 +104,7 @@ int main(int argc, char **argv) {
     // Run a few steps
     for (uint32_t i = 0; i < 9; ++i)
       comp.TimeStep(false);
+
     bool printOnlyOnMaster = !comm.getRank();
     comp.TimeStep(printOnlyOnMaster);
   }
