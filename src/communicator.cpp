@@ -49,7 +49,10 @@ using namespace std;
       printf("für rank %d folgt %d in x richtung \n",_rank,_tidx[0] );
       _tidx[1] = (index_t)(_rank/_tdim[0]);
       printf("für rank %d folgt %d in y richtung \n",_rank,_tidx[1] );
+      _evenodd = ((_tidx[0]%2==0) && (_tidx[1]%2==0) || (_tidx[0]%2 != 0) && (_tidx[1]%2 != 0) )? true:false;
   }
+
+
   /** Communicator destructor; finalizes MPI Environment
    */
   Communicator::~Communicator(){
@@ -107,7 +110,12 @@ using namespace std;
    *
    * \param [in] grid  The values to sync
    */
-  void Communicator::copyBoundary(Grid *grid) const{}
+  void Communicator::copyBoundary(Grid *grid) const{
+    !this->isLeft() && this->copyLeftBoundary(grid);
+    !this->isRight() && this->copyRightBoundary(grid);
+    !this->isTop() && this->copyTopBoundary(grid);
+    //(!this->isBottom())? copyBottomBoundary(grid):null; 
+  }
 
   /** Decide whether our left boundary is a domain boundary
    */
@@ -164,13 +172,16 @@ using namespace std;
       BoundIt.Next();
       count ++;
     }
+    int result = MPI_Sendrecv_replace(message,messagelength,MPI_DOUBLE, _rank-1,1,_rank-1,2,MPI_COMM_WORLD,&stat);
 
-
-
-
-
-    
-    return true;
+     count = 0;
+     BoundIt.First();
+    while (BoundIt.Valid()){
+      grid->Cell(BoundIt) = message[count];
+      BoundIt.Next();
+      count ++;
+    }   
+    return (result == MPI_SUCCESS)? true:false;
   }
 
   /** Function to sync ghost layer on right boundary
@@ -178,20 +189,88 @@ using namespace std;
    *
    * \param [in] grid  values whose boundary shall be synced
    */
-  bool Communicator::copyRightBoundary(Grid *grid) const{ return _evenodd; }
+  bool Communicator::copyRightBoundary(Grid *grid) const{ 
+    MPI_Status stat;
+    const index_t messagelength = grid->getGeometry()->Size()[1];
+    real_t message[messagelength];
+    BoundaryIterator BoundIt = BoundaryIterator(grid->getGeometry());
+    BoundIt.SetBoundary(1);
+    int count = 0;
+    while (BoundIt.Valid()){
+      message[count] = grid->Cell(BoundIt);
+      BoundIt.Next();
+      count ++;
+    }
+    int result = MPI_Sendrecv_replace(message,messagelength,MPI_DOUBLE, _rank+1,2,_rank+1,1,MPI_COMM_WORLD,&stat);
+
+     count = 0;
+     BoundIt.First();
+    while (BoundIt.Valid()){
+      grid->Cell(BoundIt) = message[count];
+      BoundIt.Next();
+      count ++;
+    }   
+    return (result == MPI_SUCCESS)? true:false;
+  }
 
   /** Function to sync ghost layer on top boundary
    *  Details analog to left boundary
    *
    * \param [in] grid  values whose boundary shall be synced
    */
-  bool Communicator::copyTopBoundary(Grid *grid) const{ return _evenodd; }
+  bool Communicator::copyTopBoundary(Grid *grid) const{ 
+    MPI_Status stat;
+    int toprank = _rank+_tdim[0];
+    const index_t messagelength = grid->getGeometry()->Size()[1];
+    real_t message[messagelength];
+    BoundaryIterator BoundIt = BoundaryIterator(grid->getGeometry());
+    BoundIt.SetBoundary(0);
+    int count = 0;
+    while (BoundIt.Valid()){
+      message[count] = grid->Cell(BoundIt);
+      BoundIt.Next();
+      count ++;
+    }
+    int result = MPI_Sendrecv_replace(message,messagelength,MPI_DOUBLE,toprank,4,toprank,3,MPI_COMM_WORLD,&stat);
+
+     count = 0;
+     BoundIt.First();
+    while (BoundIt.Valid()){
+      grid->Cell(BoundIt) = message[count];
+      BoundIt.Next();
+      count ++;
+    }   
+    return (result == MPI_SUCCESS)? true:false;
+  }
 
   /** Function to sync ghost layer on bottom boundary
    *  Details analog to left boundary
    *
    * \param [in] grid  values whose boundary shall be synced
    */
-  bool Communicator::copyBottomBoundary(Grid *grid) const{ return _evenodd; }
+  bool Communicator::copyBottomBoundary(Grid *grid) const{ 
+    MPI_Status stat;
+    int bottomrank = _rank-_tdim[0];
+    const index_t messagelength = grid->getGeometry()->Size()[1];
+    real_t message[messagelength];
+    BoundaryIterator BoundIt = BoundaryIterator(grid->getGeometry());
+    BoundIt.SetBoundary(0);
+    int count = 0;
+    while (BoundIt.Valid()){
+      message[count] = grid->Cell(BoundIt);
+      BoundIt.Next();
+      count ++;
+    }
+    int result = MPI_Sendrecv_replace(message,messagelength,MPI_DOUBLE,bottomrank,3,bottomrank,4,MPI_COMM_WORLD,&stat);
+
+     count = 0;
+     BoundIt.First();
+    while (BoundIt.Valid()){
+      grid->Cell(BoundIt) = message[count];
+      BoundIt.Next();
+      count ++;
+    }   
+    return (result == MPI_SUCCESS)? true:false;
+  }
 
 //------------------------------------------------------------------------------
