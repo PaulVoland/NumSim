@@ -20,9 +20,8 @@
 #ifndef __SOLVER_HPP
 #define __SOLVER_HPP
 //------------------------------------------------------------------------------
-
-/** abstract base class for an iterative solver
- */
+/* Abstract base class for an iterative solver
+*/
 class Solver {
 public:
   /// Constructor of the abstract Solver class
@@ -42,15 +41,15 @@ protected:
   /// Returns the residual at [it] for the pressure-Poisson equation
   real_t localRes(const Iterator &it, const Grid *grid, const Grid *rhs) const;
 };
-
 //------------------------------------------------------------------------------
-
-/** concrete SOR solver
- */
+/* Concrete SOR solver
+*/
 class SOR : public Solver {
 public:
   /// Constructs an actual SOR solver
   SOR(const Geometry *geom, const real_t &omega);
+  /// Constructs an actual SOR solver 'overloaded' (without an omega input)
+  SOR(const Geometry *geom);
   /// Destructor
   ~SOR();
 
@@ -63,17 +62,24 @@ protected:
   real_t _omega;
 };
 //------------------------------------------------------------------------------
-
-/** concrete Red or Balck SOR solver
- */
+/* Concrete Red or Black SOR solver
+*/
 class RedOrBlackSOR : public SOR {
 public:
-  /// Constructs an actual SOR solver
+  /// Constructs an actual Red or Black SOR solver
   RedOrBlackSOR(const Geometry *geom, const real_t &omega);
+  /// Constructs an actual Red or Black SOR solver 'overloaded' (without an omega input)
+  RedOrBlackSOR(const Geometry *geom);
   /// Destructor
   ~RedOrBlackSOR();
 
+  /// Returns the total residual and executes a solver cycle for the 'red' cells
+  // @param grid current pressure values
+  // @param rhs right hand side
   real_t RedCycle(Grid *grid, const Grid *rhs) const;
+  /// Returns the total residual and executes a solver cycle for the 'black' cells
+  // @param grid current pressure values
+  // @param rhs right hand side
   real_t BlackCycle(Grid *grid, const Grid *rhs) const;
 };
 //------------------------------------------------------------------------------
