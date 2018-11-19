@@ -1,6 +1,8 @@
 #include "communicator.hpp"
 #include "grid.hpp"
+#include "geometry.hpp"
 #include "typedef.hpp"
+#include "iterator.hpp"
 #include <iostream>
 #include <cmath>
 #include <unistd.h>
@@ -150,7 +152,26 @@ using namespace std;
    *
    * \param [in] grid  values whose boundary shall be synced
    */
-  bool Communicator::copyLeftBoundary(Grid *grid) const{ return _evenodd; }
+  bool Communicator::copyLeftBoundary(Grid *grid) const{ 
+  	MPI_Status stat;
+  	const index_t messagelength = grid->getGeometry()->Size()[1];
+  	real_t message[messagelength];
+  	BoundaryIterator BoundIt = BoundaryIterator(grid->getGeometry());
+    BoundIt.SetBoundary(3);
+    int count = 0;
+    while (BoundIt.Valid()){
+      message[count] = grid->Cell(BoundIt);
+      BoundIt.Next();
+      count ++;
+    }
+
+
+
+
+
+    
+    return true;
+  }
 
   /** Function to sync ghost layer on right boundary
    *  Details analog to left boundary

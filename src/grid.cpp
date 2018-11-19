@@ -241,4 +241,6 @@ real_t Grid::AbsMax() const {
 
 /// Returns a pointer to the raw data
 real_t* Grid::Data() {return _data;}
+
+const Geometry *getGeometry() const {return _geom;}
 //------------------------------------------------------------------------------

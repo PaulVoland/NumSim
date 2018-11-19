@@ -1,6 +1,6 @@
 #include "typedef.hpp"
 #include "communicator.hpp"
-//#include "grid.hpp"
+#include "grid.hpp"
 #include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
