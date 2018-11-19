@@ -36,20 +36,21 @@ public:
   //    -------------
   //       u=0, v=0
   Geometry();
+  /// Constructs a default geometry with partition set up using the communicator object
   Geometry(const Communicator *comm);
 
   /// Loads a geometry from a file
   void Load(const char *file);
 
-  /// Returns the number of cells in each dimension
+  /// Returns the number of cells in each dimension blockwise
   const multi_index_t &Size() const;
   /// Returns the total number of cells in each dimension
   const multi_index_t &TotalSize() const;
-  /// Returns the length of the domain
+  /// Returns the length of the partitioned domain
   const multi_real_t &Length() const;
   /// Returns the total length of the domain
   const multi_real_t &TotalLength() const;
-  /// Returns the meshwidth
+  /// Returns the overall meshwidth
   const multi_real_t &Mesh() const;
 
   /// Updates the velocity field u
@@ -64,12 +65,12 @@ private:
 
   multi_index_t _size;
   multi_index_t _bsize;
-  multi_real_t _length;
-  multi_real_t _blength;
-  multi_real_t _h;
+  multi_real_t  _length;
+  multi_real_t  _blength;
+  multi_real_t  _h;
 
-  multi_real_t _velocity;
-  real_t _pressure;
+  multi_real_t  _velocity;
+  real_t        _pressure;
 };
 //------------------------------------------------------------------------------
 #endif // __GEOMETRY_HPP
