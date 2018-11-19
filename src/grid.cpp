@@ -237,15 +237,10 @@ real_t Grid::AbsMax() const {
 //------------------------------------------------------------------------------
 /// Returns a pointer to the raw data
 real_t* Grid::Data() {return _data;}
-<<<<<<< HEAD
 
-const Geometry *getGeometry() const {return _geom;}
-=======
+const Geometry* Grid::getGeometry() const {return _geom;}
+
 //------------------------------------------------------------------------------
 /// Getter for the grid offset
 const multi_real_t& Grid::getOffset() const {return _offset;}
-//------------------------------------------------------------------------------
-/// Returns a pointer to the Geometry
-const Geometry* Grid::getGeometry() const {return _geom;}
->>>>>>> origin/master
 //------------------------------------------------------------------------------
