@@ -107,7 +107,7 @@ private:
   bool _evenodd;
 
   /** Function to sync ghost layer on left boundary:
-   *  send values of own left boundary to left neighbor and
+   *  send values of own left boundary to left neighbor
    *  and receive values from his right boundary
    *
    *   ------------ ------------
