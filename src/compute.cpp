@@ -98,7 +98,8 @@ void Compute::TimeStep(bool printInfo) {
   index_t i  = 0;
   while (res > _param->Eps() && i < _param->IterMax()) {
     res = _solver->Cycle(_p, _rhs);
-    
+    // Update boundary values for pressure
+    _geom->Update_P(p);
     i++;
   }
 
