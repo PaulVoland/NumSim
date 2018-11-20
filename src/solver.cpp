@@ -81,7 +81,7 @@ real_t SOR::Cycle(Grid* p, const Grid* rhs) const {
 /// Constructs an actual Red or Black SOR solver
 //@param geom  information about the geometry
 //@param omega factor for the correction
-RedOrBlackSOR::RedOrBlackSOR(const Geometry* geom, const real_t& omega) : Solver(geom) {
+RedOrBlackSOR::RedOrBlackSOR(const Geometry* geom, const real_t& omega) : SOR(geom) {
     _omega = omega;
     cout << "Constructed a Red or Black SOR solver for the given geometry and omega = " << _omega << "." << endl;
 }
@@ -89,7 +89,7 @@ RedOrBlackSOR::RedOrBlackSOR(const Geometry* geom, const real_t& omega) : Solver
 /// Constructs an actual Red or Black SOR solver 'overloaded' (without an omega input)
 // => compute optimal omega
 //@param geom information about the geometry
-RedOrBlackSOR::RedOrBlackSOR(const Geometry* geom) : Solver(geom) {
+RedOrBlackSOR::RedOrBlackSOR(const Geometry* geom) : SOR(geom) {
     const real_t PI = M_PI;
     _omega = 2.0/(1.0 + sin(PI*geom->Mesh()[0]));
     cout << "Constructed the Red or Black SOR solver for the given geometry with a computed optimal omega = " << _omega << "." << endl;
