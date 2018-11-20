@@ -22,7 +22,7 @@ Compute::Compute(const Geometry* geom, const Parameter* param) {
   // Set timestep data
   real_t _t = 0.0;
   _dtlimit  = param->Dt();
-  
+
   // Tolerance for Poisson solver
   _epslimit = param->Eps();
 
@@ -76,12 +76,20 @@ void Compute::TimeStep(bool printInfo) {
   _geom->Update_P(_p);
 
   // Find timestep as a minimum of different criteria
-  real_t dt_1 = _param->Tau()*fmin(_geom->Mesh()[0], _geom->Mesh()[1])/
-    fmax(_u->AbsMax(), _v->AbsMax());
-  real_t dt_2 = _param->Tau()*_param->Re()*
+
+  real_t dt_1 = _param->Tau()*_param->Re()*
     (_geom->Mesh()[0]*_geom->Mesh()[0]*_geom->Mesh()[1]*_geom->Mesh()[1])/
     (2*(_geom->Mesh()[0]*_geom->Mesh()[0] + _geom->Mesh()[1]*_geom->Mesh()[1]));
+
+  // Comunicate the global u-/v-AbsMax for equal timestepsize
+  real_t AbsMax_u = _comm->gatherMax(_u->AbsMax());
+  real_t AbsMax_v = _comm->gatherMax(_v->AbsMax());
+
+  real_t dt_2 = _param->Tau()*fmin(_geom->Mesh()[0], _geom->Mesh()[1])/
+    fmax(AbsMax_u, AbsMax_v);
+
   real_t dt = min(dt_1, dt_2);
+
   // If explicit timestep > 0 is given in the paramater file, use this instead
   if (_param->Dt() > 0) {
     dt = _param->Dt();
@@ -207,7 +215,7 @@ void Compute::MomentumEqu(const real_t& dt) {
 
     // Next cell
     intit.Next();
-  }  
+  }
   // Boundary update for new values of F, G
   _geom->Update_U(_F);
   _geom->Update_V(_G);
