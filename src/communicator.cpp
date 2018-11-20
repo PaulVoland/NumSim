@@ -125,21 +125,21 @@ real_t Communicator::gatherMax(const real_t& val) const {
  * \param [in] grid  The values to sync
  */
 void Communicator::copyBoundary(Grid* grid) const {
-
-  if(_evenodd){
+  // Take care about the numbering of the communicators (even/odd)
+  // even grids communicate to the left first, while odd grids to the right first
+  if (_evenodd) {
     (!isLeft()   && copyLeftBoundary(grid));
     (!isRight()  && copyRightBoundary(grid));
     (!isTop()    && copyTopBoundary(grid));
     (!isBottom() && copyBottomBoundary(grid));
   }
-  else{
+  else {
     (!isRight()  && copyRightBoundary(grid));
     (!isLeft()   && copyLeftBoundary(grid));
     (!isBottom() && copyBottomBoundary(grid));
     (!isTop()    && copyTopBoundary(grid));
   }
 }
-
 //------------------------------------------------------------------------------
 /** Decide whether our left boundary is a domain boundary
  */
