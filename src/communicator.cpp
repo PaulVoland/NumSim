@@ -128,7 +128,7 @@ void Communicator::copyBoundary(Grid* grid) const {
   // Take care about the numbering of the communicators (even/odd)
   // even grids communicate to the left first, while odd grids to the right first
   if (_evenodd) {
-    (!isLeft()   && copyLeftBoundary(grid));
+    (!isLeft()   && copyLeftBoundary(grid)); //possibly !isLeft() not necessary, because already in Update_.
     (!isRight()  && copyRightBoundary(grid));
     (!isTop()    && copyTopBoundary(grid));
     (!isBottom() && copyBottomBoundary(grid));
