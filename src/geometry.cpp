@@ -135,16 +135,136 @@ const multi_real_t &Geometry::Length() const { return _blength; }
 const multi_real_t &Geometry::TotalLength() const { return _length; }
 //------------------------------------------------------------------------------
 const multi_real_t &Geometry::Mesh() const { return _h; }
+
 //------------------------------------------------------------------------------
+/// Updates the velocity field u on the boundary
+// @param u grid for the velocity in x-direction
 void Geometry::Update_U(Grid *u) const {
-  // to be implemented
+  //copy all boundary except the physical BC
+  _comm->copyBoundary(u);
+
+  //check if there are physical BC to be set
+  BoundaryIterator bit = BoundaryIterator(this);
+  //falls mehrere Ränder betroffen sind, dann stimmt bit nicht mehr oder?
+
+  if(_comm->isBottom()){
+    bit.SetBoundary(0);
+    while ( bit.Valid() ) {
+      u->Cell(bit) = -1*u->Cell(bit.Top());
+      bit.Next();
+    }
+  }
+
+  if(_comm->isRight()){
+    bit.SetBoundary(1);
+    while (bit.Valid()) {
+        u->Cell(bit)        = 0;
+        u->Cell(bit.Left()) = 0; // necessary?!
+        bit.Next();
+    }
+  }
+
+  if(_comm->isTop()){
+    bit.SetBoundary(2);
+    while (bit.Valid()) {
+        u->Cell(bit) = 2*vel_x - u->Cell(bit.Down());
+        bit.Next();
+    }
+  }
+
+  if(_comm->isLeft()){
+    bit.SetBoundary(3);
+      while (bit.Valid()) {
+        u->Cell(bit) = 0;
+        bit.Next();
+      }
+  }
 }
+
 //------------------------------------------------------------------------------
+/// Updates the velocity field v on the boundary
+// @param v grid for the velocity in y-direction
 void Geometry::Update_V(Grid *v) const {
-  // to be implemented
+  //copy all boundary except the physical BC
+  _comm->copyBoundary(v);
+
+  //check if there are physical BC to be set
+  BoundaryIterator bit = BoundaryIterator(this);
+
+  if(_comm->isBottom()){
+    bit.SetBoundary(0);
+    while (bit.Valid()) {
+        v->Cell(bit) = 0;
+        bit.Next();
+    }
+  }
+
+  if(_comm->isRight()){
+    bit.SetBoundary(1);
+    while (bit.Valid()) {
+        v->Cell(bit) = -v->Cell(bit.Left());
+        bit.Next();
+    }
+  }
+
+  if(_comm->isTop()){
+    bit.SetBoundary(2);
+    while (bit.Valid()) {
+        v->Cell(bit) =        0;
+        v->Cell(bit.Down()) = 0; // notwendig?!
+        bit.Next();
+    }
+  }
+
+  if(_comm->isLeft()){
+    bit.SetBoundary(3);
+    while (bit.Valid()) {
+        v->Cell(bit) = -v->Cell(bit.Right());
+        bit.Next();
+    }
+  }
 }
+
 //------------------------------------------------------------------------------
+/// Updates the pressure field p on the boundary
+// @param p grid for the pressure
 void Geometry::Update_P(Grid *p) const {
-  // to be implemented
+  //copy all boundary except the physical BC
+  _comm->copyBoundary(p);
+
+  // Preparation of boundary iteration
+  BoundaryIterator bit = BoundaryIterator(this);
+
+  if(_comm->isBottom()){
+    bit.SetBoundary(0);
+    while (bit.Valid()) {
+        p->Cell(bit) = p->Cell(bit.Top());
+        bit.Next();
+    }
+  }
+
+  if(_comm->isRight()){
+    bit.SetBoundary(1);
+    while (bit.Valid()) {
+        p->Cell(bit) = p->Cell(bit.Left());
+        bit.Next();
+    }
+  }
+
+  if(_comm->isTop()){
+    bit.SetBoundary(2);
+    while (bit.Valid()) {
+        p->Cell(bit) = p->Cell(bit.Down());
+        bit.Next();
+    }
+  }
+
+  if(_comm->isLeft()){
+    bit.SetBoundary(3);
+    while (bit.Valid()) {
+        p->Cell(bit) = p->Cell(bit.Right());
+        bit.Next();
+    }
+  }
 }
 //------------------------------------------------------------------------------
