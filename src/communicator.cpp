@@ -36,7 +36,7 @@ Communicator::Communicator(int* argc, char*** argv) {
   _tidx[1] = (int)(_rank/_tdim[0]);
   _tidx[0] = (int)(_rank - _tidx[1]*_tdim[0]);
   */
-  
+
   // Partition first in y-direction (horizontal slices if odd)
   for (index_t i= (index_t)sqrt(_size); i > 0; i--) {
     if ((real_t)(_size)/(real_t)(i) == _size/i) {
@@ -51,7 +51,7 @@ Communicator::Communicator(int* argc, char*** argv) {
   *   |-------|-------|
   * 1 |   2  x|y  3   |  _tdim[] = (2, 3)
   *   |-------|-------|
-  * 0 |   0  x|y  1   | 
+  * 0 |   0  x|y  1   |
   *   |-------|-------|
   *       0       1    _tidx[0]
   */
@@ -125,11 +125,21 @@ real_t Communicator::gatherMax(const real_t& val) const {
  * \param [in] grid  The values to sync
  */
 void Communicator::copyBoundary(Grid* grid) const {
-  (!isLeft()   && copyLeftBoundary(grid));
-  (!isRight()  && copyRightBoundary(grid));
-  (!isTop()    && copyTopBoundary(grid));
-  (!isBottom() && copyBottomBoundary(grid));
+
+  if(_evenodd){
+    (!isLeft()   && copyLeftBoundary(grid));
+    (!isRight()  && copyRightBoundary(grid));
+    (!isTop()    && copyTopBoundary(grid));
+    (!isBottom() && copyBottomBoundary(grid));
+  }
+  else{
+    (!isRight()  && copyRightBoundary(grid));
+    (!isLeft()   && copyLeftBoundary(grid));
+    (!isBottom() && copyBottomBoundary(grid));
+    (!isTop()    && copyTopBoundary(grid));
+  }
 }
+
 //------------------------------------------------------------------------------
 /** Decide whether our left boundary is a domain boundary
  */
@@ -172,7 +182,7 @@ const int& Communicator::getSize() const {return _size;}
  *
  * \param [in] grid  values whose boundary shall be synced
  */
-bool Communicator::copyLeftBoundary(Grid* grid) const { 
+bool Communicator::copyLeftBoundary(Grid* grid) const {
   MPI_Status stat;
   const index_t messagelength =
     grid->getGeometry()->Size()[1] - 2; // Left boundary has less elements
@@ -194,7 +204,7 @@ bool Communicator::copyLeftBoundary(Grid* grid) const {
     grid->Cell(BoundIt) = message[count];
     BoundIt.Next();
     count++;
-  }   
+  }
   return (result == MPI_SUCCESS)? true:false;
 }
 //------------------------------------------------------------------------------
@@ -203,7 +213,7 @@ bool Communicator::copyLeftBoundary(Grid* grid) const {
  *
  * \param [in] grid  values whose boundary shall be synced
  */
-bool Communicator::copyRightBoundary(Grid* grid) const { 
+bool Communicator::copyRightBoundary(Grid* grid) const {
   MPI_Status stat;
   const index_t messagelength =
     grid->getGeometry()->Size()[1] - 2; // Right boundary has less elements
@@ -225,7 +235,7 @@ bool Communicator::copyRightBoundary(Grid* grid) const {
     grid->Cell(BoundIt) = message[count];
     BoundIt.Next();
     count++;
-  }   
+  }
   return (result == MPI_SUCCESS)? true:false;
 }
 //------------------------------------------------------------------------------
@@ -234,7 +244,7 @@ bool Communicator::copyRightBoundary(Grid* grid) const {
  *
  * \param [in] grid  values whose boundary shall be synced
  */
-bool Communicator::copyTopBoundary(Grid* grid) const { 
+bool Communicator::copyTopBoundary(Grid* grid) const {
   MPI_Status stat;
   int toprank = _rank + _tdim[0];
   const index_t messagelength = grid->getGeometry()->Size()[0];
@@ -256,7 +266,7 @@ bool Communicator::copyTopBoundary(Grid* grid) const {
     grid->Cell(BoundIt) = message[count];
     BoundIt.Next();
     count++;
-  }   
+  }
   return (result == MPI_SUCCESS)? true:false;
 }
 //------------------------------------------------------------------------------
@@ -265,7 +275,7 @@ bool Communicator::copyTopBoundary(Grid* grid) const {
  *
  * \param [in] grid  values whose boundary shall be synced
  */
-bool Communicator::copyBottomBoundary(Grid* grid) const { 
+bool Communicator::copyBottomBoundary(Grid* grid) const {
   MPI_Status stat;
   int bottomrank = _rank - _tdim[0];
   const index_t messagelength = grid->getGeometry()->Size()[0];
@@ -287,7 +297,7 @@ bool Communicator::copyBottomBoundary(Grid* grid) const {
     grid->Cell(BoundIt) = message[count];
     BoundIt.Next();
     count++;
-  }   
+  }
   return (result == MPI_SUCCESS)? true:false;
 }
 //------------------------------------------------------------------------------
