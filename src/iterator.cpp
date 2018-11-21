@@ -152,10 +152,10 @@ void BoundaryIterator::First() {
     _value = 2*_increm_y- 1;
   // Top boundary
   else if (_boundary == 2)
-    _value = _num_cell - 1;
+    _value = _num_cell - _increm_y;
   // Left boundary
   else if (_boundary == 3)
-    _value = _increm_y*(_increm_x - 2);
+    _value = _increm_y;
 }
 //------------------------------------------------------------------------------
 /// Goes to the next element of the iterator, disables it if position is end
@@ -181,20 +181,20 @@ void BoundaryIterator::Next() {
   }
   // Top boundary
   if (_boundary == 2) {
-    if (_value - 1 <= _num_cell - 1 - _increm_y) {
+    if (_value + 1 >= _num_cell) {
       _valid = false;
     }
     else {
-      _value--;
+      _value++;
     }
   }
   // Left boundary
   if (_boundary == 3) {
-    if (_value - _increm_y <= 0) {
+    if (_value + _increm_y >= _num_cell - _increm_y) {
       _valid = false;
     }
     else {
-      _value -= _increm_y;
+      _value += _increm_y;
     }
   }
 }

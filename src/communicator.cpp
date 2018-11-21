@@ -65,7 +65,10 @@ Communicator::Communicator(int* argc, char*** argv) {
   */
   // True/False value which describes if communicator has an even/odd number
   _evenodd = ((_tidx[0]%2==0) && (_tidx[1]%2==0) ||
-    (_tidx[0]%2 != 0) && (_tidx[1]%2 != 0) )? true:false;
+  (_tidx[0]%2 != 0) && (_tidx[1]%2 != 0) )? true:false;
+
+  //alternative
+  //_evenodd = (_tidx[0]+_tidx[1])%2 == 0;
 }
 //------------------------------------------------------------------------------
 /** Communicator destructor; finalizes MPI Environment
@@ -86,6 +89,7 @@ const multi_index_t& Communicator::ThreadDim() const {return _tdim;}
 /** Returns whether this process is a red or a black field
  */
 const bool& Communicator::EvenOdd() const {return _evenodd;}
+
 //------------------------------------------------------------------------------
 /** Gets the sum of all values and distributes the result among all
  *  processes
@@ -119,6 +123,7 @@ real_t Communicator::gatherMax(const real_t& val) const {
  MPI_Allreduce(&val,&max,1,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
  return max;
 }
+
 //------------------------------------------------------------------------------
 /** Synchronizes ghost layer
  *
@@ -139,6 +144,35 @@ void Communicator::copyBoundary(Grid* grid) const {
     (!isBottom() && copyBottomBoundary(grid));
     (!isTop()    && copyTopBoundary(grid));
   }
+
+//   if(this->EvenOdd()) {
+//         if(!this->isLeft()) {
+//             this->copyLeftBoundary(grid);
+//         }
+//         if(!this->isRight()) {
+//             this->copyRightBoundary(grid);
+//         }
+//         if(!this->isTop()) {
+//             this->copyTopBoundary(grid);
+//         }
+//         if(!this->isBottom()) {
+//             this->copyBottomBoundary(grid);
+//         }
+//     } else {
+//         if(!this->isRight()) {
+//             this->copyRightBoundary(grid);
+//         }
+//         if(!this->isLeft()) {
+//             this->copyLeftBoundary(grid);
+//         }
+//         if(!this->isBottom()) {
+//             this->copyBottomBoundary(grid);
+//         }
+//         if(!this->isTop()) {
+//             this->copyTopBoundary(grid);
+//         }
+// }
+
 }
 //------------------------------------------------------------------------------
 /** Decide whether our left boundary is a domain boundary
@@ -191,7 +225,7 @@ bool Communicator::copyLeftBoundary(Grid* grid) const {
   BoundIt.SetBoundary(3);
   int count = 0;
   while (BoundIt.Valid()) {
-    message[count] = grid->Cell(BoundIt);
+    message[count] = grid->Cell(BoundIt.Right());
     BoundIt.Next();
     count++;
   }
@@ -222,7 +256,7 @@ bool Communicator::copyRightBoundary(Grid* grid) const {
   BoundIt.SetBoundary(1);
   int count = 0;
   while (BoundIt.Valid()) {
-    message[count] = grid->Cell(BoundIt);
+    message[count] = grid->Cell(BoundIt.Left());
     BoundIt.Next();
     count ++;
   }
@@ -253,7 +287,7 @@ bool Communicator::copyTopBoundary(Grid* grid) const {
   BoundIt.SetBoundary(2);
   int count = 0;
   while (BoundIt.Valid()) {
-    message[count] = grid->Cell(BoundIt);
+    message[count] = grid->Cell(BoundIt.Down());
     BoundIt.Next();
     count++;
   }
@@ -284,7 +318,7 @@ bool Communicator::copyBottomBoundary(Grid* grid) const {
   BoundIt.SetBoundary(0);
   int count = 0;
   while (BoundIt.Valid()) {
-    message[count] = grid->Cell(BoundIt);
+    message[count] = grid->Cell(BoundIt.Top());
     BoundIt.Next();
     count++;
   }
