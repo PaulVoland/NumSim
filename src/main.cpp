@@ -32,9 +32,13 @@ int main(int argc, char **argv) {
   // Create parameter and geometry instances with default values, set up a communicator
   Communicator comm(&argc, &argv);
   Parameter param;
+  param.Load("../default.param");
   Geometry geom(&comm);
+  geom.Load("../default.geom");
   // Create the fluid solver
   Compute comp(&geom, &param, &comm);
+  // To put the single pictures per thread in a nice order on the screen while execution
+  // bool start = true;
 
   if (comm.getRank() == 0) {
     // Check if folder "VTK" exists
@@ -48,7 +52,7 @@ int main(int argc, char **argv) {
   // Create and initialize the visualization
   #ifdef USE_DEBUG_VISU
     Renderer visu(geom.Length(), geom.Mesh());
-    visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1],
+    visu.Init(800/comm.ThreadDim()[0], 800/comm.ThreadDim()[1],
       comm.getRank() + 1);
   #endif // USE_DEBUG_VISU
 
@@ -70,7 +74,8 @@ int main(int argc, char **argv) {
   while (comp.GetTime() < param.Tend()) {
     #ifdef USE_DEBUG_VISU
       // Render and check if window is closed
-      switch (visu.Render(visugrid)) {
+      switch (visu.Render(visugrid, comm.gatherMin(visugrid->Min()),
+        comm.gatherMax(visugrid->Max())*0.35)) {
         case -1:
           return -1;
         case 0:
@@ -89,6 +94,11 @@ int main(int argc, char **argv) {
           break;
       };
     #endif // USE_DEBUG_VISU
+    /* Type in anything to start after positioning the pictures
+    if (start) {
+      std::cin.get();
+      start = false;
+    }*/
 
     // Create VTK Files in the folder VTK
     // Note that when using VTK module as it is you first have to write cell

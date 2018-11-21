@@ -133,7 +133,7 @@ void Communicator::copyBoundary(Grid* grid) const {
   // Take care about the numbering of the communicators (even/odd)
   // even grids communicate to the left first, while odd grids to the right first
   if (_evenodd) {
-    (!isLeft()   && copyLeftBoundary(grid)); //possibly !isLeft() not necessary, because already in Update_.
+    (!isLeft()   && copyLeftBoundary(grid));
     (!isRight()  && copyRightBoundary(grid));
     (!isTop()    && copyTopBoundary(grid));
     (!isBottom() && copyBottomBoundary(grid));
@@ -144,35 +144,6 @@ void Communicator::copyBoundary(Grid* grid) const {
     (!isBottom() && copyBottomBoundary(grid));
     (!isTop()    && copyTopBoundary(grid));
   }
-
-//   if(this->EvenOdd()) {
-//         if(!this->isLeft()) {
-//             this->copyLeftBoundary(grid);
-//         }
-//         if(!this->isRight()) {
-//             this->copyRightBoundary(grid);
-//         }
-//         if(!this->isTop()) {
-//             this->copyTopBoundary(grid);
-//         }
-//         if(!this->isBottom()) {
-//             this->copyBottomBoundary(grid);
-//         }
-//     } else {
-//         if(!this->isRight()) {
-//             this->copyRightBoundary(grid);
-//         }
-//         if(!this->isLeft()) {
-//             this->copyLeftBoundary(grid);
-//         }
-//         if(!this->isBottom()) {
-//             this->copyBottomBoundary(grid);
-//         }
-//         if(!this->isTop()) {
-//             this->copyTopBoundary(grid);
-//         }
-// }
-
 }
 //------------------------------------------------------------------------------
 /** Decide whether our left boundary is a domain boundary
@@ -230,7 +201,7 @@ bool Communicator::copyLeftBoundary(Grid* grid) const {
     count++;
   }
   int result = MPI_Sendrecv_replace(message, messagelength, MPI_DOUBLE,
-    _rank - 1, 1, _rank - 1, 2, MPI_COMM_WORLD, &stat); //_tidx[0] - 1?!
+    _rank - 1, 1, _rank - 1, 2, MPI_COMM_WORLD, &stat);
 
   count = 0;
   BoundIt.First();
