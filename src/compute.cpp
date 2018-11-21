@@ -1,6 +1,7 @@
 #include "compute.hpp"
 #include "geometry.hpp"
 #include "parameter.hpp"
+#include "communicator.hpp"
 #include "grid.hpp"
 #include "solver.hpp"
 #include "iterator.hpp"
@@ -13,60 +14,51 @@ using namespace std;
 /// Creates a compute instance with given geometry and parameter
 //  @param geom  given geometry
 //  @param param given parameter data
-Compute::Compute(const Geometry* geom, const Parameter* param) {
-  // Initialize
-  _geom   = geom;
-  _param  = param;
-  _solver = new SOR(geom, param->Omega());
-
+Compute::Compute(const Geometry* geom, const Parameter* param, const Communicator* comm)
+  : _geom(geom), _param(param), _comm(comm) {
+  // Initialize solver
+  _solver = new RedOrBlackSOR(geom, param->Omega());
   // Set timestep data
-  real_t _t = 0.0;
-  _dtlimit  = param->Dt();
-
+  _t = 0.0;
+  _dtlimit  = param->Dt(); 
   // Tolerance for Poisson solver
-  _epslimit = param->Eps();
-
+  _epslimit = param->Eps(); //evtl. anpassen Musterlösung 01
   // Offsets for the grid variables
   multi_real_t off_u;
   multi_real_t off_v;
   multi_real_t off_p;
-
   off_u[0] = geom->Mesh()[0];
   off_u[1] = geom->Mesh()[1]/2;
   off_v[0] = geom->Mesh()[0]/2;
   off_v[1] = geom->Mesh()[1];
   off_p[0] = geom->Mesh()[0]/2;
   off_p[1] = geom->Mesh()[1]/2;
-
   // Instantiate grids with offsets
   _u   = new Grid(geom, off_u);
   _v   = new Grid(geom, off_v);
   _p   = new Grid(geom, off_p);
-  _F   = new Grid(geom);
-  _G   = new Grid(geom);
-  _rhs = new Grid(geom);
-  _tmp = new Grid(geom);
-
+  _F   = new Grid(geom, off_u);
+  _G   = new Grid(geom, off_v);
+  _rhs = new Grid(geom, off_p);
+  _tmp = new Grid(geom, off_p);
   // Set initial values for physical variables
   _u->Initialize(0.0);
   _v->Initialize(0.0);
   _p->Initialize(0.0);
 }
-
+//------------------------------------------------------------------------------
 /// Deletes all grids
 Compute::~Compute() {
   delete[] _u;
   delete[] _v;
   delete[] _p;
-
   delete[] _F;
   delete[] _G;
   delete[] _rhs;
-
   delete[] _tmp;
   delete _solver;
 }
-
+//------------------------------------------------------------------------------
 /// Execute one time step of the fluid simulation (with or without debug info)
 // @ param printInfo print information about current solver state (residual etc.)
 void Compute::TimeStep(bool printInfo) {
@@ -74,48 +66,49 @@ void Compute::TimeStep(bool printInfo) {
   _geom->Update_U(_u);
   _geom->Update_V(_v);
   _geom->Update_P(_p);
-
-  // Find timestep as a minimum of different criteria
-
+  // Find timestep as a minimum of different criteria --> first timestep
   real_t dt_1 = _param->Tau()*_param->Re()*
     (_geom->Mesh()[0]*_geom->Mesh()[0]*_geom->Mesh()[1]*_geom->Mesh()[1])/
-    (2*(_geom->Mesh()[0]*_geom->Mesh()[0] + _geom->Mesh()[1]*_geom->Mesh()[1]));
-
-  // Comunicate the global u-/v-AbsMax for equal timestepsize
+    (2.0*(_geom->Mesh()[0]*_geom->Mesh()[0] + _geom->Mesh()[1]*_geom->Mesh()[1]));
+  // Communicate the global u-/v-AbsMax for equal timestepsize
   real_t AbsMax_u = _comm->gatherMax(_u->AbsMax());
   real_t AbsMax_v = _comm->gatherMax(_v->AbsMax());
-
+  // Resulting second timestep
   real_t dt_2 = _param->Tau()*fmin(_geom->Mesh()[0], _geom->Mesh()[1])/
     fmax(AbsMax_u, AbsMax_v);
-
+  // Use minimum of dt_1 and dt_2
   real_t dt = min(dt_1, dt_2);
-
   // If explicit timestep > 0 is given in the paramater file, use this instead
   if (_param->Dt() > 0) {
     dt = _param->Dt();
   }
-
   // Compute temporary velocities F, G using difference schemes
   MomentumEqu(dt);
-
+  // Boundary update for new values of F, G
+  _geom->Update_U(_F);
+  _geom->Update_V(_G);
   // Compute RHS of the Poisson equation
   RHS(dt);
-
+  // Boundary update for new values of rhs
+  _geom->Update_P(_rhs);
   // Find solution of the Poisson equation using a SOR solver
   real_t res = 1000000.0;
   index_t i  = 0;
   while (res > _param->Eps() && i < _param->IterMax()) {
-    res = _solver->Cycle(_p, _rhs);
+    res_red = _solver->RedCycle(_p, _rhs);
     // Update boundary values for pressure
-    _geom->Update_P(p);
+    _geom->Update_P(_p);
+    res_black = _solver->BlackCycle(_p, _rhs);
+    // Update boundary values for pressure
+    _geom->Update_P(_p);
+    res_comm = res_red*res_red + res_black*res_black;
+    res = sqrt(_comm->gatherSum(res_comm)/_comm->getSize());
     i++;
   }
-
   // Compute 'new' velocities using the pressure
   NewVelocities(dt);
-
   // (optionally) printing informations
-  if (printInfo) {
+  if (_comm->getRank() == 0 && printInfo) {
     cout << "_t = " << fixed << _t << "\tdt = " << scientific << dt << " \tres = " << res
       << " \tprogress: " << fixed << (uint32_t) 100*_t/_param->Tend() << "%\n" << endl;
   }
@@ -216,9 +209,6 @@ void Compute::MomentumEqu(const real_t& dt) {
     // Next cell
     intit.Next();
   }
-  // Boundary update for new values of F, G
-  _geom->Update_U(_F);
-  _geom->Update_V(_G);
 }
 
 /// Compute the RHS of the Poisson equation
