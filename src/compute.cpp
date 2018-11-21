@@ -95,13 +95,13 @@ void Compute::TimeStep(bool printInfo) {
   real_t res = 1000000.0;
   index_t i  = 0;
   while (res > _param->Eps() && i < _param->IterMax()) {
-    res_red = _solver->RedCycle(_p, _rhs);
+    real_t res_red = ((RedOrBlackSOR*)_solver)->RedCycle(_p, _rhs);
     // Update boundary values for pressure
     _geom->Update_P(_p);
-    res_black = _solver->BlackCycle(_p, _rhs);
+    real_t res_black = ((RedOrBlackSOR*)_solver)->BlackCycle(_p, _rhs);
     // Update boundary values for pressure
     _geom->Update_P(_p);
-    res_comm = res_red*res_red + res_black*res_black;
+    real_t res_comm = res_red*res_red + res_black*res_black;
     res = sqrt(_comm->gatherSum(res_comm)/_comm->getSize());
     i++;
   }
