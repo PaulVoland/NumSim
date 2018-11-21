@@ -31,7 +31,7 @@ Grid::~Grid() {delete[] _data;}
 /// Initializes the grid with a given value
 // @param value initial value for the whole grid
 void Grid::Initialize(const real_t& value) {
-  fill_n(_data, geom->Size()[0]*geom->Size()[1], value);
+  fill_n(_data, _geom->Size()[0]*_geom->Size()[1], value);
 }
 //------------------------------------------------------------------------------
 /// Write access to the grid cell at position [it]

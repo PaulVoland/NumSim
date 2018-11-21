@@ -4,6 +4,7 @@
 #include "grid.hpp"
 #include "solver.hpp"
 #include "iterator.hpp"
+#include "communicator.cpp"
 
 #include <iostream>
 #include <cmath>
@@ -13,14 +14,12 @@ using namespace std;
 /// Creates a compute instance with given geometry and parameter
 //  @param geom  given geometry
 //  @param param given parameter data
-Compute::Compute(const Geometry* geom, const Parameter* param) {
+Compute::Compute(const Geometry* geom, const Parameter* param, const Communicator* comm) : _geom(geom), _param(param), _comm(comm) {
   // Initialize
-  _geom   = geom;
-  _param  = param;
-  _solver = new SOR(geom, param->Omega());
+  _solver = new RedOrBlackSOR(geom, param->Omega());
 
   // Set timestep data
-  real_t _t = 0.0;
+  _t = 0.0;
   _dtlimit  = param->Dt();
 
   // Tolerance for Poisson solver
@@ -107,7 +106,7 @@ void Compute::TimeStep(bool printInfo) {
   while (res > _param->Eps() && i < _param->IterMax()) {
     res = _solver->Cycle(_p, _rhs);
     // Update boundary values for pressure
-    _geom->Update_P(p);
+    _geom->Update_P(_p);
     i++;
   }
 
