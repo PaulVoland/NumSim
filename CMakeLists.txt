@@ -54,6 +54,7 @@ set (HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/solver.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/typedef.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/zeitgeist.hpp
   )
 
 set (SOURCES
