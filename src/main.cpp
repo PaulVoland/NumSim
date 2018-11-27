@@ -99,11 +99,11 @@ int main(int argc, char **argv) {
           break;
       };
     #endif // USE_DEBUG_VISU
-    /* Type in anything to start after positioning the pictures
+    Type in anything to start after positioning the pictures
     if (start) {
       std::cin.get();
-      start = false;
-    }*/
+      // start = false;
+    }
 
     // Create VTK Files in the folder VTK
     // Note that when using VTK module as it is you first have to write cell
