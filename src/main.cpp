@@ -23,7 +23,7 @@
 #include "parameter.hpp"
 #include "visu.hpp"
 #include "vtk.hpp"
-// #include "zeitgeist.hpp"
+#include "zeitgeist.hpp"
 
 #include <iostream>
 #include <sys/stat.h>
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     // Type in anything to start after positioning the pictures
     if (start) {
       std::cin.get();
-      // start = false;
+      start = false;
     }
 
     // Create VTK Files in the folder VTK
