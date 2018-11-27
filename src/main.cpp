@@ -23,7 +23,7 @@
 #include "parameter.hpp"
 #include "visu.hpp"
 #include "vtk.hpp"
-#include "zeitgeist.hpp"
+// #include "zeitgeist.hpp"
 
 #include <iostream>
 #include <sys/stat.h>
@@ -31,9 +31,9 @@
 using namespace std;
 int main(int argc, char **argv) {
 
-  // Measuring of computational times
+  /* // Measuring of computational times
   ZeitGeist zg;
-  zg.Start();
+  zg.Start(); */
   // Create parameter and geometry instances with default values, set up a communicator
   Communicator comm(&argc, &argv);
   Parameter param;
@@ -123,9 +123,9 @@ int main(int argc, char **argv) {
     bool printOnlyOnMaster = !comm.getRank();
     comp.TimeStep(printOnlyOnMaster);
   }
-  if (!comm.getRank()) {
+  /* if (!comm.getRank()) {
     cout << "Total computational time = "
       << zg.Stop() << " µs\n" << endl;
-  }
+  }*/
   return 0;
 }
