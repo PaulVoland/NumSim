@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   // Create the fluid solver
   Compute comp(&geom, &param, &comm);
   // To put the single pictures per thread in a nice order on the screen while execution
-  // bool start = true;
+  bool start = true;
 
   if (comm.getRank() == 0) {
     // Check if folder "VTK" exists
