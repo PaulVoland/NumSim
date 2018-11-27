@@ -64,7 +64,7 @@ Compute::~Compute() {
 // @ param printInfo print information about current solver state (residual etc.)
 void Compute::TimeStep(bool printInfo) {
   // Measuring of computational times
-  // ZeitGeist zg;
+  ZeitGeist zg;
   // Refresh boundary values
   _geom->Update_U(_u);
   _geom->Update_V(_v);
@@ -102,29 +102,33 @@ void Compute::TimeStep(bool printInfo) {
   real_t time_comm_inv = 0.0; */
   /* // 2.4.1A) one iteration only, no mean usage
   unsigned long time_comp, time_comm; */
-  /* // 2.4.2) measuring the whole iteration
+  // 2.4.2) measuring the whole iteration
   unsigned long time_comp = 0;
-  unsigned long time_comm = 0; */
+  unsigned long time_comm = 0;
   while (res > _param->Eps() && i < _param->IterMax()) {
     // Measuring of computational times
     /* // only 2.4.1A)
     time_comp = 0; time_comm = 0; */
-    // zg.Start();
+    zg.Start();
     real_t res_red = ((RedOrBlackSOR*)_solver)->RedCycle(_p, _rhs);
-    // 2.4.1A), 2.4.2)    time_comp += zg.Step();
+    // 2.4.1A), 2.4.2)    
+    time_comp += zg.Step();
     // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
     // Update boundary values for pressure
     _geom->Update_P(_p);
-    // 2.4.1A), 2.4.2)    time_comm += zg.Step();
+    // 2.4.1A), 2.4.2)    
+    time_comm += zg.Step();
     // 2.4.1B)    time_comm_inv += 1.0/zg.Step();
     real_t res_black = ((RedOrBlackSOR*)_solver)->BlackCycle(_p, _rhs);
-    // 2.4.1A), 2.4.2)    time_comp += zg.Step();
+    // 2.4.1A), 2.4.2)    
+    time_comp += zg.Step();
     // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
     // Update boundary values for pressure
     _geom->Update_P(_p);
     real_t res_comm = res_red*res_red + res_black*res_black;
     res = sqrt(_comm->gatherSum(res_comm)/_comm->getSize());
-    // 2.4.1A), 2.4.2)    time_comm += zg.Step();
+    // 2.4.1A), 2.4.2)    
+    time_comm += zg.Step();
     // 2.4.1B)    time_comm_inv += 1.0/zg.Step();
     /* // only 2.4.1A)
     if (_comm->getRank() == 0 && printInfo) {
@@ -142,13 +146,13 @@ void Compute::TimeStep(bool printInfo) {
     cout << "Harmonic mean of communication time over used steps = "
       << (index_t) (i/time_comm_inv) << " µs\n" << endl;
   } */
-  /* // only 2.4.2)
+  // only 2.4.2)
   if (_comm->getRank() == 0 && printInfo) {
     cout << "Total computational time over used steps = "
       << time_comp << " µs\n" << endl;
     cout << "Total communication time over used steps = "
       << time_comm << " µs\n" << endl;
-  } */
+  }
   // Compute 'new' velocities using the pressure
   NewVelocities(dt);
   // (optionally) printing informations
