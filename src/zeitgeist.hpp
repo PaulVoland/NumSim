@@ -28,18 +28,18 @@ public:
 	void Start () {
 		ticks.clear();
 		timeval tv;
-		gettimeofday(&tv, NULL);
+		gettimeofday(&tv, 0);
 		ticks.push_back(tv);
 	}
 	unsigned long Stop () {
 		timeval tv;
-		gettimeofday(&tv, NULL);
+		gettimeofday(&tv, 0);
 		ticks.push_back(tv);
 		return Total ();
 	}
 	unsigned long Step () {
 		timeval tv;
-		gettimeofday(&tv, NULL);
+		gettimeofday(&tv, 0);
 		ticks.push_back(tv);
 		return Interval(ticks.size()-2,1);
 	}
