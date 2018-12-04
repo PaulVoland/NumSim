@@ -19,22 +19,28 @@ project (NUMSIM)
 
 cmake_minimum_required (VERSION 2.8)
 
+# force to set a build type
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
     "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
+# set compiler
 set (CMAKE_CC_COMPILER "/usr/bin/gcc")
 set (CMAKE_CXX_COMPILER "/usr/bin/g++")
 
+# set some good compiler flags
 set (GOOD_FLAGS "-Wall -Wextra -pedantic -std=c++11")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GOOD_FLAGS}")
 
 # debug visu?
 option (DEBUG_VISU
   "Enable debugging visualization" ON)
+# VTK visu?
+option (VTK_VISU
+  "Enable VTK visualization" ON)
 
-# find sdl 2
+# find sdl2
 INCLUDE(FindPkgConfig)
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
 INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${SDL2_INCLUDE_DIRS})
@@ -55,6 +61,7 @@ set (HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/typedef.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/zeitgeist.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/argvparser.hpp
   )
 
 set (SOURCES
@@ -69,6 +76,8 @@ set (SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.cpp
   )
 
+# add header and source of visu if it shall be built
+# additionally set a flag
 if (DEBUG_VISU)
   set (HEADERS
     ${HEADERS}
@@ -83,15 +92,16 @@ if (DEBUG_VISU)
   add_definitions(-DUSE_DEBUG_VISU)
 endif (DEBUG_VISU)
 
-add_executable (numsim ${SOURCES})
-target_link_libraries (numsim ${SDL2_LIBRARIES} ${MPI_LIBRARIES})
+# build executable and link libs against it
+add_executable (NumSim ${SOURCES})
+target_link_libraries (NumSim ${SDL2_LIBRARIES}) ${MPI_LIBRARIES})
 
 if (MPI_COMPILE_FLAGS)
-  set_target_properties(numsim PROPERTIES
+  set_target_properties(NumSim PROPERTIES
     COMPILE_FLAGS "${MPI_COMPILE_FLAGS}")
 endif()
 
 if (MPI_LINK_FLAGS)
-  set_target_properties (numsim PROPERTIES
+  set_target_properties (NumSim PROPERTIES
     LINK_FLAGS "${MPI_LINK_FLAGS}")
 endif()

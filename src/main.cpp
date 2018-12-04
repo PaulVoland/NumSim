@@ -21,12 +21,19 @@
 #include "compute.hpp"
 #include "geometry.hpp"
 #include "parameter.hpp"
+
+#ifdef USE_DEBUG_VISU
 #include "visu.hpp"
+#endif // USE_DEBUG_VISU
+#ifdef USE_VTK
 #include "vtk.hpp"
+#include <sys/stat.h>
+#endif // USE_VTK
+
 #include "zeitgeist.hpp"
+#include "argvparser.hpp"
 
 #include <iostream>
-#include <sys/stat.h>
 
 using namespace std;
 int main(int argc, char **argv) {
@@ -34,25 +41,44 @@ int main(int argc, char **argv) {
   /* // Measuring of computational times
   ZeitGeist zg;
   zg.Start(); */
+
   // Create parameter and geometry instances with default values, set up a communicator
   Communicator comm(&argc, &argv);
   Parameter param;
-  param.Load("../default.param");
+  // param.Load("../default.param"); // Is done by the parser now.
   Geometry geom(&comm);
-  geom.Load("../default.geom");
+  // geom.Load("../default.geom"); // Is done by the parser now.
   // Create the fluid solver
   Compute comp(&geom, &param, &comm);
+
+  // Using the ARGVParser.hpp template
+  // Works with commands from terminal like: -geom ../example_1.geom -param ../example_1.param
+  ARGVParser parser;
+  parser.bind("-geom", [&geom](int ac, char **av) -> int {
+    if (ac != 1) return 0;
+    geom.Load(av[0]);
+    return 1;
+  });
+  parser.bind("-param", [&param](int ac, char **av) -> int {
+    if (ac != 1) return 0;
+    param.Load(av[0]);
+    return 1;
+  });
+  parser.exec(argc, argv);
+
   // To put the single pictures per thread in a nice order on the screen while execution
   bool start = true;
 
+  #ifdef USE_VTK
   if (comm.getRank() == 0) {
-    // Check if folder "VTK" exists
+    // check if folder "VTK" exists
     struct stat info;
 
     if (stat("VTK", &info) != 0) {
       system("mkdir VTK");
     }
   }
+  #endif
 
   // Create and initialize the visualization
   #ifdef USE_DEBUG_VISU
@@ -61,6 +87,7 @@ int main(int argc, char **argv) {
       comm.getRank() + 1);
   #endif // USE_DEBUG_VISU
 
+  #ifdef USE_VTK
   // Create a VTK generator;
   // use offset as the domain shift
   multi_real_t offset;
@@ -68,6 +95,7 @@ int main(int argc, char **argv) {
   offset[1] = comm.ThreadIdx()[1]*(geom.Mesh()[1]*(double)(geom.Size()[1] - 2));
   VTK vtk(geom.Mesh(), geom.Length(), geom.TotalLength(), offset, comm.getRank(),
     comm.getSize(), comm.ThreadDim());
+  #endif
 
   #ifdef USE_DEBUG_VISU
     const Grid *visugrid;
@@ -80,7 +108,7 @@ int main(int argc, char **argv) {
     #ifdef USE_DEBUG_VISU
       // Render and check if window is closed
       switch (visu.Render(visugrid, comm.gatherMin(visugrid->Min()),
-        comm.gatherMax(visugrid->Max())*0.35)) {
+        comm.gatherMax(visugrid->Max()))) {
         case -1:
           return -1;
         case 0:
@@ -99,12 +127,14 @@ int main(int argc, char **argv) {
           break;
       };
     #endif // USE_DEBUG_VISU
+
     // Type in anything to start after positioning the pictures
     if (start) {
       std::cin.get();
       start = false;
     }
 
+    #ifdef USE_VTK
     // Create VTK Files in the folder VTK
     // Note that when using VTK module as it is you first have to write cell
     // information, then call SwitchToPointData(), and then write point data.
@@ -115,6 +145,7 @@ int main(int argc, char **argv) {
     vtk.AddPointField("Velocity", comp.GetU(), comp.GetV());
     vtk.AddPointScalar("Pressure", comp.GetP());
     vtk.Finish();
+    #endif
 
     // Run a few steps
     for (uint32_t i = 0; i < 9; ++i)
@@ -123,9 +154,11 @@ int main(int argc, char **argv) {
     bool printOnlyOnMaster = !comm.getRank();
     comp.TimeStep(printOnlyOnMaster);
   }
+
   /* if (!comm.getRank()) {
     cout << "Total computational time = "
       << zg.Stop() << " µs\n" << endl;
   }*/
+  
   return 0;
 }
