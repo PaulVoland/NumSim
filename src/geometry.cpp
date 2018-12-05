@@ -9,29 +9,31 @@ void Geometry::UpdateCellDirichlet_U(Grid* u, const real_t& value,
     const Iterator& it) const {
   switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
   case cellN:
-    //
+    u->Cell(it) = 2.0*value - u->Cell(it.Top());
     break;
   case cellW:
     u->Cell(it.Left()) = value;
     u->Cell(it) = value;
     break;
   case cellNW:
-    //
+    u->Cell(it.Left()) = value;
+    u->Cell(it) = 2.0*value - u->Cell(it.Top());
     break;
   case cellS:
-    //
+    u->Cell(it) = 2.0*value - u->Cell(it.Down());
     break;
   case cellSW:
-    //
+    u->Cell(it.Left()) = value;
+    u->Cell(it) = 2.0*value - u->Cell(it.Down());
     break;
   case cellE:
-    //
+    u->Cell(it) = value;
     break;
   case cellNE:
-    //
+    // ?
     break;
   case cellSE:
-    //
+    // ?
     break;
   default:
     u->Cell(it) = value;
@@ -43,28 +45,31 @@ void Geometry::UpdateCellDirichlet_V(Grid* v, const real_t& value,
     const Iterator& it) const {
   switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
   case cellN:
-    //
+    v->Cell(it) = value;
     break;
   case cellW:
-    //
+    v->Cell(it) = 2.0*value - v->Cell(it.Left());
     break;
   case cellNW:
-    //
+    // ?
     break;
   case cellS:
-    //
+    v->Cell(it.Down()) = value;
+    v->Cell(it) = value;
     break;
   case cellSW:
-    //
+    v->Cell(it.Down()) = value;
+    v->Cell(it) = 2.0*value - v->Cell(it.Left());
     break;
   case cellE:
-    //
+    v->Cell(it) = 2.0*value - v->Cell(it.Right());
     break;
   case cellNE:
-    //
+    // ?
     break;
   case cellSE:
-    //
+    v->Cell(it.Down()) = value;
+    v->Cell(it) = 2.0*value - v->Cell(it.Right());
     break;
   default:
     v->Cell(it) = value;
@@ -75,7 +80,7 @@ void Geometry::UpdateCellDirichlet_V(Grid* v, const real_t& value,
 void Geometry::UpdateCellNeumann(Grid* grid, const Iterator& it) const {
   switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
   case cellN:
-    //
+    grid->Cell(it) = grid->Cell(it.Top());
     break;
   case cellW:
     grid->Cell(it) = grid->Cell(it.Left());
@@ -84,19 +89,19 @@ void Geometry::UpdateCellNeumann(Grid* grid, const Iterator& it) const {
     grid->Cell(it) = 0.5*(grid->Cell(it.Left()) + grid->Cell(it.Top()));
     break;
   case cellS:
-    //
+    grid->Cell(it) = grid->Cell(it.Down());
     break;
   case cellSW:
-    //
+    grid->Cell(it) = 0.5*(grid->Cell(it.Left()) + grid->Cell(it.Down()));
     break;
   case cellE:
-    //
+    grid->Cell(it) = grid->Cell(it.Right());
     break;
   case cellNE:
-    //
+    grid->Cell(it) = 0.5*(grid->Cell(it.Right()) + grid->Cell(it.Top()));
     break;
   case cellSE:
-    //
+    grid->Cell(it) = 0.5*(grid->Cell(it.Right()) + grid->Cell(it.Down()));
     break;
   default:
     grid->Cell(it) = value;
@@ -106,6 +111,7 @@ void Geometry::UpdateCellNeumann(Grid* grid, const Iterator& it) const {
 //------------------------------------------------------------------------------
 void Geometry::UpdateCellNeumann_P(Grid* grid, const Iterator& it) const {
   // necessary?!
+  UpdateCellNeumann(grid, it); // ?
 }
 //------------------------------------------------------------------------------
 /// Constructs a default geometry
@@ -484,7 +490,7 @@ void Geometry::Update_V(Grid* v) const {
       case typeSlipH:
         // ToDo 
       case typeSlipV:
-          // ToDo
+        // ToDo
       case typeOut:
         UpdateCellNeumann(v, it);
         break;
