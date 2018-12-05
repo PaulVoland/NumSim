@@ -100,7 +100,7 @@ void Compute::TimeStep(bool printInfo) {
   // Compute RHS of the Poisson equation
   RHS(dt);
   // Boundary update for new values of rhs
-  _geom->Update_P(_rhs);
+  _geom->Update_P(_rhs); // possibly not necessary?
   // Find solution of the Poisson equation using a SOR solver
   real_t res = 1000000.0;
   index_t i  = 0;
