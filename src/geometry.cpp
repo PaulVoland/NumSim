@@ -30,10 +30,10 @@ void Geometry::UpdateCellDirichlet_U(Grid* u, const real_t& value,
     u->Cell(it) = value;
     break;
   case cellNE:
-    // ?
+    u->Cell(it) = value;
     break;
   case cellSE:
-    // ?
+    u->Cell(it) = value;
     break;
   default:
     u->Cell(it) = value;
@@ -51,7 +51,7 @@ void Geometry::UpdateCellDirichlet_V(Grid* v, const real_t& value,
     v->Cell(it) = 2.0*value - v->Cell(it.Left());
     break;
   case cellNW:
-    // ?
+    v->Cell(it) = value;
     break;
   case cellS:
     v->Cell(it.Down()) = value;
@@ -65,7 +65,7 @@ void Geometry::UpdateCellDirichlet_V(Grid* v, const real_t& value,
     v->Cell(it) = 2.0*value - v->Cell(it.Right());
     break;
   case cellNE:
-    // ?
+    v->Cell(it) = value;
     break;
   case cellSE:
     v->Cell(it.Down()) = value;
@@ -110,8 +110,7 @@ void Geometry::UpdateCellNeumann(Grid* grid, const Iterator& it) const {
 }
 //------------------------------------------------------------------------------
 void Geometry::UpdateCellNeumann_P(Grid* grid, const Iterator& it) const {
-  // necessary?!
-  UpdateCellNeumann(grid, it); // ?
+  UpdateCellNeumann(grid, it);
 }
 //------------------------------------------------------------------------------
 /// Constructs a default geometry
@@ -233,10 +232,10 @@ void Geometry::Load(const char* file) {
               _cell[x + y*_size[0]].type = typeOut;
               break;
             case '|':
-              _cell[x + y*_size[0]].type = typeSlipV; // ...H wrong?
+              _cell[x + y*_size[0]].type = typeSlipV;
               break;
             case '-':
-              _cell[x + y*_size[0]].type = typeSlipH; // ...V wrong?
+              _cell[x + y*_size[0]].type = typeSlipH;
               break;
             case 'H':
               _cell[x + y*_size[0]].type = typeInH;
@@ -246,7 +245,7 @@ void Geometry::Load(const char* file) {
               _cell[x + y*_size[0]].type = typeInV;
               parabolic = true;
               break;
-            default: // Closed volume (walls are solid) with fluid in it
+            default: // All other cases, box for bottom/top/left/right layer
               if (x == 0 || x == _size[0] - 1 || y == 0 || y == _size[1] - 1)
                 _cell[x + y*_size[0]].type = typeSolid;
               else
@@ -406,18 +405,21 @@ void Geometry::Update_U(Grid* u) const {
         UpdateCellDirichlet_U(u, 0.0, it);
         break;
       case typeIn:
-        // ToDo
-      case typeInH:
         UpdateCellDirichlet_U(u, _velocity[0], it);
+        break;
+      case typeInH:
+        UpdateCellDirichlet_U(u, 0.0, it);
         break;
       case typeInV:
         UpdateCellDirichlet_U(u, _velocity[0]*
           _cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].factor, it);
         break;
       case typeSlipH:
-        // ToDo 
+        UpdateCellNeumann(u, it);
+        break;
       case typeSlipV:
-        // ToDo
+        UpdateCellDirichlet_U(u, 0.0, it);
+        break;
       case typeOut:
         UpdateCellNeumann(u, it);
         break;
@@ -479,18 +481,21 @@ void Geometry::Update_V(Grid* v) const {
         UpdateCellDirichlet_V(v, 0.0, it);
         break;
       case typeIn:
-        // ToDo
+        UpdateCellDirichlet_V(v, _velocity[1], it);
+        break;
       case typeInH:
         UpdateCellDirichlet_V(v, _velocity[1]*
           _cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].factor, it);
         break;
       case typeInV:
-        UpdateCellDirichlet_V(v, _velocity[1], it);
+        UpdateCellDirichlet_V(v, 0.0, it);
         break;
       case typeSlipH:
-        // ToDo 
+        UpdateCellDirichlet_V(v, 0.0, it);
+        break;
       case typeSlipV:
-        // ToDo
+        UpdateCellNeumann(v, it);
+        break;
       case typeOut:
         UpdateCellNeumann(v, it);
         break;
@@ -551,18 +556,23 @@ void Geometry::Update_P(Grid* p) const {
         UpdateCellNeumann_P(p, it);
         break;
       case typeIn:
-        // ToDo/Nothing ToDo?
+        UpdateCellNeumann_P(p, it);
+        break;
       case typeInH:
-        // Nothing ToDo?
+        UpdateCellNeumann_P(p, it);
+        break;
       case typeInV:
-        // Nothing ToDo?
+        UpdateCellNeumann_P(p, it);
+        break;
       case typeSlipH:
-        // Like typeSlipV?!
+        p->Cell(it) = _pressure; // why?
+        // UpdateCellNeumann_P(p, it); // alternative version
       case typeSlipV:
-        p->Cell(it) = _pressure; //?
+        p->Cell(it) = _pressure; // why?
+        // UpdateCellNeumann_P(p, it); // alternative version
         break;
       case typeOut:
-        p->Cell(it) = 0; //?
+        p->Cell(it) = 0;
         break;
       default:
         break;
