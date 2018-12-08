@@ -393,7 +393,9 @@ const multi_real_t&  Geometry::TotalLength() const {return _length;}
 //------------------------------------------------------------------------------
 const multi_real_t&  Geometry::Mesh()        const {return _h;}
 //------------------------------------------------------------------------------
-const Cell_t&        Geometry::Cells()       const {return _cell;}
+const Cell_t& Geometry::Cell(const Iterator& it) const {
+  return _cell[it]; // Uses cast command via Iterator::operator
+}
 //------------------------------------------------------------------------------
 /// Updates the velocity field u on the boundary
 // @param u grid for the velocity in x-direction

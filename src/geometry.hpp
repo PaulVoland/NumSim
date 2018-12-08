@@ -16,6 +16,7 @@
  */
 
 #include "typedef.hpp"
+#include "iterator.hpp"
 //------------------------------------------------------------------------------
 #ifndef __GEOMETRY_HPP
 #define __GEOMETRY_HPP
@@ -93,8 +94,8 @@ public:
   const multi_real_t &TotalLength() const;
   /// Returns the overall meshwidth
   const multi_real_t &Mesh() const;
-  /// Returns the cell type field
-  const Cell_t &Cells() const;
+  /// Read access to the cell type field at position [it]
+  const Cell_t &Cell(const Iterator &it) const;
 
   /// Updates the velocity field u
   void Update_U(Grid *u) const;
