@@ -183,6 +183,34 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const {
   return ((meanv_t*meanv_t) - (meanv_d*meanv_d) + alpha*(fabs(meanv_t)*diffv_t - fabs(meanv_d)*diffv_d))/(4.0*_geom->Mesh()[1]);
 }
 //------------------------------------------------------------------------------
+/// Computes u*dT/dx with the donor cell method
+// @param it    Iterator instance
+// @param alpha weighting factor between original 2nd order central difference scheme and Donor-Cell-method
+// @param u     grid instance for u
+real_t Grid::DC_udT_x(const Iterator& it, const real_t& alpha, const Grid* u) const {
+  real_t u_r      = u->Cell(it);
+  real_t u_l      = u->Cell(it.Left());
+  real_t meanT_r  = _data[it] + _data[it.Right()];
+  real_t meanT_l  = _data[it.Left()] + _data[it];
+  real_t diffT_r  = _data[it] - _data[it.Right()];
+  real_t diffT_l  = _data[it.Left()] - _data[it];
+  return ((u_r*meanT_r) - (u_l*meanT_l) + alpha*(fabs(u_r)*diffT_r - fabs(u_l)*diffT_l))/(4.0*_geom->Mesh()[0]);
+}
+//------------------------------------------------------------------------------
+/// Computes v*dT/dy with the donor cell method
+// @param it    Iterator instance
+// @param alpha weighting factor between original 2nd order central difference scheme and Donor-Cell-method
+// @param u     grid instance for v
+real_t Grid::DC_udT_x(const Iterator& it, const real_t& alpha, const Grid* v) const {
+  real_t v_t      = v->Cell(it);
+  real_t v_d      = v->Cell(it.Down());
+  real_t meanT_t  = _data[it] + _data[it.Top()];
+  real_t meanT_d  = _data[it.Down()] + _data[it];
+  real_t diffT_t  = _data[it] - _data[it.Top()];
+  real_t diffT_d  = _data[it.Down()] - _data[it];
+  return ((v_t*meanT_t) - (v_d*meanT_d) + alpha*(fabs(v_t)*diffT_t - fabs(v_d)*diffT_d))/(4.0*_geom->Mesh()[1]);
+}
+//------------------------------------------------------------------------------
 /// Returns the maximal value of the grid
 real_t Grid::Max() const {
   real_t max = _data[0];
