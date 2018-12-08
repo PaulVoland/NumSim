@@ -173,7 +173,7 @@ Geometry::~Geometry() {
 void Geometry::Load(const char* file) {
   FILE *handle = fopen(file, "r");
   double inval[2];
-  char name[20];
+  char name[200000];
   while (!feof(handle)) {
     if (!fscanf(handle, "%s =", name))
       continue;
@@ -212,13 +212,13 @@ void Geometry::Load(const char* file) {
         _cell = new Cell_t[_size[0]*_size[1]];
         bool parabolic = false;
         // Read stuff from file
-        for (uint32_t y = _size[1]; y-- > 0;) {
+        for (int y = _size[1]; y-- > 0;) {
           if (feof(handle)) {
             delete[] _cell;
             _cell = NULL;
             break;
           }
-          for (uint32_t x = 0; x < _size[0]; ++x) {
+          for (int x = 0; x < _size[0]; ++x) {
             _cell[x + y*_size[0]].fluid = cellNone;
             _cell[x + y*_size[0]].factor = 1.0;
             switch (getc(handle)) {
@@ -259,9 +259,9 @@ void Geometry::Load(const char* file) {
         if (!_cell)
           break;
         // Process it
-        for (uint32_t y = 0; y < _size[1]; ++y) {
-          for (uint32_t x = 0; x < _size[0]; ++x) {
-            uint32_t check = 0;
+        for (int y = 0; y < _size[1]; ++y) {
+          for (int x = 0; x < _size[0]; ++x) {
+            int check = 0;
             if (_cell[x + y*_size[0]]].type == typeFluid)
               continue;
             if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeFluid)
@@ -317,8 +317,8 @@ void Geometry::Load(const char* file) {
         }
         // Parabolic stuff
         if (parabolic) {
-          for (uint32_t y = 0; y < _size[1]; ++y) {
-            for (uint32_t x = 0; x < _size[0]; ++x) {
+          for (int y = 0; y < _size[1]; ++y) {
+            for (int x = 0; x < _size[0]; ++x) {
               int32_t dist1 = 0;
               int32_t dist2 = 0;
               switch (_cell[x + y*_size[0]].type) {
@@ -392,6 +392,8 @@ const multi_real_t&  Geometry::Length()      const {return _blength;}
 const multi_real_t&  Geometry::TotalLength() const {return _length;}
 //------------------------------------------------------------------------------
 const multi_real_t&  Geometry::Mesh()        const {return _h;}
+//------------------------------------------------------------------------------
+const Cell_t&        Geometry::Cells()       const {return _cell;}
 //------------------------------------------------------------------------------
 /// Updates the velocity field u on the boundary
 // @param u grid for the velocity in x-direction
