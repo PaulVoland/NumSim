@@ -18,7 +18,10 @@ using namespace std;
 Compute::Compute(const Geometry* geom, const Parameter* param, const Communicator* comm)
   : _geom(geom), _param(param), _comm(comm) {
   // Initialize solver
-  _solver = new RedOrBlackSOR(geom, param->Omega());
+  if (comm->getSize() > 1)
+    _solver = new RedOrBlackSOR(geom, param->Omega());
+  else
+    _solver = new SOR(geom, param->Omega());
   // Set timestep data
   _t = 0.0;
   _dtlimit  = param->Dt(); 
@@ -68,7 +71,7 @@ void Compute::TimeStep(bool printInfo) {
   // Refresh boundary values
   _geom->Update_U(_u);
   _geom->Update_V(_v);
-  _geom->Update_P(_p);
+  // _geom->Update_P(_p); // not necessary here
   // Measuring of computational times
   // zg.Start();
   // Find timestep as a minimum of different criteria --> first timestep
@@ -100,7 +103,7 @@ void Compute::TimeStep(bool printInfo) {
   // Compute RHS of the Poisson equation
   RHS(dt);
   // Boundary update for new values of rhs
-  _geom->Update_P(_rhs); // possibly not necessary?
+  // _geom->Update_P(_rhs); // not necessary here
   // Find solution of the Poisson equation using a SOR solver
   real_t res = 1000000.0;
   index_t i  = 0;
@@ -117,30 +120,47 @@ void Compute::TimeStep(bool printInfo) {
     /* // only 2.4.1A)
     time_comp = 0; time_comm = 0; */
     // zg.Start();
-    real_t res_red = ((RedOrBlackSOR*)_solver)->RedCycle(_p, _rhs);
-    // 2.4.1A), 2.4.2)    time_comp += zg.Step();
-    // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
-    // Update boundary values for pressure
-    _geom->Update_P(_p);
-    // 2.4.1A), 2.4.2)    time_comm += zg.Step();
-    // 2.4.1B)    time_comm_inv += 1.0/zg.Step();
-    real_t res_black = ((RedOrBlackSOR*)_solver)->BlackCycle(_p, _rhs);
-    // 2.4.1A), 2.4.2)    time_comp += zg.Step();
-    // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
-    // Update boundary values for pressure
-    _geom->Update_P(_p);
-    real_t res_comm = res_red*res_red + res_black*res_black;
-    res = sqrt(_comm->gatherSum(res_comm)/_comm->getSize());
-    // 2.4.1A), 2.4.2)    time_comm += zg.Step();
-    // 2.4.1B)    time_comm_inv += 1.0/zg.Step();
-    /* // only 2.4.1A)
-    if (_comm->getRank() == 0 && printInfo) {
-      cout << "Computational time for one step = "
-        << time_comp << " µs\n" << endl;
-      cout << "Communication time for one step = "
-        << time_comm << " µs\n" << endl;
-    } */
-     i++;
+    if (_comm->getSize() > 1) {
+      real_t res_red = ((RedOrBlackSOR*)_solver)->RedCycle(_p, _rhs);
+      // 2.4.1A), 2.4.2)    time_comp += zg.Step();
+      // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
+      // Update boundary values for pressure
+      _geom->Update_P(_p);
+      // 2.4.1A), 2.4.2)    time_comm += zg.Step();
+      // 2.4.1B)    time_comm_inv += 1.0/zg.Step();
+      real_t res_black = ((RedOrBlackSOR*)_solver)->BlackCycle(_p, _rhs);
+      // 2.4.1A), 2.4.2)    time_comp += zg.Step();
+      // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
+      // Update boundary values for pressure
+      _geom->Update_P(_p);
+      real_t res_comm = res_red*res_red + res_black*res_black;
+      res = sqrt(_comm->gatherSum(res_comm)/_comm->getSize());
+      // 2.4.1A), 2.4.2)    time_comm += zg.Step();
+      // 2.4.1B)    time_comm_inv += 1.0/zg.Step();
+      /* // only 2.4.1A)
+      if (_comm->getRank() == 0 && printInfo) {
+        cout << "Computational time for one step = "
+          << time_comp << " µs\n" << endl;
+        cout << "Communication time for one step = "
+          << time_comm << " µs\n" << endl;
+      } */
+    } else {
+      real_t res = _solver->Cycle(_p, _rhs);
+      // 2.4.1A), 2.4.2)    time_comp += zg.Step();
+      // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
+      // Update boundary values for pressure
+      _geom->Update_P(_p);
+      // 2.4.1A), 2.4.2)    time_comm += zg.Step();
+      // 2.4.1B)    time_comm_inv += 1.0/zg.Step();
+      /* // only 2.4.1A)
+      if (_comm->getRank() == 0 && printInfo) {
+        cout << "Computational time for one step = "
+          << time_comp << " µs\n" << endl;
+        cout << "Communication time for one step = "
+          << time_comm << " µs\n" << endl;
+      } */
+    }
+    i++;
   }
   /* // only 2.4.1B)
   if (_comm->getRank() == 0 && printInfo) {
@@ -222,13 +242,20 @@ void Compute::NewVelocities(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
-    // Read access to temporary velocities F, G
-    const real_t F = _F->Cell(intit);
-    const real_t G = _G->Cell(intit);
-
-    // Calculate 'new' velocities
-    _u->Cell(intit) = F - dt*_p->dx_r(intit);
-    _v->Cell(intit) = G - dt*_p->dy_t(intit);
+    if (_geom->Cell(intit).type == typeFluid) {
+      if (_geom->Cell(intit.Right()).type == typeFluid) {
+        // Read access to temporary velocity F
+        const real_t F = _F->Cell(intit);
+        // Calculate 'new' velocity
+        _u->Cell(intit) = F - dt*_p->dx_r(intit);
+      }
+      if (_geom->Cell(intit.Top()).type == typeFluid) {
+        // Read access to temporary velocity G
+        const real_t G = _G->Cell(intit);
+        // Calculate 'new' velocity
+        _v->Cell(intit) = G - dt*_p->dy_t(intit);
+      }
+    }
 
     // Next cell
     intit.Next();
@@ -243,22 +270,28 @@ void Compute::MomentumEqu(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
-    // read access to u, v
-    const real_t u = _u->Cell(intit);
-    const real_t v = _v->Cell(intit);
+    if (_geom->Cell(intit).type == typeFluid) {
+      // read access to u, v
+      const real_t u = _u->Cell(intit);
+      const real_t v = _v->Cell(intit);
 
-    // Parameter for Donor-Cell
-    const real_t Re_inv = 1.0/_param->Re();
-    const real_t alpha  = _param->Alpha();
+      // Parameter for Donor-Cell
+      const real_t Re_inv = 1.0/_param->Re();
+      const real_t alpha  = _param->Alpha();
 
-    // Update correlation, see lecture
-    _F->Cell(intit) = u + dt*( Re_inv*(_u->dxx(intit) + _u->dyy(intit)) -
-      _u->DC_udu_x(intit, alpha) - _u->DC_vdu_y(intit, alpha, _v));
-    _G->Cell(intit) = v + dt*( Re_inv*(_v->dxx(intit) + _v->dyy(intit)) -
-      _v->DC_vdv_y(intit, alpha) - _v->DC_udv_x(intit, alpha, _u));
+      // Update correlation, see lecture
+      if (_geom_>Cell(intit.Right()).type == typeFluid) {
+        _F->Cell(intit) = u + dt*( Re_inv*(_u->dxx(intit) + _u->dyy(intit)) -
+          _u->DC_udu_x(intit, alpha) - _u->DC_vdu_y(intit, alpha, _v));
+        }
+      if (_geom->Cell(intit.Top()).type == typeFluid) {
+        _G->Cell(intit) = v + dt*( Re_inv*(_v->dxx(intit) + _v->dyy(intit)) -
+          _v->DC_vdv_y(intit, alpha) - _v->DC_udv_x(intit, alpha, _u));
+      }
 
-    // Next cell
-    intit.Next();
+      // Next cell
+      intit.Next();
+    }
   }
 }
 
@@ -270,8 +303,10 @@ void Compute::RHS(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
-    // Update correlation for RHS, see lecture
-    _rhs->Cell(intit) = (_F->dx_l(intit) + _G->dy_d(intit))/dt;
+    if (_geom->Cell(intit).type == typeFluid) {
+      // Update correlation for RHS, see lecture
+      _rhs->Cell(intit) = (_F->dx_l(intit) + _G->dy_d(intit))/dt;
+    }
 
     // Next cell
     intit.Next();
