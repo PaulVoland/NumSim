@@ -38,9 +38,9 @@ public:
   const real_t  &Eps()     const;
   const real_t  &Tau()     const;
   const index_t &IterMax() const;
-  const index_t &Imax()    const;
-  const index_t &Jmax()    const;
-  const real_t  &Dt_Val()  const;
+  const index_t &Imax()    const; // unused?
+  const index_t &Jmax()    const; // unused?
+  const real_t  &Dt_Val()  const; // unused?
   const real_t  &Gx()      const;
   const real_t  &Gy()      const;
   const real_t  &Pr()      const;
