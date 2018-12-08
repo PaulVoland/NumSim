@@ -44,6 +44,8 @@ public:
   const Grid *GetP() const;
   /// Returns the pointer to RHS
   const Grid *GetRHS() const;
+  /// Returns the pointer to T
+  const Grid *GetT() const;
 
   /// Computes and returns the absolute velocity
   const Grid *GetVelocity();
@@ -69,6 +71,9 @@ private:
   // pressure
   Grid *_p;
 
+  // temperature
+  Grid *_T;
+
   // prel. vel
   Grid *_F;
   Grid *_G;
@@ -91,6 +96,8 @@ private:
   void MomentumEqu(const real_t &dt);
   /// Compute the RHS of the poisson equation
   void RHS(const real_t &dt);
+  /// Compute the new temperature values
+  void HeatTransport(const real_t &dt);
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

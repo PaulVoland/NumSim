@@ -24,7 +24,7 @@ Compute::Compute(const Geometry* geom, const Parameter* param, const Communicato
     _solver = new SOR(geom, param->Omega());
   // Set timestep data
   _t = 0.0;
-  _dtlimit  = param->Dt(); 
+  _dtlimit  = param->Dt_Val(); // usage?
   // Tolerance for Poisson solver
   _epslimit = param->Eps(); //evtl. anpassen Musterlösung 01
   // Offsets for the grid variables
@@ -41,6 +41,7 @@ Compute::Compute(const Geometry* geom, const Parameter* param, const Communicato
   _u   = new Grid(geom, off_u);
   _v   = new Grid(geom, off_v);
   _p   = new Grid(geom, off_p);
+  _T   = new Grid(geom, off_p);
   _F   = new Grid(geom, off_u);
   _G   = new Grid(geom, off_v);
   _rhs = new Grid(geom, off_p);
@@ -49,6 +50,7 @@ Compute::Compute(const Geometry* geom, const Parameter* param, const Communicato
   _u->Initialize(0.0);
   _v->Initialize(0.0);
   _p->Initialize(0.0);
+  _T->Initialize(0.0);
 }
 //------------------------------------------------------------------------------
 /// Deletes all grids
@@ -56,6 +58,7 @@ Compute::~Compute() {
   delete[] _u;
   delete[] _v;
   delete[] _p;
+  delete[] _T;
   delete[] _F;
   delete[] _G;
   delete[] _rhs;
@@ -71,6 +74,7 @@ void Compute::TimeStep(bool printInfo) {
   // Refresh boundary values
   _geom->Update_U(_u);
   _geom->Update_V(_v);
+  _geom->Update_T(_T, _param->T_H(), _param->T_C());
   // _geom->Update_P(_p); // not necessary here
   // Measuring of computational times
   // zg.Start();
@@ -86,6 +90,12 @@ void Compute::TimeStep(bool printInfo) {
     fmax(AbsMax_u, AbsMax_v);
   // Use minimum of dt_1 and dt_2
   real_t dt = min(dt_1, dt_2);
+  if (_param->Pr() != 0) {
+    // Third timestep
+    real_t dt_3 = dt_1*_param->Pr(); // if pr > 1, this criterium is never used?!
+    // Use minimum of dt and dt_3
+    dt = min(dt, dt_3);
+  }
   // If explicit timestep > 0 is given in the paramater file, use this instead
   if (_param->Dt() > 0) {
     dt = _param->Dt();
@@ -95,6 +105,9 @@ void Compute::TimeStep(bool printInfo) {
       cout << "Computational time of the time step = "
         << zg.Step() << " µs\n" << endl;
   } */
+  // Compute the new temperature values explicitly (only influence of old velocity values)
+  HeatTransport(dt);
+  // _geom->Update_T(_T); // possibly necessary?
   // Compute temporary velocities F, G using difference schemes
   MomentumEqu(dt);
   // Boundary update for new values of F, G
@@ -204,6 +217,9 @@ const Grid* Compute::GetP() const {return _p;}
 // Returns the pointer to the RHS
 const Grid* Compute::GetRHS() const {return _rhs;}
 
+// Returns the pointer to T
+const Grid* Compute::GetT() const {return _T;}
+
 /// Computes and returns the absolute velocity
 const Grid* Compute::GetVelocity() {
   // Initialize full Iterator
@@ -274,19 +290,24 @@ void Compute::MomentumEqu(const real_t& dt) {
       // read access to u, v
       const real_t u = _u->Cell(intit);
       const real_t v = _v->Cell(intit);
-
+      
       // Parameter for Donor-Cell
       const real_t Re_inv = 1.0/_param->Re();
       const real_t alpha  = _param->Alpha();
 
       // Update correlation, see lecture
       if (_geom->Cell(intit.Right()).type == typeFluid) {
-        _F->Cell(intit) = u + dt*( Re_inv*(_u->dxx(intit) + _u->dyy(intit)) -
-          _u->DC_udu_x(intit, alpha) - _u->DC_vdu_y(intit, alpha, _v));
+        // Additional term through temperature inclusion (temperature value at u position)
+        real_t add_u = _param->Gx()*(1.0 - _param->Beta()*
+          ((_T->Cell(intit) + _T->Cell(intit.Right()))/2.0));
+        _F->Cell(intit) = u + dt*(Re_inv*(_u->dxx(intit) + _u->dyy(intit)) -
+          _u->DC_udu_x(intit, alpha) - _u->DC_vdu_y(intit, alpha, _v) + add_u);
         }
       if (_geom->Cell(intit.Top()).type == typeFluid) {
-        _G->Cell(intit) = v + dt*( Re_inv*(_v->dxx(intit) + _v->dyy(intit)) -
-          _v->DC_vdv_y(intit, alpha) - _v->DC_udv_x(intit, alpha, _u));
+        // Additional term through temperature inclusion (temperature value at v position)
+        real_t add_v = _param->Gy()*(1.0 - _param->Beta()*((_T->Cell(intit) + _T->Cell(intit.Top()))/2.0));
+        _G->Cell(intit) = v + dt*(Re_inv*(_v->dxx(intit) + _v->dyy(intit)) -
+          _v->DC_vdv_y(intit, alpha) - _v->DC_udv_x(intit, alpha, _u) + add_v);
       }
     }
     // Next cell
@@ -307,6 +328,31 @@ void Compute::RHS(const real_t& dt) {
       _rhs->Cell(intit) = (_F->dx_l(intit) + _G->dy_d(intit))/dt;
     }
 
+    // Next cell
+    intit.Next();
+  }
+}
+
+/// Compute the new temperature values with the heat transport equation (using old velocity values)
+// @param dt timestep width
+void Compute::HeatTransport(const real_t& dt) {
+  // Initialize interior Iterator
+  InteriorIterator intit(_geom);
+
+  // Cycle through all inner cells
+  while (intit.Valid()) {
+    if (_geom->Cell(intit).type == typeFluid) {
+      // read access to T
+      const real_t T = _T->Cell(intit);
+
+      // Parameter for Donor-Cell
+      const real_t Re_Pr_inv = 1.0/(_param->Re()*_param->Pr());
+      const real_t alpha  = _param->Alpha();
+
+      // Update correlation, see lecture
+      _T->Cell(intit) = T + dt*(Re_Pr_inv*(_T->dxx(intit) + _T->dyy(intit)) -
+        _T->DC_udT_x(intit, alpha, _u) - _T->DC_vdT_y(intit, alpha, _v));
+    }
     // Next cell
     intit.Next();
   }
