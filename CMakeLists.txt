@@ -94,7 +94,7 @@ endif (DEBUG_VISU)
 
 # build executable and link libs against it
 add_executable (NumSim ${SOURCES})
-target_link_libraries (NumSim ${SDL2_LIBRARIES}) ${MPI_LIBRARIES})
+target_link_libraries (NumSim ${SDL2_LIBRARIES} ${MPI_LIBRARIES})
 
 if (MPI_COMPILE_FLAGS)
   set_target_properties(NumSim PROPERTIES

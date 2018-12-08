@@ -83,7 +83,8 @@ int main(int argc, char **argv) {
   // Create and initialize the visualization
   #ifdef USE_DEBUG_VISU
     Renderer visu(geom.Length(), geom.Mesh());
-    visu.Init(800/comm.ThreadDim()[0], 800/comm.ThreadDim()[1],
+    double ratio = geom.Length()[1]/geom.Length()[0];
+    visu.Init(800/comm.ThreadDim()[0], 800*ratio/comm.ThreadDim()[1],
       comm.getRank() + 1);
   #endif // USE_DEBUG_VISU
 

@@ -2,8 +2,11 @@
 #include "iterator.hpp"
 #include "grid.hpp"
 #include "communicator.hpp"
+#include <iostream>
 #include <stdio.h>
 #include <string.h>
+
+using namespace std;
 //------------------------------------------------------------------------------
 void Geometry::UpdateCellDirichlet_U(Grid* u, const real_t& value,
     const Iterator& it) const {
@@ -104,7 +107,6 @@ void Geometry::UpdateCellNeumann(Grid* grid, const Iterator& it) const {
     grid->Cell(it) = 0.5*(grid->Cell(it.Right()) + grid->Cell(it.Down()));
     break;
   default:
-    grid->Cell(it) = value;
     break;
   };
 }
@@ -132,6 +134,8 @@ Geometry::Geometry() : _comm(NULL) {
   _blength = _length;
   _cell    = NULL;
   _boffset = 0;
+  // Message of success
+  cout << "Loaded default geometry for lid driven cavity without communicator." << endl;
 }
 //------------------------------------------------------------------------------
 /// Constructs a default geometry with partition set up using the communicator object
@@ -161,6 +165,8 @@ Geometry::Geometry(const Communicator* comm) : _comm(comm) {
   _size[1] += 2;
   _cell    =  NULL;
   _boffset =  0;
+  // Message of success
+  cout << "Loaded default geometry for lid driven cavity with a communicator object." << endl;
 }
 //------------------------------------------------------------------------------
 /// Destructor (deletes the cell field information)
@@ -212,13 +218,13 @@ void Geometry::Load(const char* file) {
         _cell = new Cell_t[_size[0]*_size[1]];
         bool parabolic = false;
         // Read stuff from file
-        for (int y = _size[1]; y-- > 0;) {
+        for (uint32_t y = _size[1]; y-- > 0;) {
           if (feof(handle)) {
             delete[] _cell;
             _cell = NULL;
             break;
           }
-          for (int x = 0; x < _size[0]; ++x) {
+          for (uint32_t x = 0; x < _size[0]; ++x) {
             _cell[x + y*_size[0]].fluid = cellNone;
             _cell[x + y*_size[0]].factor = 1.0;
             switch (getc(handle)) {
@@ -259,10 +265,10 @@ void Geometry::Load(const char* file) {
         if (!_cell)
           break;
         // Process it
-        for (int y = 0; y < _size[1]; ++y) {
-          for (int x = 0; x < _size[0]; ++x) {
-            int check = 0;
-            if (_cell[x + y*_size[0]]].type == typeFluid)
+        for (uint32_t y = 0; y < _size[1]; ++y) {
+          for (uint32_t x = 0; x < _size[0]; ++x) {
+            uint32_t check = 0;
+            if (_cell[x + y*_size[0]].type == typeFluid)
               continue;
             if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeFluid)
               check |= 8;
@@ -379,6 +385,7 @@ void Geometry::Load(const char* file) {
   // If !_comm --> default, see first constructor
   if (!_comm)
     _bsize = _size;
+  cout << "Loaded geometry data from file " << file << "." << endl;
 }
 //------------------------------------------------------------------------------
 /* Getter functions for some parameters
@@ -430,7 +437,7 @@ void Geometry::Update_U(Grid* u) const {
       default:
         break;
       };
-      it.Next()
+      it.Next();
     }
   } else {
     /// Default lid driven cavity example
@@ -581,7 +588,7 @@ void Geometry::Update_P(Grid* p) const {
       default:
         break;
       };
-      it.Next()
+      it.Next();
     }
   } else {
     /// Default lid driven cavity example

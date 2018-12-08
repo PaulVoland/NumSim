@@ -145,7 +145,7 @@ void Compute::TimeStep(bool printInfo) {
           << time_comm << " µs\n" << endl;
       } */
     } else {
-      real_t res = _solver->Cycle(_p, _rhs);
+      res = _solver->Cycle(_p, _rhs);
       // 2.4.1A), 2.4.2)    time_comp += zg.Step();
       // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
       // Update boundary values for pressure
@@ -179,7 +179,7 @@ void Compute::TimeStep(bool printInfo) {
   // Compute 'new' velocities using the pressure
   NewVelocities(dt);
   // (optionally) printing informations
-  if (_comm->getRank() == 0 && printInfo) {
+  if (_comm->getRank == 0 && printInfo) {
     cout << "_t = " << fixed << _t << "\tdt = " << scientific << dt << " \tres = " << res
       << " \tprogress: " << fixed << (uint32_t) 100*_t/_param->Tend() << "%\n" << endl;
   }
@@ -280,7 +280,7 @@ void Compute::MomentumEqu(const real_t& dt) {
       const real_t alpha  = _param->Alpha();
 
       // Update correlation, see lecture
-      if (_geom_>Cell(intit.Right()).type == typeFluid) {
+      if (_geom->Cell(intit.Right()).type == typeFluid) {
         _F->Cell(intit) = u + dt*( Re_inv*(_u->dxx(intit) + _u->dyy(intit)) -
           _u->DC_udu_x(intit, alpha) - _u->DC_vdu_y(intit, alpha, _v));
         }
@@ -288,10 +288,9 @@ void Compute::MomentumEqu(const real_t& dt) {
         _G->Cell(intit) = v + dt*( Re_inv*(_v->dxx(intit) + _v->dyy(intit)) -
           _v->DC_vdv_y(intit, alpha) - _v->DC_udv_x(intit, alpha, _u));
       }
-
-      // Next cell
-      intit.Next();
     }
+    // Next cell
+    intit.Next();
   }
 }
 
