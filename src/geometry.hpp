@@ -93,6 +93,8 @@ public:
   const multi_real_t &TotalLength() const;
   /// Returns the overall meshwidth
   const multi_real_t &Mesh() const;
+  /// Returns the cell type field
+  const Cell_t &Cells() const;
 
   /// Updates the velocity field u
   void Update_U(Grid *u) const;
