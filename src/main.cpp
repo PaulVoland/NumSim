@@ -124,6 +124,8 @@ int main(int argc, char **argv) {
         case 3:
           visugrid = comp.GetP();
           break;
+        case 4:
+          visugrid = comp.GetT();
         default:
           break;
       };
@@ -145,6 +147,7 @@ int main(int argc, char **argv) {
     vtk.SwitchToPointData();
     vtk.AddPointField("Velocity", comp.GetU(), comp.GetV());
     vtk.AddPointScalar("Pressure", comp.GetP());
+    vtk.AddPointScalar("Temperature", comp.GetT());
     vtk.Finish();
     #endif
 
