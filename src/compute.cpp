@@ -107,7 +107,7 @@ void Compute::TimeStep(bool printInfo) {
   } */
   // Compute the new temperature values explicitly (only influence of old velocity values)
   HeatTransport(dt);
-  // _geom->Update_T(_T); // possibly necessary?
+  // _geom->Update_T(_T, _param->T_H(), _param->T_C()); // possibly necessary?
   // Compute temporary velocities F, G using difference schemes
   MomentumEqu(dt);
   // Boundary update for new values of F, G
@@ -305,7 +305,8 @@ void Compute::MomentumEqu(const real_t& dt) {
         }
       if (_geom->Cell(intit.Top()).type == typeFluid) {
         // Additional term through temperature inclusion (temperature value at v position)
-        real_t add_v = _param->Gy()*(1.0 - _param->Beta()*((_T->Cell(intit) + _T->Cell(intit.Top()))/2.0));
+        real_t add_v = _param->Gy()*(1.0 - _param->Beta()*
+          ((_T->Cell(intit) + _T->Cell(intit.Top()))/2.0));
         _G->Cell(intit) = v + dt*(Re_inv*(_v->dxx(intit) + _v->dyy(intit)) -
           _v->DC_vdv_y(intit, alpha) - _v->DC_udv_x(intit, alpha, _u) + add_v);
       }
@@ -341,7 +342,7 @@ void Compute::HeatTransport(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
-    if (_geom->Cell(intit).type == typeFluid) {
+    if (_geom->Cell(intit).type == typeFluid && (_param->Pr() != 0)) {
       // read access to T
       const real_t T = _T->Cell(intit);
 
