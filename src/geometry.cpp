@@ -125,25 +125,25 @@ void Geometry::UpdateCellDirichlet_T(Grid* T, const real_t& value,
     T->Cell(it) = 2.0*value - T->Cell(it.Left());
     break;
   case cellNW:
-    T->Cell(it) = 2.0*value - (T->Cell(it.Top()) + T_>Cell(it.Left()))/2.0;
+    T->Cell(it) = 2.0*value - (T->Cell(it.Top()) + T->Cell(it.Left()))/2.0;
     break;
   case cellS:
     T->Cell(it) = 2.0*value - T->Cell(it.Down());
     break;
   case cellSW:
-    T->Cell(it) = 2.0*value - (T->Cell(it.Down()) + T_>Cell(it.Left()))/2.0;
+    T->Cell(it) = 2.0*value - (T->Cell(it.Down()) + T->Cell(it.Left()))/2.0;
     break;
   case cellE:
     T->Cell(it) = 2.0*value - T->Cell(it.Right());
     break;
   case cellNE:
-    T->Cell(it) = 2.0*value - (T->Cell(it.Top()) + T_>Cell(it.Right()))/2.0;
+    T->Cell(it) = 2.0*value - (T->Cell(it.Top()) + T->Cell(it.Right()))/2.0;
     break;
   case cellSE:
-    T->Cell(it) = 2.0*value - (T->Cell(it.Down()) + T_>Cell(it.Right()))/2.0;
+    T->Cell(it) = 2.0*value - (T->Cell(it.Down()) + T->Cell(it.Right()))/2.0;
     break;
   default:
-    u->Cell(it) = value;
+    T->Cell(it) = value;
     break;
   };
 }

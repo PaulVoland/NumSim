@@ -201,7 +201,7 @@ real_t Grid::DC_udT_x(const Iterator& it, const real_t& alpha, const Grid* u) co
 // @param it    Iterator instance
 // @param alpha weighting factor between original 2nd order central difference scheme and Donor-Cell-method
 // @param u     grid instance for v
-real_t Grid::DC_udT_x(const Iterator& it, const real_t& alpha, const Grid* v) const {
+real_t Grid::DC_vdT_y(const Iterator& it, const real_t& alpha, const Grid* v) const {
   real_t v_t      = v->Cell(it);
   real_t v_d      = v->Cell(it.Down());
   real_t meanT_t  = _data[it] + _data[it.Top()];
