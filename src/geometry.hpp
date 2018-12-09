@@ -23,14 +23,16 @@
 //------------------------------------------------------------------------------
 /// Typedef for cell types
 typedef enum {
-  typeFluid, // Standard fluid cell
-  typeSolid, // Simple wall, no slip
-  typeIn,    // Simple inflow (forced velocity)
-  typeOut,   // Outflow
-  typeSlipH, // Horizontal slip boundary
-  typeSlipV, // Vertical slip boundary
-  typeInH,   // Horizontal inflow (parabolic)
-  typeInV    // Vertical inflow (parabolic)
+  typeFluid,   // Standard fluid cell
+  typeSolid,   // Simple wall, no slip
+  typeIn,      // Simple inflow (forced velocity)
+  typeInH,     // Horizontal inflow (parabolic)
+  typeInV,     // Vertical inflow (parabolic)
+  typeSlipH,   // Horizontal slip boundary
+  typeSlipV,   // Vertical slip boundary
+  typeOut,     // Outflow
+  typeTDir_h,  // Dirichlet value for high temperature, u,v,p treated as no slip
+  typeTDir_c   // Dirichlet value for low temperature, u,v,p treated as no slip
 } CellType_t;
 /// Typedef for cell boundary type (which boundary cells are fluid)
 //       |   NO   |
@@ -103,6 +105,8 @@ public:
   void Update_V(Grid *v) const;
   /// Updates the pressure field p
   void Update_P(Grid *p) const;
+  /// Updates the temperature field T (parameters from .param used)
+  void Update_T(Grid *T, const real_t &T_h, const real_t &T_c) const;
 
 private:
   const Communicator *_comm;
@@ -123,6 +127,7 @@ private:
   void UpdateCellDirichlet_V(Grid *v, const real_t &value, const Iterator &it) const;
   void UpdateCellNeumann(Grid *grid, const Iterator &it) const;
   void UpdateCellNeumann_P(Grid *grid, const Iterator &it) const;
+  void UpdateCellDirichlet_T(Grid *T, const real_t &value, const Iterator &it) const;
 };
 //------------------------------------------------------------------------------
 #endif // __GEOMETRY_HPP

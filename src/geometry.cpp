@@ -115,6 +115,39 @@ void Geometry::UpdateCellNeumann_P(Grid* grid, const Iterator& it) const {
   UpdateCellNeumann(grid, it);
 }
 //------------------------------------------------------------------------------
+void Geometry::UpdateCellDirichlet_T(Grid* T, const real_t& value,
+    const Iterator& it) const {
+  switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
+  case cellN:
+    T->Cell(it) = 2.0*value - T->Cell(it.Top());
+    break;
+  case cellW:
+    T->Cell(it) = 2.0*value - T->Cell(it.Left());
+    break;
+  case cellNW:
+    T->Cell(it) = 2.0*value - (T->Cell(it.Top()) + T_>Cell(it.Left()))/2.0;
+    break;
+  case cellS:
+    T->Cell(it) = 2.0*value - T->Cell(it.Down());
+    break;
+  case cellSW:
+    T->Cell(it) = 2.0*value - (T->Cell(it.Down()) + T_>Cell(it.Left()))/2.0;
+    break;
+  case cellE:
+    T->Cell(it) = 2.0*value - T->Cell(it.Right());
+    break;
+  case cellNE:
+    T->Cell(it) = 2.0*value - (T->Cell(it.Top()) + T_>Cell(it.Right()))/2.0;
+    break;
+  case cellSE:
+    T->Cell(it) = 2.0*value - (T->Cell(it.Down()) + T_>Cell(it.Right()))/2.0;
+    break;
+  default:
+    u->Cell(it) = value;
+    break;
+  };
+}
+//------------------------------------------------------------------------------
 /// Constructs a default geometry
 Geometry::Geometry() : _comm(NULL) {
   _length[0] = 1.0;
@@ -234,15 +267,6 @@ void Geometry::Load(const char* file) {
             case 'I':
               _cell[x + y*_size[0]].type = typeIn;
               break;
-            case 'O':
-              _cell[x + y*_size[0]].type = typeOut;
-              break;
-            case '|':
-              _cell[x + y*_size[0]].type = typeSlipV;
-              break;
-            case '-':
-              _cell[x + y*_size[0]].type = typeSlipH;
-              break;
             case 'H':
               _cell[x + y*_size[0]].type = typeInH;
               parabolic = true;
@@ -251,6 +275,20 @@ void Geometry::Load(const char* file) {
               _cell[x + y*_size[0]].type = typeInV;
               parabolic = true;
               break;
+            case '-':
+              _cell[x + y*_size[0]].type = typeSlipH;
+              break;
+            case '|':
+              _cell[x + y*_size[0]].type = typeSlipV;
+              break;
+            case 'O':
+              _cell[x + y*_size[0]].type = typeOut;
+              break;
+            case 'h':
+              _cell[x + y*_size[0]].type = typeTDir_h;
+              break;
+            case 'c':
+              _cell[x + y*_size[0]].type = typeTDir_c;
             default: // All other cases, box for bottom/top/left/right layer
               if (x == 0 || x == _size[0] - 1 || y == 0 || y == _size[1] - 1)
                 _cell[x + y*_size[0]].type = typeSolid;
@@ -434,6 +472,12 @@ void Geometry::Update_U(Grid* u) const {
       case typeOut:
         UpdateCellNeumann(u, it);
         break;
+      case typeTDir_h:
+        UpdateCellDirichlet_U(u, 0.0, it);
+        break;
+      case typeTDir_c:
+        UpdateCellDirichlet_U(u, 0.0, it);
+        break;
       default:
         break;
       };
@@ -510,6 +554,12 @@ void Geometry::Update_V(Grid* v) const {
       case typeOut:
         UpdateCellNeumann(v, it);
         break;
+      case typeTDir_h:
+        UpdateCellDirichlet_V(v, 0.0, it);
+        break;
+      case typeTDir_c:
+        UpdateCellDirichlet_V(v, 0.0, it);
+        break;
       default:
         break;
       };
@@ -583,7 +633,13 @@ void Geometry::Update_P(Grid* p) const {
         // UpdateCellNeumann_P(p, it); // alternative version
         break;
       case typeOut:
-        p->Cell(it) = 0;
+        p->Cell(it) = 0.0;
+        break;
+      case typeTDir_h:
+        UpdateCellNeumann_P(p, it);
+        break;
+      case typeTDir_c:
+        UpdateCellNeumann_P(p, it);
         break;
       default:
         break;
@@ -623,6 +679,88 @@ void Geometry::Update_P(Grid* p) const {
       bit.SetBoundary(3);
       while (bit.Valid()) {
       p->Cell(bit) = p->Cell(bit.Right());
+      bit.Next();
+      }
+    }
+  }
+}
+//------------------------------------------------------------------------------
+/// Updates the temperature field T on the boundary
+// @param T   grid for the temperature
+// @param T_h higher temeparture value from .param
+// @param T_c lower temperature vlaue from .param
+void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c) const {
+  if (_cell) {
+    /// Cell_t is used for free geometries
+    Iterator it(this);
+    while (it.Valid()) {
+      switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
+      case typeSolid:
+        UpdateCellNeumann(T, it);
+        break;
+      case typeIn:
+        UpdateCellNeumann(T, it);
+        break;
+      case typeInH:
+        UpdateCellNeumann(T, it);
+        break;
+      case typeInV:
+        UpdateCellNeumann(T, it);
+        break;
+      case typeSlipH:
+        T->Cell(it) = 0.0; // why?
+        // UpdateCellNeumann(T, it); // alternative version
+      case typeSlipV:
+        T->Cell(it) = 0.0; // why?
+        // UpdateCellNeumann(T, it); // alternative version
+        break;
+      case typeOut:
+        T->Cell(it) = 0.0;
+        break;
+      case typeTDir_h:
+        UpdateCellDirichlet_T(T, T_h, it);
+        break;
+      case typeTDir_c:
+        UpdateCellDirichlet_T(T, T_c, it);
+        break;
+      default:
+        break;
+      };
+      it.Next();
+    }
+  } else {
+    /// Default lid driven cavity example
+    // Check if there are physical boundary conditions to be set
+    BoundaryIterator bit(this);
+    // Update on bottom boundary
+    if (_comm->isBottom()) {
+      bit.SetBoundary(0);
+      while (bit.Valid()) {
+        T->Cell(bit) = T->Cell(bit.Top());
+        bit.Next();
+      }
+    }
+    // Update on right boundary
+    if (_comm->isRight()) {
+      bit.SetBoundary(1);
+      while (bit.Valid()) {
+      T->Cell(bit) = T->Cell(bit.Left());
+      bit.Next();
+      }
+    }
+    // Update on top boundary
+    if (_comm->isTop()) {
+      bit.SetBoundary(2);
+      while (bit.Valid()) {
+        T->Cell(bit) = T->Cell(bit.Down());
+        bit.Next();
+      }
+    }
+    // Update on left boundary
+    if (_comm->isLeft()) {
+      bit.SetBoundary(3);
+      while (bit.Valid()) {
+      T->Cell(bit) = T->Cell(bit.Right());
       bit.Next();
       }
     }
