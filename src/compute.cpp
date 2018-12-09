@@ -50,7 +50,7 @@ Compute::Compute(const Geometry* geom, const Parameter* param, const Communicato
   _u->Initialize(0.0);
   _v->Initialize(0.0);
   _p->Initialize(0.0);
-  _T->Initialize(0.0);
+  _T->Initialize(0.0); // maybe also _T->Initialize(geom->Temperature())
 }
 //------------------------------------------------------------------------------
 /// Deletes all grids

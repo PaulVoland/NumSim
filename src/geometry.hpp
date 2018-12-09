@@ -98,6 +98,8 @@ public:
   const multi_real_t &Mesh() const;
   /// Read access to the cell type field at position [it]
   const Cell_t &Cell(const Iterator &it) const;
+  /// Returns the prescribed temperature value
+  const real_t &Temperature() const;
 
   /// Updates the velocity field u
   void Update_U(Grid *u) const;
@@ -122,6 +124,7 @@ private:
 
   multi_real_t  _velocity;
   real_t        _pressure;
+  real_t        _temperature;
 
   void UpdateCellDirichlet_U(Grid *u, const real_t &value, const Iterator &it) const;
   void UpdateCellDirichlet_V(Grid *v, const real_t &value, const Iterator &it) const;

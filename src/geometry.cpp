@@ -157,6 +157,7 @@ Geometry::Geometry() : _comm(NULL) {
   _h[0] = _length[0]/_size[0];
   _h[1] = _length[1]/_size[1];
   _pressure    = 0.0;
+  _temperature = 0.0;
   _velocity[0] = 1.0;
   _velocity[1] = 0.0;
   // Create boundary halo
@@ -180,6 +181,7 @@ Geometry::Geometry(const Communicator* comm) : _comm(comm) {
   _h[0] = _length[0]/_size[0];
   _h[1] = _length[1]/_size[1];
   _pressure    = 0.0;
+  _temperature = 0.0;
   _velocity[0] = 1.0;
   _velocity[1] = 0.0;
   // Make blocks for each communicator object including halo
@@ -240,6 +242,11 @@ void Geometry::Load(const char* file) {
     if (strcmp(name, "pressure") == 0) {
       if (fscanf(handle, " %lf\n", &inval[0]))
         _pressure = inval[0];
+      continue;
+    }
+    if (strcmp(name, "temperature") == 0) {
+      if (fscanf(handle, " %lf\n", &inval[0]))
+        _temperature = inval[0];
       continue;
     }
     if (strcmp(name, "geometry") == 0) {
@@ -441,6 +448,8 @@ const multi_real_t&  Geometry::Mesh()        const {return _h;}
 const Cell_t& Geometry::Cell(const Iterator& it) const {
   return _cell[it]; // Uses cast command via Iterator::operator
 }
+//------------------------------------------------------------------------------
+const real_t&        Geometry::Temperature() const {return _temperature;}
 //------------------------------------------------------------------------------
 /// Updates the velocity field u on the boundary
 // @param u grid for the velocity in x-direction
@@ -708,19 +717,19 @@ void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c) const {
         UpdateCellNeumann(T, it);
         break;
       case typeSlipH:
-        T->Cell(it) = 0.0; // why?
+        T->Cell(it) = _temperature; // why?
         // UpdateCellNeumann(T, it); // alternative version
       case typeSlipV:
-        T->Cell(it) = 0.0; // why?
+        T->Cell(it) = _temperature; // why?
         // UpdateCellNeumann(T, it); // alternative version
         break;
       case typeOut:
         T->Cell(it) = 0.0;
         break;
-      case typeTDir_h:
+      case typeTDir_h: // possibly use T_h as positive offset to TI (which is null niveau)
         UpdateCellDirichlet_T(T, T_h, it);
         break;
-      case typeTDir_c:
+      case typeTDir_c: // possibly use T_c as negative offset to TI (which is null niveau)
         UpdateCellDirichlet_T(T, T_c, it);
         break;
       default:
