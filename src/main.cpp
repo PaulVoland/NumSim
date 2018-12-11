@@ -25,7 +25,6 @@
 #ifdef USE_DEBUG_VISU
 #include "visu.hpp"
 #endif // USE_DEBUG_VISU
-#define USE_VTK
 #ifdef USE_VTK
 #include "vtk.hpp"
 #include <sys/stat.h>
@@ -38,8 +37,6 @@
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
-
-
 
 #include "zeitgeist.hpp"
 #include "argvparser.hpp"
@@ -128,6 +125,7 @@ int main(int argc, char **argv) {
   });
   parser.exec(argc, argv);
 
+  // Create Iterator
   Iterator TestFullIt(&geom);
   // Create Boundary Iterator
   BoundaryIterator TestBoundIt(&geom);
@@ -224,7 +222,7 @@ int main(int argc, char **argv) {
 
     // Run a few steps
     //for (uint32_t i = 0; i < 9; ++i)
-     // comp.TimeStep(false);
+      // comp.TimeStep(false);
 
 //print Coordinates with values for the value u
 #ifdef USE_DEBUG_PRINT_U 

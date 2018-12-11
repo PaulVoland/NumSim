@@ -41,17 +41,16 @@ option (VTK_VISU
   "Enable VTK visualization" ON)
 # debug print grid u?
 option (USE_DEBUG_PRINT_U
-  "Enable debugging visualization" ON)
+  "Enable debugging visualization for grid u" OFF)
 # debug print grid v?
 option (USE_DEBUG_PRINT_V
-  "Enable debugging visualization" ON)
+  "Enable debugging visualization for grid v" OFF)
 # debug print grid P?
 option (USE_DEBUG_PRINT_P
-  "Enable debugging visualization" ON)
+  "Enable debugging visualization for grid p" OFF)
 # debug print enum border?
 option (USE_DEBUG_PRINT_ENUM_BORDER
-  "Enable debugging visualization" ON)
-  
+  "Enable debugging visualization for enum grid" OFF)
 
 # find sdl2
 INCLUDE(FindPkgConfig)
@@ -72,7 +71,6 @@ set (HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/parameter.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/solver.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/typedef.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/zeitgeist.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/argvparser.hpp
   )
@@ -86,7 +84,6 @@ set (SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/src/iterator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/parameter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/solver.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.cpp
   )
 
 # add header and source of visu if it shall be built
@@ -105,20 +102,33 @@ if (DEBUG_VISU)
   add_definitions(-DUSE_DEBUG_VISU)
 endif (DEBUG_VISU)
 
+# add header and source of VTK if it shall be built
+# additionally set a flag
+if (VTK_VISU)
+  set (HEADERS
+    ${HEADERS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.hpp
+    )
+
+  set (SOURCES
+    ${SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.cpp
+    )
+
+  add_definitions(-DVTK_VISU)
+endif (VTK_VISU)
+
 if (USE_DEBUG_PRINT_U)
   add_definitions(-DUSE_DEBUG_PRINT_U)
 endif (USE_DEBUG_PRINT_U)
-
 
 if (USE_DEBUG_PRINT_V)
   add_definitions(-DUSE_DEBUG_PRINT_V)
 endif (USE_DEBUG_PRINT_V)
 
-
 if (USE_DEBUG_PRINT_P)
   add_definitions(-DUSE_DEBUG_PRINT_P)
 endif (USE_DEBUG_PRINT_P)
-
 
 if (USE_DEBUG_PRINT_ENUM_BORDER)
   add_definitions(-DUSE_DEBUG_PRINT_ENUM_BORDER)
