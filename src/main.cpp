@@ -199,11 +199,14 @@ int main(int argc, char **argv) {
           break;
       };
     #endif // USE_DEBUG_VISU
+    
 
     // Type in anything to start after positioning the pictures
     if (start) {
       std::cin.get();
-      //start = false;
+    #ifndef USE_STEP_BY_STEP
+      start = false;
+    #endif //#ifdef USE_STEP_BY_STEP
     }
 
     #ifdef USE_VTK

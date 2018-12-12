@@ -51,7 +51,9 @@ option (USE_DEBUG_PRINT_P
 # debug print enum border?
 option (USE_DEBUG_PRINT_ENUM_BORDER
   "Enable debugging visualization for enum grid" OFF)
-
+option (USE_STEP_BY_STEP
+  "Enable debugging visualization for enum grid" OFF)
+  
 # find sdl2
 INCLUDE(FindPkgConfig)
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
@@ -115,12 +117,16 @@ if (VTK_VISU)
     ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.cpp
     )
 
-  add_definitions(-DVTK_VISU)
+  add_definitions(-DUSE_VTK)
 endif (VTK_VISU)
 
 if (USE_DEBUG_PRINT_U)
   add_definitions(-DUSE_DEBUG_PRINT_U)
 endif (USE_DEBUG_PRINT_U)
+
+if (USE_STEP_BY_STEP)
+  add_definitions(-DUSE_STEP_BY_STEP)
+endif (USE_STEP_BY_STEP)
 
 if (USE_DEBUG_PRINT_V)
   add_definitions(-DUSE_DEBUG_PRINT_V)
