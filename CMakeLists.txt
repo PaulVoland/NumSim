@@ -39,6 +39,19 @@ option (DEBUG_VISU
 # VTK visu?
 option (VTK_VISU
   "Enable VTK visualization" ON)
+# debug print grid u?
+option (USE_DEBUG_PRINT_U
+  "Enable debugging visualization" ON)
+# debug print grid v?
+option (USE_DEBUG_PRINT_V
+  "Enable debugging visualization" ON)
+# debug print grid P?
+option (USE_DEBUG_PRINT_P
+  "Enable debugging visualization" ON)
+# debug print enum border?
+option (USE_DEBUG_PRINT_ENUM_BORDER
+  "Enable debugging visualization" ON)
+  
 
 # find sdl2
 INCLUDE(FindPkgConfig)
@@ -91,6 +104,25 @@ if (DEBUG_VISU)
 
   add_definitions(-DUSE_DEBUG_VISU)
 endif (DEBUG_VISU)
+
+if (USE_DEBUG_PRINT_U)
+  add_definitions(-DUSE_DEBUG_PRINT_U)
+endif (USE_DEBUG_PRINT_U)
+
+
+if (USE_DEBUG_PRINT_V)
+  add_definitions(-DUSE_DEBUG_PRINT_V)
+endif (USE_DEBUG_PRINT_V)
+
+
+if (USE_DEBUG_PRINT_P)
+  add_definitions(-DUSE_DEBUG_PRINT_P)
+endif (USE_DEBUG_PRINT_P)
+
+
+if (USE_DEBUG_PRINT_ENUM_BORDER)
+  add_definitions(-DUSE_DEBUG_PRINT_ENUM_BORDER)
+endif (USE_DEBUG_PRINT_ENUM_BORDER)
 
 # build executable and link libs against it
 add_executable (NumSim ${SOURCES})
