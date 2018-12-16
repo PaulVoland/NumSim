@@ -63,102 +63,16 @@ real_t SOR::Cycle(Grid* p, const Grid* rhs) const {
 
     while(intit.Valid()) {
         n++;
-        if (_geom->Cell(intit).type == typeFluid) {
+        // if (_geom->Cell(intit).type == typeFluid) {
             // Calcute the corrector = local residuum
             res_loc = localRes(intit, p, rhs);
             // New inner p values with SOR solver approach
             p->Cell(intit) += _omega*norm*res_loc;
             // Sum up the total residuum (in square)
             res_tot += res_loc*res_loc;
-        }
+        // }
         // Interior Iterator goes to the next cell
         intit.Next();
-    }
-    // Return the total residuum
-    return sqrt(res_tot/n);
-}
-//------------------------------------------------------------------------------
-/* Concrete Red or Black SOR solver
-*/
-/// Constructs an actual Red or Black SOR solver
-//@param geom  information about the geometry
-//@param omega factor for the correction
-RedOrBlackSOR::RedOrBlackSOR(const Geometry* geom, const real_t& omega) : SOR(geom) {
-    _omega = omega;
-    cout << "Constructed a Red or Black SOR solver for the given geometry and omega = " << _omega << "." << endl;
-}
-//------------------------------------------------------------------------------
-/// Constructs an actual Red or Black SOR solver 'overloaded' (without an omega input)
-// => compute optimal omega
-//@param geom information about the geometry
-RedOrBlackSOR::RedOrBlackSOR(const Geometry* geom) : SOR(geom) {
-    const real_t PI = M_PI;
-    _omega = 2.0/(1.0 + sin(PI*geom->Mesh()[0]));
-    cout << "Constructed the Red or Black SOR solver for the given geometry with a computed optimal omega = " << _omega << "." << endl;
-}
-//------------------------------------------------------------------------------
-/// Destructor
-RedOrBlackSOR::~RedOrBlackSOR() {}
-//------------------------------------------------------------------------------
-/// Returns the total residual and executes a solver cycle for the 'red' cells
-//@param p   current pressure values on the grid
-//@param rhs right hand side (grid values)
-real_t RedOrBlackSOR::RedCycle(Grid* p, const Grid* rhs) const {
-    InteriorIterator intit(_geom);
-    // Counter
-    index_t n = 0;
-    // Preparations
-    real_t dx = _geom->Mesh()[0];
-    real_t dy = _geom->Mesh()[1];
-    real_t res_loc;
-    real_t res_tot = 0.0;
-    real_t norm = (dx*dx*dy*dy)/(2.0*(dx*dx + dy*dy));
-
-    while(intit.Valid()) {
-        n++;
-        if (_geom->Cell(intit).type == typeFluid) {
-            // Calcute the corrector = local residuum
-            res_loc = localRes(intit, p, rhs);
-            // New inner p values with SOR solver approach
-            p->Cell(intit) += _omega*norm*res_loc;
-            // Sum up the total residuum (in square)
-            res_tot += res_loc*res_loc;
-        }
-        // Interior Iterator goes to the next cell twice
-        intit.Next(); intit.Next();
-    }
-    // Return the total residuum
-    return sqrt(res_tot/n);
-}
-
-/// Returns the total residual and executes a solver cycle for the 'black' cells
-//@param p   current pressure values on the grid
-//@param rhs right hand side (grid values)
-real_t RedOrBlackSOR::BlackCycle(Grid* p, const Grid* rhs) const {
-    InteriorIterator intit(_geom);
-    // Start one cell further on the right
-    intit.Next();
-    // Counter
-    index_t n = 0;
-    // Preparations
-    real_t dx = _geom->Mesh()[0];
-    real_t dy = _geom->Mesh()[1];
-    real_t res_loc;
-    real_t res_tot = 0.0;
-    real_t norm = (dx*dx*dy*dy)/(2.0*(dx*dx + dy*dy));
-
-    while(intit.Valid()) {
-        n++;
-        if (_geom->Cell(intit).type == typeFluid) {
-            // Calcute the corrector = local residuum
-            res_loc = localRes(intit, p, rhs);
-            // New inner p values with SOR solver approach
-            p->Cell(intit) += _omega*norm*res_loc;
-            // Sum up the total residuum (in square)
-            res_tot += res_loc*res_loc;
-        }
-        // Interior Iterator goes to the next cell twice
-        intit.Next(); intit.Next();
     }
     // Return the total residuum
     return sqrt(res_tot/n);

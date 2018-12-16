@@ -19,53 +19,58 @@ project (NUMSIM)
 
 cmake_minimum_required (VERSION 2.8)
 
-# force to set a build type
+# Force to set a build type
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
     "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
-# set compiler
+# Set compiler
 set (CMAKE_CC_COMPILER "/usr/bin/gcc")
 set (CMAKE_CXX_COMPILER "/usr/bin/g++")
 
-# set some good compiler flags
+# Set some good compiler flags
 set (GOOD_FLAGS "-Wall -Wextra -pedantic -std=c++11")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GOOD_FLAGS}")
 
-# debug visu?
+# Use debug visualisation?
 option (DEBUG_VISU
-  "Enable debugging visualization" ON)
-# VTK visu?
+  "Enable debug visualization" ON)
+
+# Use additional VTK visualisation?
 option (VTK_VISU
   "Enable VTK visualization" ON)
-# debug print grid u?
+
+# Use debug print for grid u?
 option (USE_DEBUG_PRINT_U
-  "Enable debugging visualization for grid u" OFF)
-# debug print grid v?
+  "Enable debug print for grid u" OFF)
+# Use debug print for grid v?
 option (USE_DEBUG_PRINT_V
-  "Enable debugging visualization for grid v" OFF)
-# debug print grid P?
+  "Enable debug print for grid v" OFF)
+# Use debug print for grid p?
 option (USE_DEBUG_PRINT_P
-  "Enable debugging visualization for grid p" OFF)
-# debug print enum border?
-option (USE_DEBUG_PRINT_ENUM_BORDER
-  "Enable debugging visualization for enum grid" OFF)
+  "Enable debug print for grid p" OFF)
+
+# Use debug print for field of cell types?
+option (USE_DEBUG_PRINT_TYPES
+  "Enable debug print for field of cell types" OFF)
+
+# Print in main.cpp after each single step?
 option (USE_STEP_BY_STEP
-  "Enable debugging visualization for enum grid" OFF)
+  "Enable print/visualisation in each step" OFF)
   
-# find sdl2
+# Find sdl2
 INCLUDE(FindPkgConfig)
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
 INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${SDL2_INCLUDE_DIRS})
 
-# find mpi
+# Find mpi
 find_package (MPI REQUIRED)
 INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${MPI_INCLUDE_PATH})
 
 # Using glob is discouraged in cmake.
 set (HEADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/communicator.hpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/src/communicator.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/compute.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/grid.hpp
@@ -79,7 +84,7 @@ set (HEADERS
 
 set (SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/communicator.cpp
+  # ${CMAKE_CURRENT_SOURCE_DIR}/src/communicator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/compute.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/grid.cpp
@@ -88,8 +93,8 @@ set (SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/src/solver.cpp
   )
 
-# add header and source of visu if it shall be built
-# additionally set a flag
+# Add header and source of debug visualisation if it shall be built
+# Additionally set a flag
 if (DEBUG_VISU)
   set (HEADERS
     ${HEADERS}
@@ -104,8 +109,8 @@ if (DEBUG_VISU)
   add_definitions(-DUSE_DEBUG_VISU)
 endif (DEBUG_VISU)
 
-# add header and source of VTK if it shall be built
-# additionally set a flag
+# Add header and source of VTK visualisation if it shall be built
+# Aditionally set a flag
 if (VTK_VISU)
   set (HEADERS
     ${HEADERS}
@@ -124,10 +129,6 @@ if (USE_DEBUG_PRINT_U)
   add_definitions(-DUSE_DEBUG_PRINT_U)
 endif (USE_DEBUG_PRINT_U)
 
-if (USE_STEP_BY_STEP)
-  add_definitions(-DUSE_STEP_BY_STEP)
-endif (USE_STEP_BY_STEP)
-
 if (USE_DEBUG_PRINT_V)
   add_definitions(-DUSE_DEBUG_PRINT_V)
 endif (USE_DEBUG_PRINT_V)
@@ -136,11 +137,15 @@ if (USE_DEBUG_PRINT_P)
   add_definitions(-DUSE_DEBUG_PRINT_P)
 endif (USE_DEBUG_PRINT_P)
 
-if (USE_DEBUG_PRINT_ENUM_BORDER)
-  add_definitions(-DUSE_DEBUG_PRINT_ENUM_BORDER)
-endif (USE_DEBUG_PRINT_ENUM_BORDER)
+if (USE_DEBUG_PRINT_TYPES)
+  add_definitions(-DUSE_DEBUG_PRINT_TYPES)
+endif (USE_DEBUG_PRINT_TYPES)
 
-# build executable and link libs against it
+if (USE_STEP_BY_STEP)
+  add_definitions(-DUSE_STEP_BY_STEP)
+endif (USE_STEP_BY_STEP)
+
+# Build executable and link libs against it
 add_executable (NumSim ${SOURCES})
 target_link_libraries (NumSim ${SDL2_LIBRARIES} ${MPI_LIBRARIES})
 
