@@ -294,14 +294,18 @@ void Compute::MomentumEqu(const real_t& dt) {
       if (_geom->Cell(intit.Right()).type == typeFluid) {
         // Additional term through temperature inclusion (temperature value at u position)
         real_t add_u = _param->Gx()*(1.0 - _param->Beta()*
-          ((_T->Cell(intit) + _T->Cell(intit.Right()))/2.0)); // Larissa: ohne 1.0?
+          ((_T->Cell(intit) + _T->Cell(intit.Right()))/2.0));
+        /* real_t add_u = -_param->Gx()*_param->Beta()*
+          ((_T->Cell(intit) + _T->Cell(intit.Right())/2.0)); // Larissa */
         _F->Cell(intit) = u + dt*(Re_inv*(_u->dxx(intit) + _u->dyy(intit)) -
           _u->DC_udu_x(intit, alpha) - _u->DC_vdu_y(intit, alpha, _v) + add_u);
       }
       if (_geom->Cell(intit.Top()).type == typeFluid) {
         // Additional term through temperature inclusion (temperature value at v position)
         real_t add_v = _param->Gy()*(1.0 - _param->Beta()*
-          ((_T->Cell(intit) + _T->Cell(intit.Top()))/2.0)); // Larissa: ohne 1.0?
+          ((_T->Cell(intit) + _T->Cell(intit.Top()))/2.0));
+        /* real_t add_v = -_param->Gy()*_param->Beta()*
+          ((_T->Cell(intit) + _T->Cell(intit.Top())/2.0)); // Larissa */
         _G->Cell(intit) = v + dt*(Re_inv*(_v->dxx(intit) + _v->dyy(intit)) -
           _v->DC_vdv_y(intit, alpha) - _v->DC_udv_x(intit, alpha, _u) + add_v);
       }
