@@ -33,7 +33,7 @@ Iterator::operator const index_t&() const {return _value;}
 multi_index_t Iterator::Pos() const {
   multi_index_t pos;
   pos[0] = _value % _increm_y;
-  pos[1] = (index_t) (_value / _increm_x);
+  pos[1] = (index_t) (_value/_increm_y);
   return pos;
 }
 //------------------------------------------------------------------------------
