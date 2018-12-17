@@ -101,8 +101,6 @@ int main(int argc, char **argv) {
   // param.Load("../default.param"); // Is done by the parser now.
   Geometry geom;
   // geom.Load("../default.geom"); // Is done by the parser now.
-  // Create the fluid solver
-  Compute comp(&geom, &param);
   
   // Using the ARGVParser.hpp template
   // Works with commands from terminal like: -geom ../default.geom -param ../default.param
@@ -118,6 +116,9 @@ int main(int argc, char **argv) {
     return 1;
   });
   parser.exec(argc, argv);
+
+  // Create the fluid solver
+  Compute comp(&geom, &param);
 
   // Create Iterator instance for debug purposes
   Iterator it(&geom);
