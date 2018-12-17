@@ -253,20 +253,20 @@ void Compute::NewVelocities(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
-    // if (_geom->Cell(intit).type == typeFluid) {
-      // if (_geom->Cell(intit.Right()).type == typeFluid) {
+    if (_geom->Cell(intit).type == typeFluid) {
+      if (_geom->Cell(intit.Right()).type == typeFluid) {
         // Read access to temporary velocity F
         const real_t F = _F->Cell(intit);
         // Calculate 'new' velocity
         _u->Cell(intit) = F - dt*_p->dx_r(intit);
-      // }
-      // if (_geom->Cell(intit.Top()).type == typeFluid) {
+      }
+      if (_geom->Cell(intit.Top()).type == typeFluid) {
         // Read access to temporary velocity G
         const real_t G = _G->Cell(intit);
         // Calculate 'new' velocity
         _v->Cell(intit) = G - dt*_p->dy_t(intit);
-      // }
-    // }
+      }
+    }
 
     // Next cell
     intit.Next();
@@ -281,7 +281,7 @@ void Compute::MomentumEqu(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
-    // if (_geom->Cell(intit).type == typeFluid) {
+    if (_geom->Cell(intit).type == typeFluid) {
       // read access to u, v
       const real_t u = _u->Cell(intit);
       const real_t v = _v->Cell(intit);
@@ -291,21 +291,21 @@ void Compute::MomentumEqu(const real_t& dt) {
       const real_t alpha  = _param->Alpha();
 
       // Update correlation, see lecture
-      // if (_geom->Cell(intit.Right()).type == typeFluid) {
+      if (_geom->Cell(intit.Right()).type == typeFluid) {
         // Additional term through temperature inclusion (temperature value at u position)
         real_t add_u = _param->Gx()*(1.0 - _param->Beta()*
           ((_T->Cell(intit) + _T->Cell(intit.Right()))/2.0)); // Larissa: ohne 1.0?
         _F->Cell(intit) = u + dt*(Re_inv*(_u->dxx(intit) + _u->dyy(intit)) -
           _u->DC_udu_x(intit, alpha) - _u->DC_vdu_y(intit, alpha, _v) + add_u);
-      // }
-      // if (_geom->Cell(intit.Top()).type == typeFluid) {
+      }
+      if (_geom->Cell(intit.Top()).type == typeFluid) {
         // Additional term through temperature inclusion (temperature value at v position)
         real_t add_v = _param->Gy()*(1.0 - _param->Beta()*
           ((_T->Cell(intit) + _T->Cell(intit.Top()))/2.0)); // Larissa: ohne 1.0?
         _G->Cell(intit) = v + dt*(Re_inv*(_v->dxx(intit) + _v->dyy(intit)) -
           _v->DC_vdv_y(intit, alpha) - _v->DC_udv_x(intit, alpha, _u) + add_v);
-      // }
-    // }
+      }
+    }
     // Next cell
     intit.Next();
   }
@@ -319,10 +319,10 @@ void Compute::RHS(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
-    // if (_geom->Cell(intit).type == typeFluid) {
+    if (_geom->Cell(intit).type == typeFluid) {
       // Update correlation for RHS, see lecture
       _rhs->Cell(intit) = (_F->dx_l(intit) + _G->dy_d(intit))/dt;
-    // }
+    }
 
     // Next cell
     intit.Next();
@@ -337,8 +337,8 @@ void Compute::HeatTransport(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
-    // if (_geom->Cell(intit).type == typeFluid && (_param->Pr() != 0)) {
-    if (_param->Pr() != 0) {
+    if (_geom->Cell(intit).type == typeFluid && (_param->Pr() != 0)) {
+    // if (_param->Pr() != 0) {
       // read access to T
       const real_t T = _T->Cell(intit);
 

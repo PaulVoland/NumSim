@@ -63,14 +63,14 @@ real_t SOR::Cycle(Grid* p, const Grid* rhs) const {
 
     while(intit.Valid()) {
         n++;
-        // if (_geom->Cell(intit).type == typeFluid) {
+        if (_geom->Cell(intit).type == typeFluid) {
             // Calcute the corrector = local residuum
             res_loc = localRes(intit, p, rhs);
             // New inner p values with SOR solver approach
             p->Cell(intit) += _omega*norm*res_loc;
             // Sum up the total residuum (in square)
             res_tot += res_loc*res_loc;
-        // }
+        }
         // Interior Iterator goes to the next cell
         intit.Next();
     }
