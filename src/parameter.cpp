@@ -34,15 +34,15 @@ Parameter::Parameter() {
   _eps     = 0.001;
   _tau     = 0.5;
   _itermax = 100;
-  _imax    = 0;
-  _jmax    = 0;
-  _dt_val  = 0.0;
   _gx      = 0.0;
   _gy      = 0.0;
   _pr      = 0.0;
+  _beta    = 0.0;
+  _u_Dir   = 1.0;
+  _v_Dir   = 0.0;
+  _p_Dir   = 0.0;
   _T_h     = 0.0;
   _T_c     = 0.0;
-  _beta    = 0.0;
 
   // Message of success
   cout << "Loaded default parameters." << endl;
@@ -73,24 +73,24 @@ void Parameter::Load(const char* file) {
       _tau     = inval;
     else if (strcmp(name, "iter")     == 0)
       _itermax = (uint32_t) inval;
-    else if (strcmp(name, "imax")     == 0)
-      _imax    = (uint32_t) inval;
-    else if (strcmp(name, "jmax")     == 0)
-      _jmax    = (uint32_t) inval;
-    else if (strcmp(name, "dt_value") == 0)
-      _dt_val  = inval;
     else if (strcmp(name, "gx")       == 0)
       _gx      = inval;
     else if (strcmp(name, "gy")       == 0)
       _gy      = inval;
     else if (strcmp(name, "pr")       == 0)
       _pr      = inval;
+    else if (strcmp(name, "beta")     == 0)
+      _beta    = inval;
+    else if (strcmp(name, "u_D")      == 0)
+      _u_Dir   = inval;
+    else if (strcmp(name, "v_D")      == 0)
+      _v_Dir   = inval;
+    else if (strcmp(name, "p_D")      == 0)
+      _p_Dir   = inval;
     else if (strcmp(name, "T_h")      == 0)
       _T_h     = inval;
     else if (strcmp(name, "T_c")      == 0)
       _T_c     = inval;
-    else if (strcmp(name, "beta")     == 0)
-      _beta    = inval;
     else
       printf("Unknown parameter %s\n", name);
   }
@@ -116,21 +116,21 @@ const real_t&  Parameter::Tau()     const {return _tau;}
 //------------------------------------------------------------------------------
 const index_t& Parameter::IterMax() const {return _itermax;}
 //------------------------------------------------------------------------------
-const index_t& Parameter::Imax()    const {return _imax;}
-//------------------------------------------------------------------------------
-const index_t& Parameter::Jmax()    const {return _jmax;}
-//------------------------------------------------------------------------------
-const real_t&  Parameter::Dt_Val()  const {return _dt_val;}
-//------------------------------------------------------------------------------
 const real_t&  Parameter::Gx()      const {return _gx;}
 //------------------------------------------------------------------------------
 const real_t&  Parameter::Gy()      const {return _gy;}
 //------------------------------------------------------------------------------
 const real_t&  Parameter::Pr()      const {return _pr;}
 //------------------------------------------------------------------------------
+const real_t&  Parameter::Beta()    const {return _beta;}
+//------------------------------------------------------------------------------
+const real_t&  Parameter::u_D()     const {return _u_Dir;}
+//------------------------------------------------------------------------------
+const real_t&  Parameter::v_D()     const {return _v_Dir;}
+//------------------------------------------------------------------------------
+const real_t&  Parameter::p_D()     const {return _p_Dir;}
+//------------------------------------------------------------------------------
 const real_t&  Parameter::T_H()     const {return _T_h;}
 //------------------------------------------------------------------------------
 const real_t&  Parameter::T_C()     const {return _T_c;}
-//------------------------------------------------------------------------------
-const real_t&  Parameter::Beta()    const {return _beta;}
 //------------------------------------------------------------------------------

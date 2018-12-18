@@ -24,15 +24,15 @@
 /// Typedef for cell types
 typedef enum {
   typeFluid,   // Standard fluid cell
-  typeSolid,   // Simple wall, no slip
+  typeSolid,   // Simple wall, no slip, isolated against heat transfer
   typeIn,      // Simple inflow (forced velocity)
   typeInH,     // Horizontal inflow (parabolic)
   typeInV,     // Vertical inflow (parabolic)
   typeSlipH,   // Horizontal slip boundary
   typeSlipV,   // Vertical slip boundary
   typeOut,     // Outflow
-  typeTDir_h,  // Dirichlet value for high temperature, u,v,p treated as no slip
-  typeTDir_c   // Dirichlet value for low temperature, u,v,p treated as no slip
+  typeTDir_h,  // Dirichlet value for higher temperature (u,v,p treated as no slip)
+  typeTDir_c   // Dirichlet value for lower temperature (u,v,p treated as no slip)
 } CellType_t;
 /// Typedef for cell boundary type (which boundary cells are fluid)
 //       |   NO   |
@@ -78,48 +78,41 @@ public:
   //    -------------
   //       u=0, v=0
   Geometry();
-  /// Constructs a default geometry with partition set up using the communicator object
-  Geometry(const Communicator *comm);
   /// Destructor
   ~Geometry();
 
   /// Loads a geometry from a file
   void Load(const char *file);
 
-  /// Returns the number of cells in each dimension blockwise
-  const multi_index_t &Size() const;
   /// Returns the total number of cells in each dimension
   const multi_index_t &TotalSize() const;
-  /// Returns the length of the partitioned domain
-  const multi_real_t &Length() const;
   /// Returns the total length of the domain
   const multi_real_t &TotalLength() const;
   /// Returns the overall meshwidth
   const multi_real_t &Mesh() const;
   /// Read access to the cell type field at position [it]
   const Cell_t &Cell(const Iterator &it) const;
+  /// Returns the prescribed velocity values
+  const multi_real_t &Velocity() const;
+  /// Returns the prescribed pressure value
+  const real_t &Pressure() const;
   /// Returns the prescribed temperature value
   const real_t &Temperature() const;
 
-  /// Updates the velocity field u
-  void Update_U(Grid *u) const;
-  /// Updates the velocity field v
-  void Update_V(Grid *v) const;
-  /// Updates the pressure field p
-  void Update_P(Grid *p) const;
+  /// Updates the velocity field u (parameter from .param used)
+  void Update_U(Grid *u, const real_t &u_Dir) const;
+  /// Updates the velocity field v (parameter from .param used)
+  void Update_V(Grid *v, const real_t &v_Dir) const;
+  /// Updates the pressure field p (parameter from .param used)
+  void Update_P(Grid *p, const real_t &p_Dir) const;
   /// Updates the temperature field T (parameters from .param used)
   void Update_T(Grid *T, const real_t &T_h, const real_t &T_c) const;
 
 private:
-  const Communicator *_comm;
-
   Cell_t *_cell;
 
   multi_index_t _size;
-  multi_index_t _bsize;
   multi_real_t  _length;
-  multi_real_t  _blength;
-  index_t       _boffset;
   multi_real_t  _h;
 
   multi_real_t  _velocity;

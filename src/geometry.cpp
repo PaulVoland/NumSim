@@ -1,7 +1,6 @@
 #include "geometry.hpp"
 #include "iterator.hpp"
 #include "grid.hpp"
-#include "communicator.hpp"
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
@@ -10,7 +9,7 @@ using namespace std;
 //------------------------------------------------------------------------------
 void Geometry::UpdateCellDirichlet_U(Grid* u, const real_t& value,
     const Iterator& it) const {
-  switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
   case cellN:
     u->Cell(it) = 2.0*value - u->Cell(it.Top());
     break;
@@ -34,9 +33,13 @@ void Geometry::UpdateCellDirichlet_U(Grid* u, const real_t& value,
     break;
   case cellNE:
     u->Cell(it) = value;
+    // u->Cell(it) = value - (u->Cell(it.Top()) - u->Cell(it.Right()))/2.0;
+    // Alternative version Larissa
     break;
   case cellSE:
     u->Cell(it) = value;
+    // u->Cell(it) = value - (u->Cell(it.Down()) - u->Cell(it.Right()))/2.0;
+    // Alternative version Larissa
     break;
   default:
     u->Cell(it) = value;
@@ -46,7 +49,7 @@ void Geometry::UpdateCellDirichlet_U(Grid* u, const real_t& value,
 //------------------------------------------------------------------------------
 void Geometry::UpdateCellDirichlet_V(Grid* v, const real_t& value,
     const Iterator& it) const {
-  switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
   case cellN:
     v->Cell(it) = value;
     break;
@@ -55,6 +58,8 @@ void Geometry::UpdateCellDirichlet_V(Grid* v, const real_t& value,
     break;
   case cellNW:
     v->Cell(it) = value;
+    // v->Cell(it) = value - (v->Cell(it.Left()) - v->Cell(it.Top()))/2.0;
+    // Alternative version Larissa
     break;
   case cellS:
     v->Cell(it.Down()) = value;
@@ -69,6 +74,8 @@ void Geometry::UpdateCellDirichlet_V(Grid* v, const real_t& value,
     break;
   case cellNE:
     v->Cell(it) = value;
+    // v->Cell(it) = value - (v->Cell(it.Right()) - v->Cell(it.Top()))/2.0;
+    // Alternative version Larissa
     break;
   case cellSE:
     v->Cell(it.Down()) = value;
@@ -81,7 +88,7 @@ void Geometry::UpdateCellDirichlet_V(Grid* v, const real_t& value,
 }
 //------------------------------------------------------------------------------
 void Geometry::UpdateCellNeumann(Grid* grid, const Iterator& it) const {
-  switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
   case cellN:
     grid->Cell(it) = grid->Cell(it.Top());
     break;
@@ -89,22 +96,22 @@ void Geometry::UpdateCellNeumann(Grid* grid, const Iterator& it) const {
     grid->Cell(it) = grid->Cell(it.Left());
     break;
   case cellNW:
-    grid->Cell(it) = 0.5*(grid->Cell(it.Left()) + grid->Cell(it.Top()));
+    grid->Cell(it) = (grid->Cell(it.Left()) + grid->Cell(it.Top()))/2.0;
     break;
   case cellS:
     grid->Cell(it) = grid->Cell(it.Down());
     break;
   case cellSW:
-    grid->Cell(it) = 0.5*(grid->Cell(it.Left()) + grid->Cell(it.Down()));
+    grid->Cell(it) = (grid->Cell(it.Left()) + grid->Cell(it.Down()))/2.0;
     break;
   case cellE:
     grid->Cell(it) = grid->Cell(it.Right());
     break;
   case cellNE:
-    grid->Cell(it) = 0.5*(grid->Cell(it.Right()) + grid->Cell(it.Top()));
+    grid->Cell(it) = (grid->Cell(it.Right()) + grid->Cell(it.Top()))/2.0;
     break;
   case cellSE:
-    grid->Cell(it) = 0.5*(grid->Cell(it.Right()) + grid->Cell(it.Down()));
+    grid->Cell(it) = (grid->Cell(it.Right()) + grid->Cell(it.Down()))/2.0;
     break;
   default:
     break;
@@ -115,9 +122,10 @@ void Geometry::UpdateCellNeumann_P(Grid* grid, const Iterator& it) const {
   UpdateCellNeumann(grid, it);
 }
 //------------------------------------------------------------------------------
+// Not used in Larissas version
 void Geometry::UpdateCellDirichlet_T(Grid* T, const real_t& value,
     const Iterator& it) const {
-  switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
   case cellN:
     T->Cell(it) = 2.0*value - T->Cell(it.Top());
     break;
@@ -149,59 +157,24 @@ void Geometry::UpdateCellDirichlet_T(Grid* T, const real_t& value,
 }
 //------------------------------------------------------------------------------
 /// Constructs a default geometry
-Geometry::Geometry() : _comm(NULL) {
+Geometry::Geometry() {
   _length[0] = 1.0;
   _length[1] = 1.0;
-  _size[0] = 128;
-  _size[1] = 128;
+  _size[0] = 50;
+  _size[1] = 50;
   _h[0] = _length[0]/_size[0];
   _h[1] = _length[1]/_size[1];
+  _velocity[0] = 0.0;
+  _velocity[1] = 0.0;
   _pressure    = 0.0;
   _temperature = 0.0;
-  _velocity[0] = 1.0;
-  _velocity[1] = 0.0;
   // Create boundary halo
   _size[0] += 2;
   _size[1] += 2;
-  // Block is identical to whole domain
-  _bsize   = _size;
-  _blength = _length;
+  // No cell field set yet
   _cell    = NULL;
-  _boffset = 0;
   // Message of success
-  cout << "Loaded default geometry for lid driven cavity without communicator." << endl;
-}
-//------------------------------------------------------------------------------
-/// Constructs a default geometry with partition set up using the communicator object
-Geometry::Geometry(const Communicator* comm) : _comm(comm) {
-  _length[0] = 1.0;
-  _length[1] = 1.0;
-  _size[0] = 128;
-  _size[1] = 128;
-  _h[0] = _length[0]/_size[0];
-  _h[1] = _length[1]/_size[1];
-  _pressure    = 0.0;
-  _temperature = 0.0;
-  _velocity[0] = 1.0;
-  _velocity[1] = 0.0;
-  // Make blocks for each communicator object including halo
-  _bsize[0] = _size[0]/_comm->ThreadDim()[0] + 2;
-  _bsize[1] = _size[1]/_comm->ThreadDim()[1] + 2;
-  // The last communicator objects right/top take the rest of the physical geometry
-  if (_comm->ThreadIdx()[0] == _comm->ThreadDim()[0] - 1)
-    _bsize[0] += _size[0] % _comm->ThreadDim()[0];
-  if (_comm->ThreadIdx()[1] == _comm->ThreadDim()[1] - 1)
-    _bsize[1] += _size[1] % _comm->ThreadDim()[1];
-  // Compute block length using block size
-  _blength[0] = _h[0]*(_bsize[0] - 2);
-  _blength[1] = _h[1]*(_bsize[1] - 2);
-  // Create global boundary halo
-  _size[0] += 2;
-  _size[1] += 2;
-  _cell    =  NULL;
-  _boffset =  0;
-  // Message of success
-  cout << "Loaded default geometry for lid driven cavity with a communicator object." << endl;
+  cout << "Loaded default geometry for lid driven cavity." << endl;
 }
 //------------------------------------------------------------------------------
 /// Destructor (deletes the cell field information)
@@ -258,13 +231,13 @@ void Geometry::Load(const char* file) {
         _cell = new Cell_t[_size[0]*_size[1]];
         bool parabolic = false;
         // Read stuff from file
-        for (uint32_t y = _size[1]; y-- > 0;) {
+        for (int y = _size[1]; y-- > 0;) {
           if (feof(handle)) {
             delete[] _cell;
             _cell = NULL;
             break;
           }
-          for (uint32_t x = 0; x < _size[0]; ++x) {
+          for (int x = 0; x < _size[0]; ++x) {
             _cell[x + y*_size[0]].fluid = cellNone;
             _cell[x + y*_size[0]].factor = 1.0;
             switch (getc(handle)) {
@@ -296,6 +269,7 @@ void Geometry::Load(const char* file) {
               break;
             case 'c':
               _cell[x + y*_size[0]].type = typeTDir_c;
+              break;
             default: // All other cases, box for bottom/top/left/right layer
               if (x == 0 || x == _size[0] - 1 || y == 0 || y == _size[1] - 1)
                 _cell[x + y*_size[0]].type = typeSolid;
@@ -310,9 +284,9 @@ void Geometry::Load(const char* file) {
         if (!_cell)
           break;
         // Process it
-        for (uint32_t y = 0; y < _size[1]; ++y) {
-          for (uint32_t x = 0; x < _size[0]; ++x) {
-            uint32_t check = 0;
+        for (int y = 0; y < _size[1]; ++y) {
+          for (int x = 0; x < _size[0]; ++x) {
+            int check = 0;
             if (_cell[x + y*_size[0]].type == typeFluid)
               continue;
             if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeFluid)
@@ -404,42 +378,15 @@ void Geometry::Load(const char* file) {
   // Set width values of the grid
   _h[0] = _length[0]/_size[0];
   _h[1] = _length[1]/_size[1];
-  // If !_comm --> default, see first constructor
-  _blength = _length;
-  _boffset = 0;
-  // If communicator objects already exist
-  if (_comm) {
-    // Make blocks for each communicator object including halo
-    _bsize[0] = _size[0]/_comm->ThreadDim()[0] + 2;
-    _bsize[1] = _size[1]/_comm->ThreadDim()[1] + 2;
-    // Golbal starting index of cell field for each thread
-    _boffset = (_bsize[0] - 2)*_comm->ThreadIdx()[0] +
-      (_size[0] + 2)*(_bsize[1] - 2)*_comm->ThreadIdx()[1];
-    // The last communicator objects right/top take the rest of the physical geometry
-    if (_comm->ThreadIdx()[0] == _comm->ThreadDim()[0] - 1)
-      _bsize[0] += _size[0] % _comm->ThreadDim()[0];
-    if (_comm->ThreadIdx()[1] == _comm->ThreadDim()[1] - 1)
-      _bsize[1] += _size[1] % _comm->ThreadDim()[0];
-    // Compute block length using block size
-    _blength[0] = _h[0]*(_bsize[0] - 2);
-    _blength[1] = _h[1]*(_bsize[1] - 2);
-  }
   // Create global boundary halo
   _size[0] += 2;
   _size[1] += 2;
-  // If !_comm --> default, see first constructor
-  if (!_comm)
-    _bsize = _size;
   cout << "Loaded geometry data from file " << file << "." << endl;
 }
 //------------------------------------------------------------------------------
 /* Getter functions for some parameters
 */
-const multi_index_t& Geometry::Size()        const {return _bsize;}
-//------------------------------------------------------------------------------
 const multi_index_t& Geometry::TotalSize()   const {return _size;}
-//------------------------------------------------------------------------------
-const multi_real_t&  Geometry::Length()      const {return _blength;}
 //------------------------------------------------------------------------------
 const multi_real_t&  Geometry::TotalLength() const {return _length;}
 //------------------------------------------------------------------------------
@@ -449,28 +396,33 @@ const Cell_t& Geometry::Cell(const Iterator& it) const {
   return _cell[it]; // Uses cast command via Iterator::operator
 }
 //------------------------------------------------------------------------------
+const multi_real_t&  Geometry::Velocity()    const {return _velocity;}
+//------------------------------------------------------------------------------
+const real_t&        Geometry::Pressure()    const {return _pressure;}
+//------------------------------------------------------------------------------
 const real_t&        Geometry::Temperature() const {return _temperature;}
 //------------------------------------------------------------------------------
 /// Updates the velocity field u on the boundary
-// @param u grid for the velocity in x-direction
-void Geometry::Update_U(Grid* u) const {
+// @param u     grid for the velocity in x-direction
+// @param u_Dir Dirichlet value for u from .param
+void Geometry::Update_U(Grid* u, const real_t& u_Dir) const {
   if (_cell) {
     /// Cell_t is used for free geometries
     Iterator it(this);
     while (it.Valid()) {
-      switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
+      switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
       case typeSolid:
         UpdateCellDirichlet_U(u, 0.0, it);
         break;
       case typeIn:
-        UpdateCellDirichlet_U(u, _velocity[0], it);
+        UpdateCellDirichlet_U(u, u_Dir, it);
         break;
       case typeInH:
         UpdateCellDirichlet_U(u, 0.0, it);
         break;
       case typeInV:
-        UpdateCellDirichlet_U(u, _velocity[0]*
-          _cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].factor, it);
+        UpdateCellDirichlet_U(u, u_Dir*
+          _cell[it.Pos()[0] + it.Pos()[1]*_size[0]].factor, it);
         break;
       case typeSlipH:
         UpdateCellNeumann(u, it);
@@ -496,60 +448,52 @@ void Geometry::Update_U(Grid* u) const {
     /// Default lid driven cavity example
     // Check if there are physical boundary conditions to be set
     BoundaryIterator bit(this);
-    real_t vel_x = _velocity[0];
     // Update on bottom boundary
-    if (_comm->isBottom()) {
-      bit.SetBoundary(0);
-      while (bit.Valid()) {
-        u->Cell(bit) = -u->Cell(bit.Top());
-        bit.Next();
-      }
+    bit.SetBoundary(0);
+    while (bit.Valid()) {
+      u->Cell(bit) = -u->Cell(bit.Top());
+      bit.Next();
     }
     // Update on right boundary
-    if (_comm->isRight()) {
-      bit.SetBoundary(1);
-      while (bit.Valid()) {
-        u->Cell(bit)        = 0;
-        u->Cell(bit.Left()) = 0;
-        bit.Next();
-      }
+    bit.SetBoundary(1);
+    while (bit.Valid()) {
+      u->Cell(bit)        = 0;
+      u->Cell(bit.Left()) = 0;
+      bit.Next();
     }
     // Update on top boundary
-    if (_comm->isTop()) {
-      bit.SetBoundary(2);
-      while (bit.Valid()) {
-        u->Cell(bit) = 2*vel_x - u->Cell(bit.Down());
-        bit.Next();
-      }
+    bit.SetBoundary(2);
+    while (bit.Valid()) {
+      u->Cell(bit) = 2*u_Dir - u->Cell(bit.Down());
+      bit.Next();
     }
     // Update on left boundary
-    if (_comm->isLeft()) {
-      bit.SetBoundary(3);
-      while (bit.Valid()) {
-        u->Cell(bit) = 0;
-        bit.Next();
-      }
+    bit.SetBoundary(3);
+    while (bit.Valid()) {
+      u->Cell(bit) = 0;
+      bit.Next();
     }
   }
 }
 //------------------------------------------------------------------------------
 /// Updates the velocity field v on the boundary
-// @param v grid for the velocity in y-direction
-void Geometry::Update_V(Grid* v) const {
+// @param v     grid for the velocity in y-direction
+// @param v_Dir Dirichlet value for v from .param
+void Geometry::Update_V(Grid* v, const real_t& v_Dir) const {
   if (_cell) {
     /// Cell_t is used for free geometries
     Iterator it(this);
     while (it.Valid()) {
-      switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
+      switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
       case typeSolid:
         UpdateCellDirichlet_V(v, 0.0, it);
         break;
       case typeIn:
-        UpdateCellDirichlet_V(v, _velocity[1], it);
+        UpdateCellDirichlet_V(v, v_Dir, it);
         break;
       case typeInH:
-        UpdateCellDirichlet_V(v, _velocity[1]*
-          _cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].factor, it);
+        UpdateCellDirichlet_V(v, v_Dir*
+          _cell[it.Pos()[0] + it.Pos()[1]*_size[0]].factor, it);
         break;
       case typeInV:
         UpdateCellDirichlet_V(v, 0.0, it);
@@ -579,49 +523,42 @@ void Geometry::Update_V(Grid* v) const {
     // Check if there are physical boundary conditions to be set
     BoundaryIterator bit(this);
     // Update on bottom boundary
-    if (_comm->isBottom()) {
-      bit.SetBoundary(0);
-      while (bit.Valid()) {
-        v->Cell(bit) = 0;
-        bit.Next();
-      }
+    bit.SetBoundary(0);
+    while (bit.Valid()) {
+      v->Cell(bit) = 0;
+      bit.Next();
     }
     // Update on right boundary
-    if (_comm->isRight()) {
-      bit.SetBoundary(1);
-      while (bit.Valid()) {
-        v->Cell(bit) = -v->Cell(bit.Left());
-        bit.Next();
-      }
+    bit.SetBoundary(1);
+    while (bit.Valid()) {
+      v->Cell(bit) = -v->Cell(bit.Left());
+      bit.Next();
     }
     // Update on top boundary
-    if (_comm->isTop()) {
-      bit.SetBoundary(2);
-      while (bit.Valid()) {
-        v->Cell(bit)        = 0;
-        v->Cell(bit.Down()) = 0; 
-        bit.Next();
-      }
+    bit.SetBoundary(2);
+    while (bit.Valid()) {
+      v->Cell(bit)        = 0;
+      v->Cell(bit.Down()) = 0;
+      bit.Next();
     }
     // Update on left boundary
-    if (_comm->isLeft()) {
-      bit.SetBoundary(3);
-      while (bit.Valid()) {
-        v->Cell(bit) = -v->Cell(bit.Right());
-        bit.Next();
-      }
+    bit.SetBoundary(3);
+    while (bit.Valid()) {
+      v->Cell(bit) = -v->Cell(bit.Right());
+      bit.Next();
     }
   }
 }
 //------------------------------------------------------------------------------
 /// Updates the pressure field p on the boundary
-// @param p grid for the pressure
-void Geometry::Update_P(Grid* p) const {
+// @param p     grid for the pressure
+// @param p_Dir Dirichlet value for p from .param
+void Geometry::Update_P(Grid* p, const real_t& p_Dir) const {
   if (_cell) {
     /// Cell_t is used for free geometries
     Iterator it(this);
     while (it.Valid()) {
-      switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
+      switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
       case typeSolid:
         UpdateCellNeumann_P(p, it);
         break;
@@ -635,14 +572,16 @@ void Geometry::Update_P(Grid* p) const {
         UpdateCellNeumann_P(p, it);
         break;
       case typeSlipH:
-        p->Cell(it) = _pressure; // why?
-        // UpdateCellNeumann_P(p, it); // alternative version
+        UpdateCellNeumann_P(p, it);
+        // p->Cell(it) = p_Dir; // Alternative version 1
+        break;
       case typeSlipV:
-        p->Cell(it) = _pressure; // why?
-        // UpdateCellNeumann_P(p, it); // alternative version
+        UpdateCellNeumann_P(p, it);
+        // p->Cell(it) = p_Dir; // Alternative version 1
         break;
       case typeOut:
-        p->Cell(it) = 0.0;
+        UpdateCellNeumann_P(p, it);
+        // p->Cell(it) = 0.0; // Alternative version 1
         break;
       case typeTDir_h:
         UpdateCellNeumann_P(p, it);
@@ -660,36 +599,28 @@ void Geometry::Update_P(Grid* p) const {
     // Check if there are physical boundary conditions to be set
     BoundaryIterator bit(this);
     // Update on bottom boundary
-    if (_comm->isBottom()) {
-      bit.SetBoundary(0);
-      while (bit.Valid()) {
-        p->Cell(bit) = p->Cell(bit.Top());
-        bit.Next();
-      }
+    bit.SetBoundary(0);
+    while (bit.Valid()) {
+      p->Cell(bit) = p->Cell(bit.Top());
+      bit.Next();
     }
     // Update on right boundary
-    if (_comm->isRight()) {
-      bit.SetBoundary(1);
-      while (bit.Valid()) {
+    bit.SetBoundary(1);
+    while (bit.Valid()) {
       p->Cell(bit) = p->Cell(bit.Left());
       bit.Next();
-      }
     }
     // Update on top boundary
-    if (_comm->isTop()) {
-      bit.SetBoundary(2);
-      while (bit.Valid()) {
-        p->Cell(bit) = p->Cell(bit.Down());
-        bit.Next();
-      }
+    bit.SetBoundary(2);
+    while (bit.Valid()) {
+      p->Cell(bit) = p->Cell(bit.Down());
+      bit.Next();
     }
     // Update on left boundary
-    if (_comm->isLeft()) {
-      bit.SetBoundary(3);
-      while (bit.Valid()) {
+    bit.SetBoundary(3);
+    while (bit.Valid()) {
       p->Cell(bit) = p->Cell(bit.Right());
       bit.Next();
-      }
     }
   }
 }
@@ -703,7 +634,7 @@ void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c) const {
     /// Cell_t is used for free geometries
     Iterator it(this);
     while (it.Valid()) {
-      switch (_cell[_boffset + it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
+      switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
       case typeSolid:
         UpdateCellNeumann(T, it);
         break;
@@ -717,14 +648,18 @@ void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c) const {
         UpdateCellNeumann(T, it);
         break;
       case typeSlipH:
-        T->Cell(it) = _temperature; // why?
-        // UpdateCellNeumann(T, it); // alternative version
-      case typeSlipV:
-        T->Cell(it) = _temperature; // why?
-        // UpdateCellNeumann(T, it); // alternative version
+        UpdateCellNeumann(T, it);
+        // T->Cell(it) = T_h; // Alternative version 1
+        // T->Cell(it) = T_c; // Alternative version 2
+        break;
+       case typeSlipV:
+        UpdateCellNeumann(T, it);
+        // T->Cell(it) = T_h; // Alternative version 1
+        // T->Cell(it) = T_c; // Alternative version 2
         break;
       case typeOut:
-        T->Cell(it) = 0.0;
+        UpdateCellNeumann(T, it);
+        // T->Cell(it) = 0.0; // Alternative version 1
         break;
       case typeTDir_h: // possibly use T_h as positive offset to TI (which is null niveau)
         UpdateCellDirichlet_T(T, T_h, it);
@@ -742,36 +677,28 @@ void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c) const {
     // Check if there are physical boundary conditions to be set
     BoundaryIterator bit(this);
     // Update on bottom boundary
-    if (_comm->isBottom()) {
-      bit.SetBoundary(0);
-      while (bit.Valid()) {
-        T->Cell(bit) = T->Cell(bit.Top());
-        bit.Next();
-      }
+    bit.SetBoundary(0);
+    while (bit.Valid()) {
+      T->Cell(bit) = T->Cell(bit.Top());
+      bit.Next();
     }
     // Update on right boundary
-    if (_comm->isRight()) {
-      bit.SetBoundary(1);
-      while (bit.Valid()) {
+    bit.SetBoundary(1);
+    while (bit.Valid()) {
       T->Cell(bit) = T->Cell(bit.Left());
       bit.Next();
-      }
     }
     // Update on top boundary
-    if (_comm->isTop()) {
-      bit.SetBoundary(2);
-      while (bit.Valid()) {
-        T->Cell(bit) = T->Cell(bit.Down());
-        bit.Next();
-      }
+    bit.SetBoundary(2);
+    while (bit.Valid()) {
+      T->Cell(bit) = T->Cell(bit.Down());
+      bit.Next();
     }
     // Update on left boundary
-    if (_comm->isLeft()) {
-      bit.SetBoundary(3);
-      while (bit.Valid()) {
+    bit.SetBoundary(3);
+    while (bit.Valid()) {
       T->Cell(bit) = T->Cell(bit.Right());
       bit.Next();
-      }
     }
   }
 }

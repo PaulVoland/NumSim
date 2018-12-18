@@ -11,7 +11,7 @@ Grid::Grid(const Geometry* geom) : _geom(geom) {
   _offset[1] = 0.0;
   // Allocate pointer for the raw data with fixed size (=length) given by geometry
   // (already included halo zone in geometry.cpp)
-  _data = new real_t[geom->Size()[0]*geom->Size()[1]];
+  _data = new real_t[geom->TotalSize()[0]*geom->TotalSize()[1]];
 }
 //------------------------------------------------------------------------------
 /// Constructs a grid based on a geometry with an offset
@@ -22,7 +22,7 @@ Grid::Grid(const Geometry* geom, const multi_real_t& offset) : _geom(geom) {
     _offset = offset;
   // Allocate pointer for the raw data with fixed size (=length) given by geometry
   // (already included halo zone in geometry.cpp)
-  _data = new real_t[geom->Size()[0]*geom->Size()[1]];
+  _data = new real_t[geom->TotalSize()[0]*geom->TotalSize()[1]];
 }
 //------------------------------------------------------------------------------
 /// Destructor: deletes the grid
@@ -31,7 +31,7 @@ Grid::~Grid() {delete[] _data;}
 /// Initializes the grid with a given value
 // @param value initial value for the whole grid
 void Grid::Initialize(const real_t& value) {
-  fill_n(_data, _geom->Size()[0]*_geom->Size()[1], value);
+  fill_n(_data, _geom->TotalSize()[0]*_geom->TotalSize()[1], value);
 }
 //------------------------------------------------------------------------------
 /// Write access to the grid cell at position [it]
@@ -53,20 +53,20 @@ real_t Grid::Interpolate(const multi_real_t& pos) const {
   real_t x          = pos[0] - _offset[0];
   real_t y          = pos[1] - _offset[1];
   multi_real_t h    = _geom->Mesh();
-  index_t _increm_y = _geom->Size()[0];
+  index_t _increm_y = _geom->TotalSize()[0];
   // Instantiate indices and distances
   index_t i, j;
   real_t dx1, dx2, dy1, dy2;
 
   // find inner cell index for anchor cell in format
-  // h(0)*[i,i+1) x h(1)*[j,j+1) (i,j = 0,...,_geom->Size()[0,1])-1) (inner numbering)
+  // h(0)*[i,i+1) x h(1)*[j,j+1) (i,j = 0,...,_geom->TotalSize()[0,1])-1) (inner numbering)
   // if x,y >= 0
   if (x < 0) {
     i = 0; // is in outer index format
     dx1 = x + h[0];
     dx2 = -x;
   } else {
-    i = (index_t) (x/h[0]); // is in inner index format
+    i = (index_t)(x/h[0]); // is in inner index format
     // calculate distances to anchor point
     dx1 = x - i*h[0];
     dx2 = (i + 1)*h[0] - x;
@@ -77,7 +77,7 @@ real_t Grid::Interpolate(const multi_real_t& pos) const {
     dy1 = y + h[1];
     dy2 = -y;
   } else {
-    j = (index_t) (y/h[1]); // is in inner index format
+    j = (index_t)(y/h[1]); // is in inner index format
     // calculate distances to anchor point
     dy1 = y - j*h[1];
     dy2 = (j + 1)*h[1] - y;
@@ -122,13 +122,13 @@ real_t Grid::dy_t(const Iterator& it) const {
 /// Computes the central difference quotient of 2nd order in x-dim at [it]
 // @param it Iterator instance
 real_t Grid::dxx(const Iterator& it) const {
-  return (_data[it.Right()] - 2*_data[it] + _data[it.Left()])/_geom->Mesh()[0]/_geom->Mesh()[0];
+  return (_data[it.Right()] - 2.0*_data[it] + _data[it.Left()])/_geom->Mesh()[0]/_geom->Mesh()[0];
 }
 //------------------------------------------------------------------------------
 /// Computes the central difference quotient of 2nd order in y-dim at [it]
 // @param it Iterator instance
 real_t Grid::dyy(const Iterator& it) const {
-  return (_data[it.Top()] - 2*_data[it] + _data[it.Down()])/_geom->Mesh()[1]/_geom->Mesh()[1];
+  return (_data[it.Top()] - 2.0*_data[it] + _data[it.Down()])/_geom->Mesh()[1]/_geom->Mesh()[1];
 }
 //------------------------------------------------------------------------------
 /* Donor-Cell-method for the convective terms (discretized)
@@ -214,7 +214,7 @@ real_t Grid::DC_vdT_y(const Iterator& it, const real_t& alpha, const Grid* v) co
 /// Returns the maximal value of the grid
 real_t Grid::Max() const {
   real_t max = _data[0];
-  for (index_t i = 1; i < _geom->Size()[0]*_geom->Size()[1]; i++) {
+  for (index_t i = 1; i < _geom->TotalSize()[0]*_geom->TotalSize()[1]; i++) {
     if (_data[i] > max)
       max = _data[i];
   }
@@ -235,7 +235,7 @@ real_t Grid::InteriorMax() const {
 /// Returns the minimal value of the grid
 real_t Grid::Min() const {
   real_t min = _data[0];
-  for (index_t i = 1; i < _geom->Size()[0]*_geom->Size()[1]; i++) {
+  for (index_t i = 1; i < _geom->TotalSize()[0]*_geom->TotalSize()[1]; i++) {
     if (_data[i] < min)
       min = _data[i];
   }

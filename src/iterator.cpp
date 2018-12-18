@@ -5,8 +5,8 @@
 // @param geom input geometry to iterate over
 Iterator::Iterator(const Geometry* geom) : _geom(geom){
   First();
-  _increm_x = geom->Size()[1];
-  _increm_y = geom->Size()[0];
+  _increm_x = geom->TotalSize()[1];
+  _increm_y = geom->TotalSize()[0];
   _num_cell = _increm_x*_increm_y;
 }
 //------------------------------------------------------------------------------
@@ -16,8 +16,8 @@ Iterator::Iterator(const Geometry* geom) : _geom(geom){
 Iterator::Iterator(const Geometry* geom, const index_t& value) : _geom(geom) {
   _value = value;
   _valid = true;
-  _increm_x = geom->Size()[1];
-  _increm_y = geom->Size()[0];
+  _increm_x = geom->TotalSize()[1];
+  _increm_y = geom->TotalSize()[0];
   _num_cell = _increm_x*_increm_y;
   if (_value >= _num_cell)
     _valid = false;
@@ -33,7 +33,7 @@ Iterator::operator const index_t&() const {return _value;}
 multi_index_t Iterator::Pos() const {
   multi_index_t pos;
   pos[0] = _value % _increm_y;
-  pos[1] = (index_t) (_value / _increm_x);
+  pos[1] = (index_t) (_value/_increm_y);
   return pos;
 }
 //------------------------------------------------------------------------------

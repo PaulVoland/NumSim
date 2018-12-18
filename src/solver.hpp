@@ -61,26 +61,4 @@ public:
 protected:
   real_t _omega;
 };
-//------------------------------------------------------------------------------
-/* Concrete Red or Black SOR solver
-*/
-class RedOrBlackSOR : public SOR {
-public:
-  /// Constructs an actual Red or Black SOR solver
-  RedOrBlackSOR(const Geometry *geom, const real_t &omega);
-  /// Constructs an actual Red or Black SOR solver 'overloaded' (without an omega input)
-  RedOrBlackSOR(const Geometry *geom);
-  /// Destructor
-  ~RedOrBlackSOR();
-
-  /// Returns the total residual and executes a solver cycle for the 'red' cells
-  // @param grid current pressure values
-  // @param rhs right hand side
-  real_t RedCycle(Grid *grid, const Grid *rhs) const;
-  /// Returns the total residual and executes a solver cycle for the 'black' cells
-  // @param grid current pressure values
-  // @param rhs right hand side
-  real_t BlackCycle(Grid *grid, const Grid *rhs) const;
-};
-//------------------------------------------------------------------------------
 #endif // __SOLVER_HPP

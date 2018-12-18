@@ -17,7 +17,6 @@
 
 //------------------------------------------------------------------------------
 #include "typedef.hpp"
-#include "communicator.hpp"
 #include "compute.hpp"
 #include "geometry.hpp"
 #include "parameter.hpp"
@@ -45,73 +44,66 @@
 
 using namespace std;
 
-
-void blue(string x)
-{
-  string y = string(ANSI_COLOR_BLUE);
-  string z = string(ANSI_COLOR_RESET);
-  cout << y << x << z;
-}
-void red(string x)
-{
+/* Internal methods for debug prints on console in different colours
+*/
+void red(string x) {
   string y = string(ANSI_COLOR_RED);
   string z = string(ANSI_COLOR_RESET);
   cout << y << x << z;
 }
-void green(string x)
-{
+
+void green(string x) {
   string y = string(ANSI_COLOR_GREEN);
   string z = string(ANSI_COLOR_RESET);
   cout << y << x << z;
 }
-void yellow(string x)
-{
+
+void yellow(string x) {
   string y = string(ANSI_COLOR_YELLOW);
   string z = string(ANSI_COLOR_RESET);
   cout << y << x << z;
 }
-void magenta(string x)
-{
+
+void blue(string x) {
+  string y = string(ANSI_COLOR_BLUE);
+  string z = string(ANSI_COLOR_RESET);
+  cout << y << x << z;
+}
+
+void magenta(string x) {
   string y = string(ANSI_COLOR_MAGENTA);
   string z = string(ANSI_COLOR_RESET);
   cout << y << x << z;
 }
-void cyan(string x)
-{
+
+void cyan(string x) {
   string y = string(ANSI_COLOR_CYAN);
   string z = string(ANSI_COLOR_RESET);
   cout << y << x << z;
 }
 
-string plusminus_to_string(double x)
-{
+string plusminus_to_string(double x) {
   if (x >= 0)
-  {
-    return "+"+to_string(x);
-  } else {
+    return "+" + to_string(x);
+  else
     return to_string(x);
-  }
-
 }
 
+//------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 
   /* // Measuring of computational times
   ZeitGeist zg;
   zg.Start(); */
-  string writelocation1 = "";
-  int county = 0;
-  // Create parameter and geometry instances with default values, set up a communicator
-  Communicator comm(&argc, &argv);
+  
+  // Create parameter and geometry instances with default values
   Parameter param;
   // param.Load("../default.param"); // Is done by the parser now.
-  Geometry geom(&comm);
+  Geometry geom;
   // geom.Load("../default.geom"); // Is done by the parser now.
-  // Create the fluid solver
-  Compute comp(&geom, &param, &comm);
   
   // Using the ARGVParser.hpp template
-  // Works with commands from terminal like: -geom ../example_1.geom -param ../example_1.param
+  // Works with commands from terminal like: -geom ../default.geom -param ../default.param
   ARGVParser parser;
   parser.bind("-geom", [&geom](int ac, char **av) -> int {
     if (ac != 1) return 0;
@@ -125,46 +117,40 @@ int main(int argc, char **argv) {
   });
   parser.exec(argc, argv);
 
-  // Create Iterator
-  Iterator TestFullIt(&geom);
-  // Create Boundary Iterator
-  BoundaryIterator TestBoundIt(&geom);
-  BoundaryIterator TestBoundIt2(&geom);
-  BoundaryIterator TestBoundIt3(&geom);
-  BoundaryIterator TestBoundIt22(&geom);
-  // Create Interior Iterator
-  InteriorIterator TestInterIt(&geom);
+  // Create the fluid solver
+  Compute comp(&geom, &param);
 
-  // To put the single pictures per thread in a nice order on the screen while execution
+  // Create Iterator instance for debug purposes
+  Iterator it(&geom);
+  // Create Boundary Iterator instances for debug purposes
+  BoundaryIterator bit0(&geom);
+  BoundaryIterator bit1(&geom);
+  BoundaryIterator bit2(&geom);
+  BoundaryIterator bit3(&geom);
+  // Create Interior Iterator instance for debug purposes
+  InteriorIterator intit(&geom);
+
+  // To put the picture in a nice order on the screen while execution or to control execution
   bool start = true;
 
   #ifdef USE_VTK
-  if (comm.getRank() == 0) {
-    // check if folder "VTK" exists
+    // Check if folder "VTK" exists
     struct stat info;
 
-    if (stat("VTK", &info) != 0) {
+    if (stat("VTK", &info) != 0)
       system("mkdir VTK");
-    }
-  }
-  #endif
+  #endif // USE_VTK
 
-  // Create and initialize the visualization
+  // Create and initialize the debug visualization
   #ifdef USE_DEBUG_VISU
-    Renderer visu(geom.Length(), geom.Mesh());
-    double ratio = geom.Length()[1]/geom.Length()[0];
-    visu.Init(800/comm.ThreadDim()[0], 800*ratio/comm.ThreadDim()[1],
-      comm.getRank() + 1);
+    Renderer visu(geom.TotalLength(), geom.Mesh());
+    double ratio = geom.TotalLength()[1]/geom.TotalLength()[0];
+    visu.Init(800, 800*ratio);
   #endif // USE_DEBUG_VISU
 
   #ifdef USE_VTK
-  // Create a VTK generator;
-  // use offset as the domain shift
-  multi_real_t offset;
-  offset[0] = comm.ThreadIdx()[0]*(geom.Mesh()[0]*(double)(geom.Size()[0] - 2));
-  offset[1] = comm.ThreadIdx()[1]*(geom.Mesh()[1]*(double)(geom.Size()[1] - 2));
-  VTK vtk(geom.Mesh(), geom.Length(), geom.TotalLength(), offset, comm.getRank(),
-    comm.getSize(), comm.ThreadDim());
+    // Create a VTK generator
+    VTK vtk(geom.Mesh(), geom.TotalLength());
   #endif
 
   #ifdef USE_DEBUG_VISU
@@ -177,8 +163,7 @@ int main(int argc, char **argv) {
   while (comp.GetTime() < param.Tend()) {
     #ifdef USE_DEBUG_VISU
       // Render and check if window is closed
-      switch (visu.Render(visugrid, comm.gatherMin(visugrid->Min()),
-        comm.gatherMax(visugrid->Max()))) {
+      switch (visu.Render(visugrid)) {
         case -1:
           return -1;
         case 0:
@@ -199,476 +184,93 @@ int main(int argc, char **argv) {
           break;
       };
     #endif // USE_DEBUG_VISU
-    
 
-    // Type in anything to start after positioning the pictures
+    // Type in anything to start after positioning the pictures or checking the console prints
     if (start) {
-      std::cin.get();
-    #ifndef USE_STEP_BY_STEP
-      start = false;
-    #endif //#ifdef USE_STEP_BY_STEP
+      cin.get();
+      #ifndef USE_STEP_BY_STEP
+        start = false;
+      #endif // NOT USE_STEP_BY_STEP
     }
 
     #ifdef USE_VTK
-    // Create VTK Files in the folder VTK
-    // Note that when using VTK module as it is you first have to write cell
-    // information, then call SwitchToPointData(), and then write point data.
-    vtk.Init("VTK/field");
-    vtk.AddRank();
-    vtk.AddCellField("Cell Velocity", comp.GetU(), comp.GetV());
-    vtk.SwitchToPointData();
-    vtk.AddPointField("Velocity", comp.GetU(), comp.GetV());
-    vtk.AddPointScalar("Pressure", comp.GetP());
-    vtk.AddPointScalar("Temperature", comp.GetT());
-    vtk.Finish();
-    #endif
+      // Create VTK Files in the folder VTK
+      vtk.Init("VTK/field");
+      vtk.AddField("Velocity", comp.GetU(), comp.GetV());
+      vtk.AddScalar("Pressure", comp.GetP());
+      vtk.AddScalar("Temperature", comp.GetT());
+      vtk.Finish();
+    #endif // USE_VTK
 
     // Run a few steps
-    //for (uint32_t i = 0; i < 9; ++i)
-      // comp.TimeStep(false);
-
-//print Coordinates with values for the value u
-#ifdef USE_DEBUG_PRINT_U 
-  if(true){
-    green("Das ist die Ausgabe für u \n");
-    TestInterIt.First();
-    string writelocation = "";
-    string writevalue = "";
-
-    TestBoundIt.SetBoundary(2);
-    TestBoundIt.First();
-    while (TestBoundIt.Valid()){
-      writelocation = writelocation + "(" + to_string(TestBoundIt.Pos()[0])+ "," ;
-      writelocation = writelocation + to_string(TestBoundIt.Pos()[1]) + ")   |  ";
-      writevalue = writevalue +  plusminus_to_string(comp.GetU()->Cell(TestBoundIt)) + "  ";
-    TestBoundIt.Next();
-    }
-    yellow("        " +writelocation + " \n ");
-    blue("     " + writevalue + "\n");
-  
-    string writelocation1 = "";
-    string writevalue1 = "";
-    int counter = 0;
-    int counter1 = 0;
-    int counterfirst = 0;
-    
-    
-    TestBoundIt.SetBoundary(1);
-    TestBoundIt2.SetBoundary(3);
-    TestBoundIt3.SetBoundary(0);
-    TestBoundIt.First();
-    TestBoundIt2.First();
-    TestBoundIt3.First();
-    TestBoundIt22.SetBoundary(3);
-    TestBoundIt22.First();
-    TestFullIt.First();
-    while (TestBoundIt.Valid()){
-        counter ++;
-        counter1 ++;
-        counterfirst ++;
-        //red(to_string(TestBoundIt3.Pos()[1]));
-        TestBoundIt.Next();
-    }
-
-    TestBoundIt.First();
-    while (TestBoundIt2.Valid()){
-
-      TestBoundIt22.First();
-      //blue(to_string(counterfirst));
-      while (TestBoundIt22.Valid()){
-        //blue(to_string(counterfirst)); 
-        //green(to_string(TestBoundIt22.Pos()[1]));
-        if (counterfirst == TestBoundIt22.Pos()[1])
-        {
-          //blue(to_string(counterfirst));
-          writelocation1 = "(" + to_string(TestBoundIt22.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(TestBoundIt22.Pos()[1]) +")";
-          writevalue1 = plusminus_to_string(comp.GetU()->Cell(TestBoundIt22));
-          yellow(writelocation1 + " ");
-          blue(writevalue1 +" ");
-          counterfirst --;    
-        }
-        TestBoundIt22.Next();
+    #ifndef USE_STEP_BY_STEP
+      for (uint32_t i = 0; i < 9; ++i) {
+        comp.TimeStep(false);
       }
+    #endif // NOT USE_STEP_BY_STEP
 
-      TestBoundIt.First();
-      TestInterIt.First();
-      TestFullIt.First();
-      TestBoundIt3.First();
-        cout << " ";
-      while(TestBoundIt3.Valid()){  
-            TestBoundIt3.Next();
-            TestFullIt.Next();
-          }
-          TestBoundIt3.First();
-      while (TestBoundIt.Valid()){
-        if (counter == TestBoundIt.Pos()[1])
-        {
-          TestBoundIt3.Next();
-          TestBoundIt3.Next();
-          TestFullIt.Next();
-          while(TestBoundIt3.Valid()){
-          red(plusminus_to_string(comp.GetU()->Cell(TestFullIt))+"  ");
-          TestBoundIt3.Next();
-          TestFullIt.Next();
-          }
-        TestFullIt.Next();
-        counter1 --;
-        TestBoundIt3.First();
-        }
-        else{
-          while(TestBoundIt3.Valid()){  
-            TestBoundIt3.Next();
-            TestFullIt.Next();
-          }
-        counter1 --;
-        TestBoundIt3.First();
-        }
-        TestBoundIt.Next();
+    // Print coordinates with values for the velocity u TODO
+    #ifdef USE_DEBUG_PRINT_U
+      /* green("Das ist die Ausgabe für u:\n");
+      intit.First();
+      string writelocation = "";
+      string writevalue = "";
+      bit2.SetBoundary(2);
+      while (bit2.Valid()) {
+        writelocation += "(" + to_string(TestBoundIt.Pos()[0]) + "," + to_string(TestBoundIt.Pos()[1]) + ")   |   ";
+        writevalue += plusminus_to_string(comp.GetU()->Cell(bit2)) + "   ";
+      TestBoundIt.Next();
       }
-        
-      TestBoundIt.First();
+      yellow("      " + writelocation + "\n");
+      blue("      " + writevalue + "\n");
+      */
+    #endif // USE_DEBUG_PRINT_U
 
-      while (TestBoundIt.Valid()){
-        if (counter == TestBoundIt.Pos()[1])
-        {
-          writevalue1 = plusminus_to_string(comp.GetU()->Cell(TestBoundIt));
-          writelocation1 = "(" + to_string(TestBoundIt.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(TestBoundIt.Pos()[1]) +")";
-          blue(writevalue1 +" ");
-          yellow(writelocation1 + "\n");
-          counter --;    
-        }
-        TestBoundIt.Next();
+    // Print coordinates with values for the velocity v TODO
+    #ifdef USE_DEBUG_PRINT_V
+      /* green("Das ist die Ausgabe für u:\n");
+      intit.First();
+      string writelocation = "";
+      string writevalue = "";
+      bit2.SetBoundary(2);
+      while (bit2.Valid()) {
+        writelocation += "(" + to_string(TestBoundIt.Pos()[0]) + "," + to_string(TestBoundIt.Pos()[1]) + ")   |   ";
+        writevalue += plusminus_to_string(comp.GetV()->Cell(bit2)) + "   ";
+      TestBoundIt.Next();
       }
-    
-    TestBoundIt2.Next();
-    }
-  
-    writelocation = "      ";
-    writevalue = "     ";
-    TestBoundIt.SetBoundary(0);
-    TestBoundIt.First();
-    while (TestBoundIt.Valid()){
-      writelocation = writelocation +"(" + to_string(TestBoundIt.Pos()[0]) ;
-      writelocation = writelocation +"," + to_string(TestBoundIt.Pos()[1]) + ")   |  " ;
-      writevalue =  writevalue + plusminus_to_string(comp.GetU()->Cell(TestBoundIt))+ "  ";
-    TestBoundIt.Next();
-    }
-    blue(writevalue + "\n");
-    yellow("  " +writelocation + " \n ");
+      yellow("      " + writelocation + "\n");
+      blue("      " + writevalue + "\n");
+      */
+    #endif // USE_DEBUG_PRINT_V
+
+    // Print coordinates with values for the velocity p TODO
+    #ifdef USE_DEBUG_PRINT_P
+      /* green("Das ist die Ausgabe für u:\n");
+      intit.First();
+      string writelocation = "";
+      string writevalue = "";
+      bit2.SetBoundary(2);
+      while (bit2.Valid()) {
+        writelocation += "(" + to_string(TestBoundIt.Pos()[0]) + "," + to_string(TestBoundIt.Pos()[1]) + ")   |   ";
+        writevalue += plusminus_to_string(comp.GetV()->Cell(bit2)) + "   ";
+      TestBoundIt.Next();
+      }
+      yellow("      " + writelocation + "\n");
+      blue("      " + writevalue + "\n");
+      */
+    #endif // USE_DEBUG_PRINT_P
+
+    // Print field types and neighbourhood from geometry.cpp TODO
+    #ifdef USE_DEBUG_PRINT_TYPES
+      /* TODO
+      */
+    #endif // USE_DEBUG_PRINT_TYPES
+
+    comp.TimeStep(true);
   }
-  TestFullIt.First();
-#endif // #ifdef USE_DEBUG_PRINT_U
-  
-#ifdef USE_DEBUG_PRINT_V  
-//print Coordinates with values for the value v 
-  if(true){
-    green("Das ist die Ausgabe für v \n");
-    TestInterIt.First();
-    string writelocation = "";
-    string writevalue = "";
-
-    TestBoundIt.SetBoundary(2);
-    TestBoundIt.First();
-    while (TestBoundIt.Valid()){
-      writelocation = writelocation + "(" + to_string(TestBoundIt.Pos()[0])+ "," ;
-      writelocation = writelocation + to_string(TestBoundIt.Pos()[1]) + ")   |  ";
-      writevalue = writevalue +  plusminus_to_string(comp.GetV()->Cell(TestBoundIt)) + "  ";
-    TestBoundIt.Next();
-    }
-    yellow("        " +writelocation + " \n ");
-    blue("     " + writevalue + "\n");
-  
-    string writelocation1 = "";
-    string writevalue1 = "";
-    int counter = 0;
-    int counter1 = 0;
-    int counterfirst = 0;
-    
-    
-    TestBoundIt.SetBoundary(1);
-    TestBoundIt2.SetBoundary(3);
-    TestBoundIt3.SetBoundary(0);
-    TestBoundIt.First();
-    TestBoundIt2.First();
-    TestBoundIt3.First();
-    TestBoundIt22.SetBoundary(3);
-    TestBoundIt22.First();
-    TestFullIt.First();
-    while (TestBoundIt.Valid()){
-        counter ++;
-        counter1 ++;
-        counterfirst ++;
-        //red(to_string(TestBoundIt3.Pos()[1]));
-        TestBoundIt.Next();
-    }
-
-    TestBoundIt.First();
-    while (TestBoundIt2.Valid()){
-
-      TestBoundIt22.First();
-      //blue(to_string(counterfirst));
-      while (TestBoundIt22.Valid()){
-        //blue(to_string(counterfirst)); 
-        //green(to_string(TestBoundIt22.Pos()[1]));
-        if (counterfirst == TestBoundIt22.Pos()[1])
-        {
-          //blue(to_string(counterfirst));
-          writelocation1 = "(" + to_string(TestBoundIt22.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(TestBoundIt22.Pos()[1]) +")";
-          writevalue1 = plusminus_to_string(comp.GetV()->Cell(TestBoundIt22));
-          yellow(writelocation1 + " ");
-          blue(writevalue1 +" ");
-          counterfirst --;    
-        }
-        TestBoundIt22.Next();
-      }
-
-      TestBoundIt.First();
-      TestInterIt.First();
-      TestFullIt.First();
-      TestBoundIt3.First();
-        cout << " ";
-      while(TestBoundIt3.Valid()){  
-            TestBoundIt3.Next();
-            TestFullIt.Next();
-          }
-          TestBoundIt3.First();
-      while (TestBoundIt.Valid()){
-        if (counter == TestBoundIt.Pos()[1])
-        {
-          TestBoundIt3.Next();
-          TestBoundIt3.Next();
-          TestFullIt.Next();
-          while(TestBoundIt3.Valid()){
-          red(plusminus_to_string(comp.GetV()->Cell(TestFullIt))+"  ");
-          TestBoundIt3.Next();
-          TestFullIt.Next();
-          }
-        TestFullIt.Next();
-        counter1 --;
-        TestBoundIt3.First();
-        }
-        else{
-          while(TestBoundIt3.Valid()){  
-            TestBoundIt3.Next();
-            TestFullIt.Next();
-          }
-        counter1 --;
-        TestBoundIt3.First();
-        }
-        TestBoundIt.Next();
-      }
-        
-      TestBoundIt.First();
-
-      while (TestBoundIt.Valid()){
-        if (counter == TestBoundIt.Pos()[1])
-        {
-          writevalue1 = plusminus_to_string(comp.GetV()->Cell(TestBoundIt));
-          writelocation1 = "(" + to_string(TestBoundIt.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(TestBoundIt.Pos()[1]) +")";
-          blue(writevalue1 +" ");
-          yellow(writelocation1 + "\n");
-          counter --;    
-        }
-        TestBoundIt.Next();
-      }
-    
-    TestBoundIt2.Next();
-    }
-  
-    writelocation = "      ";
-    writevalue = "     ";
-    TestBoundIt.SetBoundary(0);
-    TestBoundIt.First();
-    while (TestBoundIt.Valid()){
-      writelocation = writelocation +"(" + to_string(TestBoundIt.Pos()[0]) ;
-      writelocation = writelocation +"," + to_string(TestBoundIt.Pos()[1]) + ")   |  " ;
-      writevalue =  writevalue + plusminus_to_string(comp.GetV()->Cell(TestBoundIt))+ "  ";
-    TestBoundIt.Next();
-    }
-    blue(writevalue + "\n");
-    yellow("  " +writelocation + " \n ");
-  }
-  TestFullIt.First();
-#endif //#ifdef USE_DEBUG_PRINT_V
-  
-#ifdef USE_DEBUG_PRINT_P
-//print Coordinates with values for the value p 
-  if(true){
-    green("Das ist die Ausgabe für P \n");
-    TestInterIt.First();
-    string writelocation = "";
-    string writevalue = "";
-    
-    TestBoundIt.SetBoundary(2);
-    TestBoundIt.First();
-    while (TestBoundIt.Valid()){
-      writelocation = writelocation + "(" + to_string(TestBoundIt.Pos()[0])+ "," ;
-      writelocation = writelocation + to_string(TestBoundIt.Pos()[1]) + ")   |  ";
-      writevalue = writevalue +  plusminus_to_string(comp.GetP()->Cell(TestBoundIt)) + "  ";
-    TestBoundIt.Next();
-    }
-    yellow("        " +writelocation + " \n ");
-    blue("     " + writevalue + "\n");
-  
-    string writelocation1 = "";
-    string writevalue1 = "";
-    int counter = 0;
-    int counter1 = 0;
-    int counterfirst = 0;
-
-    
-    TestBoundIt.SetBoundary(1);
-    TestBoundIt2.SetBoundary(3);
-    TestBoundIt3.SetBoundary(0);
-    TestBoundIt.First();
-    TestBoundIt2.First();
-    TestBoundIt3.First();
-    TestBoundIt22.SetBoundary(3);
-    TestBoundIt22.First();
-    TestFullIt.First();
-    while (TestBoundIt.Valid()){
-        counter ++;
-        counter1 ++;
-        counterfirst ++;
-        //red(to_string(TestBoundIt3.Pos()[1]));
-        TestBoundIt.Next();
-    }
-
-    TestBoundIt.First();
-    while (TestBoundIt2.Valid()){
-
-      TestBoundIt22.First();
-      //blue(to_string(counterfirst));
-      while (TestBoundIt22.Valid()){
-        //blue(to_string(counterfirst)); 
-        //green(to_string(TestBoundIt22.Pos()[1]));
-        if (counterfirst == TestBoundIt22.Pos()[1])
-        {
-          //blue(to_string(counterfirst));
-          writelocation1 = "(" + to_string(TestBoundIt22.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(TestBoundIt22.Pos()[1]) +")";
-          writevalue1 = plusminus_to_string(comp.GetP()->Cell(TestBoundIt22));
-          yellow(writelocation1 + " ");
-          blue(writevalue1 +" ");
-          counterfirst --;    
-        }
-        TestBoundIt22.Next();
-      }
-
-      TestBoundIt.First();
-      TestInterIt.First();
-      TestFullIt.First();
-      TestBoundIt3.First();
-        cout << " ";
-      while(TestBoundIt3.Valid()){  
-            TestBoundIt3.Next();
-            TestFullIt.Next();
-          }
-          TestBoundIt3.First();
-      while (TestBoundIt.Valid()){
-        if (counter == TestBoundIt.Pos()[1])
-        {
-          TestBoundIt3.Next();
-          TestBoundIt3.Next();
-          TestFullIt.Next();
-          while(TestBoundIt3.Valid()){
-          red(plusminus_to_string(comp.GetP()->Cell(TestFullIt))+"  ");
-          TestBoundIt3.Next();
-          TestFullIt.Next();
-          }
-        TestFullIt.Next();
-        counter1 --;
-        TestBoundIt3.First();
-        }
-        else{
-          while(TestBoundIt3.Valid()){  
-            TestBoundIt3.Next();
-            TestFullIt.Next();
-          }
-        counter1 --;
-        TestBoundIt3.First();
-        }
-        TestBoundIt.Next();
-      }
-        
-      TestBoundIt.First();
-
-      while (TestBoundIt.Valid()){
-        if (counter == TestBoundIt.Pos()[1])
-        {
-          writevalue1 = plusminus_to_string(comp.GetP()->Cell(TestBoundIt));
-          writelocation1 = "(" + to_string(TestBoundIt.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(TestBoundIt.Pos()[1]) +")";
-          blue(writevalue1 +" ");
-          yellow(writelocation1 + "\n");
-          counter --;    
-        }
-        TestBoundIt.Next();
-      }
-    
-    TestBoundIt2.Next();
-    }
-  
-    writelocation = "      ";
-    writevalue = "     ";
-    TestBoundIt.SetBoundary(0);
-    TestBoundIt.First();
-    while (TestBoundIt.Valid()){
-      writelocation = writelocation +"(" + to_string(TestBoundIt.Pos()[0]) ;
-      writelocation = writelocation +"," + to_string(TestBoundIt.Pos()[1]) + ")   |  " ;
-      writevalue =  writevalue + plusminus_to_string(comp.GetP()->Cell(TestBoundIt))+ "  ";
-    TestBoundIt.Next();
-    }
-    blue(writevalue + "\n");
-    yellow("  " +writelocation + " \n ");
-  }
-
-#endif //#ifdef USE_DEBUG_PRINT_P
-
-#ifdef USE_DEBUG_PRINT_ENUM_BORDER
-  TestFullIt.First();
-  
-  
-  while (TestFullIt.Valid())
-  {
-    writelocation1 = "(" + to_string(TestFullIt.Pos()[0])  ;
-    writelocation1 = writelocation1 +","+ to_string(TestFullIt.Pos()[1]) +")";
-    blue(writelocation1 +" ");
-    red(to_string(geom.Cell(TestFullIt).fluid));
-    blue(" ");
-    if (county == 9)
-    {
-      blue("\n ");
-      county =-1;
-    }
-    county ++;
-
-    TestFullIt.Next();
-  }
-  #endif //#ifdef USE_DEBUG_PRINT_ENUM_BORDER
-
-    
-
-    bool printOnlyOnMaster = !comm.getRank();
-    comp.TimeStep(printOnlyOnMaster);
-  
-
-
-
-
-
-  }
-
-
-
   /* if (!comm.getRank()) {
     cout << "Total computational time = "
       << zg.Stop() << " µs\n" << endl;
   }*/
-  
   return 0;
 }
