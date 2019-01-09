@@ -33,6 +33,10 @@ typedef enum {
   typeOut,     // Outflow
   typeTDir_h,  // Dirichlet value for higher temperature (u,v,p treated as no slip)
   typeTDir_c   // Dirichlet value for lower temperature (u,v,p treated as no slip)
+
+  typeCoupling // NEW  _interface to a coupled solid field
+
+
 } CellType_t;
 /// Typedef for cell boundary type (which boundary cells are fluid)
 //       |   NO   |
@@ -98,6 +102,8 @@ public:
   const real_t &Pressure() const;
   /// Returns the prescribed temperature value
   const real_t &Temperature() const;
+  ///
+  const index_t &Num_Coupling() const;
 
   /// Updates the velocity field u (parameter from .param used)
   void Update_U(Grid *u, const real_t &u_Dir) const;
@@ -110,6 +116,7 @@ public:
 
 private:
   Cell_t *_cell;
+  index_t _num_coupling;
 
   multi_index_t _size;
   multi_real_t  _length;

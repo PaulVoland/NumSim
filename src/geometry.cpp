@@ -173,6 +173,7 @@ Geometry::Geometry() {
   _size[1] += 2;
   // No cell field set yet
   _cell    = NULL;
+  _num_coupling = 0;
   // Message of success
   cout << "Loaded default geometry for lid driven cavity." << endl;
 }
@@ -269,6 +270,10 @@ void Geometry::Load(const char* file) {
               break;
             case 'c':
               _cell[x + y*_size[0]].type = typeTDir_c;
+              break;
+            case 'C':
+              _cell[x + y*_size[0]].type = typeCoupling;
+              _num_coupling++;
               break;
             default: // All other cases, box for bottom/top/left/right layer
               if (x == 0 || x == _size[0] - 1 || y == 0 || y == _size[1] - 1)
@@ -401,6 +406,8 @@ const multi_real_t&  Geometry::Velocity()    const {return _velocity;}
 const real_t&        Geometry::Pressure()    const {return _pressure;}
 //------------------------------------------------------------------------------
 const real_t&        Geometry::Temperature() const {return _temperature;}
+
+const index_t& Geometry::Num_Coupling() const{return _num_coupling;}
 //------------------------------------------------------------------------------
 /// Updates the velocity field u on the boundary
 // @param u     grid for the velocity in x-direction

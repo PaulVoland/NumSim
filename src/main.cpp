@@ -20,6 +20,8 @@
 #include "compute.hpp"
 #include "geometry.hpp"
 #include "parameter.hpp"
+#include "precice/SolverInterface.hpp"
+#include "%PRECICE_ROOT%"
 
 #ifdef USE_DEBUG_VISU
 #include "visu.hpp"
@@ -89,19 +91,33 @@ string plusminus_to_string(double x) {
     return to_string(x);
 }
 
+//-----------------------------------------------------------------------------
+
+// include the namespaces
+using namespace precice;
+using namespace precice::constants;
+
+//TODO funktionen implementieren
+
+precice.setInterfaceVertices()  // Interface _ coordinaten
+
+precice.writeTemp( Grid, temp, num_coupling_cells, couplingValues, &geom)             //
+
+setCouplingBoundary()           //
+
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 
   /* // Measuring of computational times
   ZeitGeist zg;
   zg.Start(); */
-  
+
   // Create parameter and geometry instances with default values
   Parameter param;
   // param.Load("../default.param"); // Is done by the parser now.
   Geometry geom;
   // geom.Load("../default.geom"); // Is done by the parser now.
-  
+
   // Using the ARGVParser.hpp template
   // Works with commands from terminal like: -geom ../default.geom -param ../default.param
   ARGVParser parser;
@@ -115,10 +131,96 @@ int main(int argc, char **argv) {
     param.Load(av[0]);
     return 1;
   });
+  parser.bind("-config") -> int {
+    if (ac != 1) return 0;
+    string path(av[0]);
+    return 1;
+  });
   parser.exec(argc, argv);
 
   // Create the fluid solver
   Compute comp(&geom, &param);
+
+
+  cout << "Configure preCICE..." << endl;
+
+
+ // Create preCICE with the solver’s name, the rank, and the total number of processes.
+ //string solverName = "Fluid";
+
+  // initialize preCICE
+  SolverInterface precice("Fluid", 0, 1);
+
+  precice.configure(path);
+
+  // get domain dimension from precice
+  int dim = precice.getDimensions();
+
+  //
+  int N = geom.Num_Coupling();
+  multi_real_t temperature(N);
+  multi_real_t heatFlux(N);
+
+  // get IDs from preCICE
+  int meshID        = precice.getMeshID("Fluid-Mesh");
+  int tempID        = precice.getDataID("Temperature", meshID);
+  int heatFluxID    = precice.getDataID("Heat-Flux", meshID);
+
+  // define coupling mesh and data ids from precice
+  //int meshID = precice.getMeshID(mesh_name);
+
+  int* vertexIDs;
+  double* grid;
+  vertexIDs = new int[N];
+  grid = new double[dim * N];
+
+  // array für die Interphasewerte als buffer
+  //double* vertices = new double [dim * N]
+  //Zuordnung der Koordinaten TODO
+  // give mesh to precice
+  precice.setMeshVertices(meshID, N, grid, vertexIDs);
+
+  precice.initialize();
+
+   // write initial data if required
+  if (precice.isActionRequired(actionWriteInitialData())) {
+    precice.writeBlockScalarData(tempID, N, vertexIDs, temperature);
+    precice.fulfilledAction(actionWriteInitialData());
+  }
+  // initial data is sent or received if necessary
+  precice.initializeData();
+   // read data if available
+  if (precice.isReadDataAvailable()) {
+    precice.readBlockScalarData(heatFluxID, N, vertexIDs, heatFlux);
+  }
+
+
+ /////// NEW preCICE ////////////////////////////////
+
+ //preCICE parameter
+ string precice_config =        //the path to the precice-config.xml file,
+ string participant_name        // which should typically be Fluid,
+ string mesh_name               // which should typically be Fluid-Mesh,
+ string read_data_name          // which should typically be Heat-Flux, and
+ string write_data_name
+
+ int* vertexIDs = set_interface_vertices(...);  // get coupling cell ids
+
+// neues Blatt:   int dataID = precice.getDataID("data", meshID); // get your data id from precice,
+                                                    // data such as pressure, velocity, temperatur
+                                                    // each data should have a seperate id!
+double* vertices = new double [dim * num_coupling_cells] // array für die Interphasewerte als buffer
+
+// define Dirichlet part of coupling written by this solver
+int temperatureID = precice.getDataID(write_data_name, meshID);
+double* temperatureCoupled = double[sizeof(double) * num_coupling_cells];
+
+// define Neumann part of coupling read by this solver
+int heatFluxID = precicec.getDataID(read_data_name, meshID);
+double* heatfluxCoupled = new double[sizeof(double) * num_coupling_cells];
+
+
+ //////////////////////////////////////////////////////////////
 
   // Create Iterator instance for debug purposes
   Iterator it(&geom);
@@ -159,8 +261,10 @@ int main(int argc, char **argv) {
     visugrid = comp.GetVelocity();
   #endif // USE_DEBUG_VISU
 
-  // Run the time steps until the end is reached
-  while (comp.GetTime() < param.Tend()) {
+
+  // ...
+  while (precicec_isCouplingOngoing()) {
+
     #ifdef USE_DEBUG_VISU
       // Render and check if window is closed
       switch (visu.Render(visugrid)) {
@@ -202,11 +306,46 @@ int main(int argc, char **argv) {
       vtk.Finish();
     #endif // USE_VTK
 
+///////////////////////////////// NEW preCICE  ///////
+
+    // real_t oder double (precice_dt)
+    real_t solver_dt;
+    real_t dt;
+
+    //1. calculate time step
+      this->Comp_TimeStep(0.0);
+      solver_dt = comp.GetTimeStep();
+
+      // call precicec_initialize()
+      double precice_dt = precicec.initialize();
+      //neues Blatt interface.initialize(); //samesame
+
+      dt = min(solver_dt, precice_dt);
+     this->Comp_TimeStep(dt);
+
+    //2. set boundary values
+        set_coupling_boundary(); // you have to implement this function
+        //TODO
+
+    //3 - 6. calculate temp, F and G | RHS of P eq. | pressure | new U,V:
+
     // Run a few steps
-    #ifndef USE_STEP_BY_STEP
-      for (uint32_t i = 0; i < 9; ++i) {
-        comp.TimeStep(false);
-      }
+    //#ifndef USE_STEP_BY_STEP
+    //    for (uint32_t i = 0; i < 199; ++i) {
+            comp.TimeStep(false);
+
+
+    temp übergeben
+
+    //7. coupling
+    precice.writeBlockScalarData(...); // write new temperature to preCICE buffers
+    precice_dt = precicec_advance(dt); // advance coupling
+    precicec.readBlockScalarData(...); // read new heatflux from preCICE buffers
+    //8. output U, V, P for visualization and update iteration values
+    }
+    precicec_finalize();
+
+
     #endif // NOT USE_STEP_BY_STEP
 
     // Print coordinates with values for the velocity u TODO
