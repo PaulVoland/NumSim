@@ -100,7 +100,7 @@ void Compute::TimeStep(bool printInfo) {
   // Refresh boundary values
   _geom->Update_U(_u, _param->u_D());
   _geom->Update_V(_v, _param->v_D());
-  _geom->Update_T(_T, _param->T_H(), _param->T_C());
+  _geom->Update_T(_T, _param->T_H(), _param->T_C(), _param->k());
   // _geom->Update_P(_p); // not necessary here
   // Measuring of computational times
   // zg.Start();
@@ -114,7 +114,7 @@ void Compute::TimeStep(bool printInfo) {
   } */
   // Compute the new temperature values explicitly (only influence of old velocity values)
   HeatTransport(_dt);
-  _geom->Update_T(_T, _param->T_H(), _param->T_C()); // possibly necessary?
+  _geom->Update_T(_T, _param->T_H(), _param->T_C(), _param->k()); // possibly necessary?
   // Compute temporary velocities F, G using difference schemes
   MomentumEqu(_dt);
   // Boundary update for new values of F, G
