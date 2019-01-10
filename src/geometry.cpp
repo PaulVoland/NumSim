@@ -324,10 +324,10 @@ void Geometry::Load(const char* file) {
           break;
         if (_coupling_cell_numbs)
           delete[] _coupling_cell_numbs;
-        _coupling_cell_numbs = new multi_index_t(_num_coupling);
+        _coupling_cell_numbs = new index_t[_num_coupling];
         if (_heat_flux)
           delete[] _heat_flux;
-        _heat_flux = new multi_real_t(_num_coupling);
+        _heat_flux = new real_t[_num_coupling];
         // Process it
         int count_C = 0;
         for (int y = 0; y < _size[1]; ++y) {
@@ -454,12 +454,14 @@ const real_t&        Geometry::Temperature()  const {return _temperature;}
 //------------------------------------------------------------------------------
 const index_t&       Geometry::Num_Coupling() const {return _num_coupling;}
 //------------------------------------------------------------------------------
-const multi_index_t& Geometry::getCouplingCellNumbs() const {return _coupling_cell_numbs;}
+const index_t*       Geometry::GetCouplingCellNumbs() const {return _coupling_cell_numbs;}
 //------------------------------------------------------------------------------
-const multi_real_t&  Geometry::GetHeatFlux() const {return _heat_flux;}
+const real_t*        Geometry::GetHeatFlux() const {return _heat_flux;}
 //------------------------------------------------------------------------------
-void Geometry::SetHeatFlux(const multi_real_t& HeatFlux) {
-  _heat_flux(HeatFlux);
+void Geometry::SetHeatFlux(const real_t *HeatFlux) {
+  for (index_t i = 0; i < _num_coupling; i++) {
+    _heat_flux[i] = HeatFlux[i];
+  }
 }
 //------------------------------------------------------------------------------
 /// Updates the velocity field u on the boundary

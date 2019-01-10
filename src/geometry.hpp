@@ -102,11 +102,11 @@ public:
   /// Returns number of coupling cells
   const index_t &Num_Coupling() const;
   /// Returns field numbers of coupling cells
-  const multi_index_t &GetCouplingCellNumbs() const;
+  const index_t *GetCouplingCellNumbs() const;
   /// Returns the heat flux field
-  const multi_real_t &GetHeatFlux() const;
+  const real_t *GetHeatFlux() const;
   /// Setter for the heat flux field
-  void SetHeatFlux(const multi_real_t &HeatFlux);
+  void SetHeatFlux(const real_t *HeatFlux);
 
   /// Updates the velocity field u (parameter from .param used)
   void Update_U(Grid *u, const real_t &u_Dir) const;
@@ -120,8 +120,8 @@ public:
 private:
   Cell_t *_cell;
   index_t _num_coupling;
-  multi_index_t _coupling_cell_numbs
-  multi_real_t _heat_flux;
+  index_t *_coupling_cell_numbs;
+  real_t *_heat_flux;
 
   multi_index_t _size;
   multi_real_t  _length;
