@@ -33,6 +33,8 @@ set (CMAKE_CXX_COMPILER "/usr/bin/g++")
 set (GOOD_FLAGS "-Wall -Wextra -pedantic -std=c++11")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GOOD_FLAGS}")
 
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lprecice")
+
 # Use debug visualisation?
 option (DEBUG_VISU
   "Enable debug visualization" ON)
@@ -68,6 +70,9 @@ INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${SDL2_INCLUDE_DIRS})
 find_package (MPI REQUIRED)
 INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${MPI_INCLUDE_PATH})
 
+#find PreCICE
+INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} $ENV{PRECICE_ROOT}/src)
+LINK_DIRECTORIES(${LINK_DIRECTORIES} $ENV{PRECICE_ROOT}/build/last)
 # Using glob is discouraged in cmake.
 set (HEADERS
   # ${CMAKE_CURRENT_SOURCE_DIR}/src/communicator.hpp
@@ -145,9 +150,11 @@ if (USE_STEP_BY_STEP)
   add_definitions(-DUSE_STEP_BY_STEP)
 endif (USE_STEP_BY_STEP)
 
+add_definitions(-DPRECICE_USE_MPI)
+
 # Build executable and link libs against it
 add_executable (NumSim ${SOURCES})
-target_link_libraries (NumSim ${SDL2_LIBRARIES} ${MPI_LIBRARIES})
+target_link_libraries (NumSim ${SDL2_LIBRARIES} ${MPI_LIBRARIES} "precice" )
 
 if (MPI_COMPILE_FLAGS)
   set_target_properties(NumSim PROPERTIES
@@ -158,3 +165,4 @@ if (MPI_LINK_FLAGS)
   set_target_properties (NumSim PROPERTIES
     LINK_FLAGS "${MPI_LINK_FLAGS}")
 endif()
+

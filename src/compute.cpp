@@ -105,7 +105,6 @@ void Compute::TimeStep(bool printInfo) {
   // Measuring of computational times
   // zg.Start();
 
-    dt = _dt;
 
 
   /* // 2.4.2) measuring computation of the time step
@@ -200,7 +199,7 @@ void Compute::TimeStep(bool printInfo) {
   NewVelocities(_dt);
   // (optionally) printing informations
   if (printInfo) {
-    cout << "_t = " << fixed << _t << "\tdt = " << scientific << dt << " \tres = " << res
+    cout << "_t = " << fixed << _t << "\tdt = " << scientific << _dt << " \tres = " << res
       << " \tprogress: " << fixed << (uint32_t) 100*_t/_param->Tend() << "%\n" << endl;
   }
 

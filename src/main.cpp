@@ -21,7 +21,6 @@
 #include "geometry.hpp"
 #include "parameter.hpp"
 #include "precice/SolverInterface.hpp"
-#include "%PRECICE_ROOT%"
 
 #ifdef USE_DEBUG_VISU
 #include "visu.hpp"
@@ -93,13 +92,7 @@ string plusminus_to_string(double x) {
     return to_string(x);
 }
 
-//TODO funktionen implementieren
 
-precice.setInterfaceVertices()  // Interface _ coordinaten
-
-precice.writeTemp( Grid, temp, num_coupling_cells, couplingValues, &geom)             //
-
-setCouplingBoundary()           //
 
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
@@ -127,11 +120,16 @@ int main(int argc, char **argv) {
     param.Load(av[0]);
     return 1;
   });
-  parser.bind("-config", -> int {
+  // Parser to fix 
+  /*
+  parser.bind("-config", (int ac, char **av)-> int {
     if (ac != 1) return 0;
     string path(av[0]);
     return 1;
   });
+  */
+  string path("string");
+
   parser.exec(argc, argv);
 
   // Create the fluid solver
@@ -148,7 +146,9 @@ int main(int argc, char **argv) {
   // Get number of coupling cells from geom
   index_t N = geom.Num_Coupling();
   // Fields for exchange
+  double* temp;
   temp = new double[N];
+  double* heatFlux;
   heatFlux = new double[N];
   // Get temperature values from fluid field
   for (index_t i = 0; i < N; i++) {
@@ -229,7 +229,7 @@ int main(int argc, char **argv) {
   if (precice.isReadDataAvailable()) {
     precice.readBlockScalarData(heatFluxID, (int)(N), vertexIDs, heatFlux);
   }
-  geom.setHeatFlux(heatFlux);
+  geom.SetHeatFlux(heatFlux);
 
   // Create Iterator instance for debug purposes
   Iterator it(&geom);
@@ -356,14 +356,14 @@ int main(int argc, char **argv) {
   precice.writeBlockScalarData(tempID, (int)(N), vertexIDs, temp);
   precice_dt = precice.advance(dt); // advance coupling
   precice.readBlockScalarData(heatFluxID, (int)(N), vertexIDs, heatFlux);
-  geom.setHeatFlux(heatFlux);
+  geom.SetHeatFlux(heatFlux);
   
   }
 
   precice.finalize();
 
 
-    #endif // NOT USE_STEP_BY_STEP
+    
 
     // Print coordinates with values for the velocity u TODO
     #ifdef USE_DEBUG_PRINT_U

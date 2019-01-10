@@ -32,7 +32,7 @@ typedef enum {
   typeSlipV,   // Vertical slip boundary
   typeOut,     // Outflow
   typeTDir_h,  // Dirichlet value for higher temperature (u,v,p treated as no slip)
-  typeTDir_c   // Dirichlet value for lower temperature (u,v,p treated as no slip)
+  typeTDir_c,  // Dirichlet value for lower temperature (u,v,p treated as no slip)
   typeCoupling // NEW  _interface to a coupled solid field
 } CellType_t;
 /// Typedef for cell boundary type (which boundary cells are fluid)
