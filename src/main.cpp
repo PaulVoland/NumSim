@@ -158,8 +158,11 @@ int main(int argc, char **argv) {
 
   //
   int N = geom.Num_Coupling();
+
+  // ######################################
   multi_real_t temperature(N);
-  multi_real_t heatFlux(N);
+  temperature(geom->Temperature());
+ // #########################################
 
   // get IDs from preCICE
   int meshID        = precice.getMeshID("Fluid-Mesh");
@@ -317,15 +320,12 @@ double* heatfluxCoupled = new double[sizeof(double) * num_coupling_cells];
       solver_dt = comp.GetTimeStep();
 
       // call precicec_initialize()
-      double precice_dt = precicec.initialize();
+      double precice_dt = precice.initialize();
       //neues Blatt interface.initialize(); //samesame
 
       dt = min(solver_dt, precice_dt);
      this->Comp_TimeStep(dt);
 
-    //2. set boundary values
-        set_coupling_boundary(); // you have to implement this function
-        //TODO
 
     //3 - 6. calculate temp, F and G | RHS of P eq. | pressure | new U,V:
 
@@ -334,13 +334,17 @@ double* heatfluxCoupled = new double[sizeof(double) * num_coupling_cells];
     //    for (uint32_t i = 0; i < 199; ++i) {
             comp.TimeStep(false);
 
-
-    temp übergeben
-
+//#####################################################
+    // temp übergeben schreibe in Array temperatur für jede Zelle aus Array CouplingCellsNumbs(enthält Zell Nummern von allen Coupling Zellen (Temperatur von Nachbar Fluid Zelle )) 
+    // entsprechende Werte für die Temperatur
+//#####################################################
     //7. coupling
     precice.writeBlockScalarData(...); // write new temperature to preCICE buffers
     precice_dt = precicec_advance(dt); // advance coupling
-    precicec.readBlockScalarData(...); // read new heatflux from preCICE buffers
+    precicec.readBlockScalarData(...); // read new heatflux from preCICE buffers 
+    //#########################################################################
+    // rufe setHeatFlux in geom auf und setze das Array mit HeatFlux neu
+    // ########################################################################
     //8. output U, V, P for visualization and update iteration values
     }
     precicec_finalize();

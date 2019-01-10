@@ -104,6 +104,12 @@ public:
   const real_t &Temperature() const;
   ///
   const index_t &Num_Coupling() const;
+  ///
+  //##################################################
+  const multi_real_t &getCouplingCellsNumbs() const;
+  const multi_real_t &getHeatFluxs() const;
+  void setHeatFluxs(const multi_real_t &HeatFlux) const;
+  //##################################################
 
   /// Updates the velocity field u (parameter from .param used)
   void Update_U(Grid *u, const real_t &u_Dir) const;
@@ -125,6 +131,11 @@ private:
   multi_real_t  _velocity;
   real_t        _pressure;
   real_t        _temperature;
+
+//#####################################
+  multi_real_t  _CouplingCellsNumbs // Dim N
+  multi_real_t  _HeatFluxs // Dim N
+//#####################################
 
   void UpdateCellDirichlet_U(Grid *u, const real_t &value, const Iterator &it) const;
   void UpdateCellDirichlet_V(Grid *v, const real_t &value, const Iterator &it) const;

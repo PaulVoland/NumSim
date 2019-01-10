@@ -412,6 +412,9 @@ const index_t& Geometry::Num_Coupling() const{return _num_coupling;}
 /// Updates the velocity field u on the boundary
 // @param u     grid for the velocity in x-direction
 // @param u_Dir Dirichlet value for u from .param
+// ################################################
+ // "Case C" sollte Randbedingungen für NoSlip erfüllen
+// ################################################
 void Geometry::Update_U(Grid* u, const real_t& u_Dir) const {
   if (_cell) {
     /// Cell_t is used for free geometries
@@ -486,6 +489,9 @@ void Geometry::Update_U(Grid* u, const real_t& u_Dir) const {
 /// Updates the velocity field v on the boundary
 // @param v     grid for the velocity in y-direction
 // @param v_Dir Dirichlet value for v from .param
+// ################################################
+ // "Case C" sollte Randbedingungen für NoSlip erfüllen
+// ################################################
 void Geometry::Update_V(Grid* v, const real_t& v_Dir) const {
   if (_cell) {
     /// Cell_t is used for free geometries
@@ -560,6 +566,9 @@ void Geometry::Update_V(Grid* v, const real_t& v_Dir) const {
 /// Updates the pressure field p on the boundary
 // @param p     grid for the pressure
 // @param p_Dir Dirichlet value for p from .param
+// ################################################
+ // "Case C" sollte Randbedingungen für NoSlip erfüllen
+// ################################################
 void Geometry::Update_P(Grid* p, const real_t& p_Dir) const {
   if (_cell) {
     /// Cell_t is used for free geometries
@@ -636,6 +645,9 @@ void Geometry::Update_P(Grid* p, const real_t& p_Dir) const {
 // @param T   grid for the temperature
 // @param T_h higher temeparture value from .param
 // @param T_c lower temperature vlaue from .param
+//##################################################
+  // "Case C" sollte Neumannbedingung für die Werte die Im Array HeatFlux liegen erfüllen ( Array HeatFlux ist im Geom definiert)  
+//##################################################
 void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c) const {
   if (_cell) {
     /// Cell_t is used for free geometries
