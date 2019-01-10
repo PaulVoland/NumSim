@@ -42,7 +42,7 @@ public:
   /// Returns the timestep
   const real_t &GetTimeStep() const;
   /// Set the timestep
-   void Comp_TimeStep(const real_t &dt_param);
+  void Comp_TimeStep(const real_t &dt_param);
 
   /// Returns the pointer to U
   const Grid *GetU() const;
