@@ -156,32 +156,32 @@ void Geometry::UpdateCellDirichlet_T(Grid* T, const real_t& value,
   };
 }
 //------------------------------------------------------------------------------
-void Geometry::UpdateHeatFlux(Grid* T, const real_t& value, const real_t& k,
+void Geometry::UpdateHeatFlux(Grid* T, const real_t& value,
     const Iterator& it) const {
   switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
   case cellN:
-    T->Cell(it) = T->Cell(it.Top()) + _h[1]*value/k;
+    T->Cell(it) = T->Cell(it.Top()) + _h[1]*value;
     break;
   case cellW:
-    T->Cell(it) = T->Cell(it.Left()) + _h[0]*value/k;
+    T->Cell(it) = T->Cell(it.Left()) + _h[0]*value;
     break;
   case cellNW:
-    T->Cell(it) = (T->Cell(it.Left()) + T->Cell(it.Top()) + value*(_h[0] + _h[1])/k)/2.0;
+    T->Cell(it) = (T->Cell(it.Left()) + T->Cell(it.Top()) + value*(_h[0] + _h[1]))/2.0;
     break;
   case cellS:
-    T->Cell(it) = T->Cell(it.Down()) + _h[1]*value/k;
+    T->Cell(it) = T->Cell(it.Down()) + _h[1]*value;
     break;
   case cellSW:
-    T->Cell(it) = (T->Cell(it.Left()) + T->Cell(it.Down()) + value*(_h[0] + _h[1])/k)/2.0;
+    T->Cell(it) = (T->Cell(it.Left()) + T->Cell(it.Down()) + value*(_h[0] + _h[1]))/2.0;
     break;
   case cellE:
-    T->Cell(it) = T->Cell(it.Right()) + _h[0]*value/k;
+    T->Cell(it) = T->Cell(it.Right()) + _h[0]*value;
     break;
   case cellNE:
-    T->Cell(it) = (T->Cell(it.Right()) + T->Cell(it.Top()) + value*(_h[0] + _h[1])/k)/2.0;
+    T->Cell(it) = (T->Cell(it.Right()) + T->Cell(it.Top()) + value*(_h[0] + _h[1]))/2.0;
     break;
   case cellSE:
-    T->Cell(it) = (T->Cell(it.Right()) + T->Cell(it.Down()) + value*(_h[0] + _h[1])/k)/2.0;
+    T->Cell(it) = (T->Cell(it.Right()) + T->Cell(it.Down()) + value*(_h[0] + _h[1]))/2.0;
     break;
   default:
     break;
@@ -700,7 +700,7 @@ void Geometry::Update_P(Grid* p, const real_t& p_Dir) const {
 // @param T   grid for the temperature
 // @param T_h higher temeparture value from .param
 // @param T_c lower temperature vlaue from .param
-void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c, const real_t& k) const {
+void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c, const real_t& k_s) const {
   if (_cell) {
     /// Cell_t is used for free geometries
     Iterator it(this);
@@ -740,7 +740,7 @@ void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c, const rea
         UpdateCellDirichlet_T(T, T_c, it);
         break;
       case typeCoupling:
-        UpdateHeatFlux(T, _heat_flux[count_C], k, it);
+        UpdateHeatFlux(T, _heat_flux[count_C]/k_s, it);
         count_C++;
         break;
       default:

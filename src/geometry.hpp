@@ -115,7 +115,7 @@ public:
   /// Updates the pressure field p (parameter from .param used)
   void Update_P(Grid *p, const real_t &p_Dir) const;
   /// Updates the temperature field T (parameters from .param used)
-  void Update_T(Grid *T, const real_t &T_h, const real_t &T_c) const;
+  void Update_T(Grid *T, const real_t &T_h, const real_t &T_c, const real_t &k_s) const;
 
 private:
   Cell_t *_cell;
