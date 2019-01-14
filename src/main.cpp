@@ -20,7 +20,7 @@
 #include "compute.hpp"
 #include "geometry.hpp"
 #include "parameter.hpp"
-#include "precice/SolverInterface.hpp"
+#include "/home/moira/Dokumente/precice/src/precice/SolverInterface.hpp"
 
 #ifdef USE_DEBUG_VISU
 #include "visu.hpp"
@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
     param.Load(av[0]);
     return 1;
   });
-  // Parser to fix 
+  // Parser to fix
   /*
   parser.bind("-config", (int ac, char **av)-> int {
     if (ac != 1) return 0;
@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
     return 1;
   });
   */
-  string path("string");
+  string path("precice-configs/precice_config_plate_explicit.xml");
 
   parser.exec(argc, argv);
 
@@ -199,7 +199,7 @@ int main(int argc, char **argv) {
   double* offset = new double[3];
   offset[0] = 0.0;
   offset[1] = 0.25;
-  //------------------------------------------------------------------------------ 
+  //------------------------------------------------------------------------------
   for (index_t i = 0; i < N; i++) {
     for (index_t j = 0; j < dim; j++) {
       Iterator it_C(&geom, geom.GetCouplingCellNumbs()[i]);
@@ -208,7 +208,7 @@ int main(int argc, char **argv) {
       } else {
         grid[i*j + j] = (double)(it_C.Pos()[j]*geom.Mesh()[j] + geom.Mesh()[j]/2.0) + offset[j];
       }
-    }  
+    }
   }
 
   // Give mesh to precice
@@ -314,7 +314,7 @@ int main(int argc, char **argv) {
     #endif // USE_VTK
 
     comp.Comp_TimeStep(0.0);
-    dt = min(comp.GetTimeStep(), precice_dt);
+    dt = fmin(comp.GetTimeStep(), precice_dt);
     comp.Comp_TimeStep(dt);
     comp.TimeStep(true);
 
@@ -357,13 +357,13 @@ int main(int argc, char **argv) {
   precice_dt = precice.advance(dt); // advance coupling
   precice.readBlockScalarData(heatFluxID, (int)(N), vertexIDs, heatFlux);
   geom.SetHeatFlux(heatFlux);
-  
+
   }
 
   precice.finalize();
 
 
-    
+
 
     // Print coordinates with values for the velocity u TODO
     #ifdef USE_DEBUG_PRINT_U

@@ -1,0 +1,3 @@
+/home/moira/Dokumente/NumSim/build/CMakeFiles/rebuild_cache.dir
+/home/moira/Dokumente/NumSim/build/CMakeFiles/NumSim.dir
+/home/moira/Dokumente/NumSim/build/CMakeFiles/edit_cache.dir

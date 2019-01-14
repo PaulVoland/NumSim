@@ -51,7 +51,9 @@ Compute::Compute(const Geometry* geom, const Parameter* param)
   _G->Initialize(geom->Velocity()[1]);
   _rhs->Initialize(0.0);
   _tmp->Initialize(0.0);
-
+  _geom->Update_U(_u, _param->u_D());
+  _geom->Update_V(_v, _param->v_D());
+  _geom->Update_T(_T, _param->T_H(), _param->T_C(), _param->K_S());
   this->Comp_TimeStep(0.0);
 }
 //------------------------------------------------------------------------------
@@ -75,6 +77,7 @@ void Compute::Comp_TimeStep(const real_t &dt_param) {
   if (dt_param > 0) {
     _dt = dt_param;
   } else {
+      cout << "Hier." << endl;
   // Find timestep as a minimum of different criteria --> first timestep without tau
   real_t dt_1 = _param->Re()*(_geom->Mesh()[0]*_geom->Mesh()[0]*_geom->Mesh()[1]*_geom->Mesh()[1])/
     (2.0*(_geom->Mesh()[0]*_geom->Mesh()[0] + _geom->Mesh()[1]*_geom->Mesh()[1]));
@@ -89,6 +92,7 @@ void Compute::Comp_TimeStep(const real_t &dt_param) {
     // Use minimum of dt and dt_3
     _dt = min(_dt, dt_3);
     }
+    cout << _dt << endl;
   }
 }
 //------------------------------------------------------------------------------

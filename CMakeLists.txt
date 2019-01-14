@@ -60,7 +60,7 @@ option (USE_DEBUG_PRINT_TYPES
 # Print in main.cpp after each single step?
 option (USE_STEP_BY_STEP
   "Enable print/visualisation in each step" OFF)
-  
+
 # Find sdl2
 INCLUDE(FindPkgConfig)
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
