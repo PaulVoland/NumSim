@@ -9,7 +9,7 @@ using namespace std;
 //------------------------------------------------------------------------------
 void Geometry::UpdateCellDirichlet_U(Grid* u, const real_t& value,
     const Iterator& it) const {
-  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellN:
     u->Cell(it) = 2.0*value - u->Cell(it.Top());
     break;
@@ -49,7 +49,7 @@ void Geometry::UpdateCellDirichlet_U(Grid* u, const real_t& value,
 //------------------------------------------------------------------------------
 void Geometry::UpdateCellDirichlet_V(Grid* v, const real_t& value,
     const Iterator& it) const {
-  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellN:
     v->Cell(it) = value;
     break;
@@ -88,7 +88,7 @@ void Geometry::UpdateCellDirichlet_V(Grid* v, const real_t& value,
 }
 //------------------------------------------------------------------------------
 void Geometry::UpdateCellNeumann(Grid* grid, const Iterator& it) const {
-  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellN:
     grid->Cell(it) = grid->Cell(it.Top());
     break;
@@ -125,7 +125,7 @@ void Geometry::UpdateCellNeumann_P(Grid* grid, const Iterator& it) const {
 // Not used in Larissas version
 void Geometry::UpdateCellDirichlet_T(Grid* T, const real_t& value,
     const Iterator& it) const {
-  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellN:
     T->Cell(it) = 2.0*value - T->Cell(it.Top());
     break;
@@ -152,6 +152,87 @@ void Geometry::UpdateCellDirichlet_T(Grid* T, const real_t& value,
     break;
   default:
     T->Cell(it) = value;
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfOne_U(Grid* u, Grid* v, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellN:
+    // ToDo
+    break;
+  case cellW:
+    // ToDo
+    break;
+  case cellS:
+    // ToDo
+    break;
+  case cellE:
+    u->Cell(it) = u->Cell(it.Left()) -
+      _h[0]*(v->Cell(it) - v->Cell(it.Down()))/_h[1];
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfTwo_Edge_U(Grid* u, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellNW:
+    // ToDo
+    break;
+  case cellSW:
+    // ToDo
+    break;
+  case cellNE:
+    // ToDo
+    break;
+  case cellSE:
+    // ToDo
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfTwo_Channel_U(Grid* u, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellNS:
+    // ToDo
+    break;
+  case cellWE:
+    // ToDo
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfThree_U(Grid* u, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellNWS:
+    // ToDo
+    break;
+  case cellNWE:
+    // ToDo
+    break;
+  case cellNSE:
+    // ToDo
+    break;
+  case cellWSE:
+    // ToDo
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfFour_U(Grid* u, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellAll:
+    // ToDo
+    break;
+  default:
     break;
   };
 }
@@ -191,6 +272,7 @@ void Geometry::Load(const char* file) {
   while (!feof(handle)) {
     if (!fscanf(handle, "%s =", name))
       continue;
+    // including halo cells! (inner + 2 in each direction)
     if (strcmp(name, "size") == 0) {
       if (fscanf(handle, " %lf %lf\n", &inval[0], &inval[1])) {
         _size[0] = inval[0];
@@ -238,7 +320,7 @@ void Geometry::Load(const char* file) {
             break;
           }
           for (int x = 0; x < _size[0]; ++x) {
-            _cell[x + y*_size[0]].fluid = cellNone;
+            _cell[x + y*_size[0]].neighbour = cellNone;
             _cell[x + y*_size[0]].factor = 1.0;
             switch (getc(handle)) {
             case '#':
@@ -270,6 +352,9 @@ void Geometry::Load(const char* file) {
             case 'c':
               _cell[x + y*_size[0]].type = typeTDir_c;
               break;
+            case 'E':
+              _cell[x + y*_size[0]].type = typeEmpty;
+              break;
             default: // All other cases, box for bottom/top/left/right layer
               if (x == 0 || x == _size[0] - 1 || y == 0 || y == _size[1] - 1)
                 _cell[x + y*_size[0]].type = typeSolid;
@@ -287,8 +372,73 @@ void Geometry::Load(const char* file) {
         for (int y = 0; y < _size[1]; ++y) {
           for (int x = 0; x < _size[0]; ++x) {
             int check = 0;
-            if (_cell[x + y*_size[0]].type == typeFluid)
+            if (_cell[x + y*_size[0]].type == typeEmpty)
               continue;
+            if (_cell[x + y*_size[0]].type == typeFluid) {
+              if (_cell[x + 1 + y*_size[0]].typ == typeEmpty || _cell[x - 1 + y*_size[0]].typ == typeEmpty ||
+                _cell[x + (y + 1)*_size[0]].typ == typeEmpty || _cell[x + (y - 1)*_size[0]].typ == typeEmpty) {
+                _cell[x + y*_size[0]].type = typeSurf;
+              } else {
+                continue;
+              }
+            }
+            if (_cell[x + y*_size[0]].type == typeSurf) {
+            if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeEmpty)
+              check |= 8;
+            if (x > 0 && _cell[x - 1 + y*_size[0]].type == typeEmpty)
+              check |= 2;
+            if (y < _size[1] - 1 && _cell[x + (y + 1)*_size[0]].type == typeEmpty)
+              check |= 1;
+            if (y > 0 && _cell[x + (y - 1)*_size[0]].type == typeEmpty)
+              check |= 4;
+            switch (check) {
+            case 1:
+              _cell[x + y*_size[0]].neighbour = cellN;
+              break;
+            case 2:
+              _cell[x + y*_size[0]].neighbour = cellW;
+              break;
+            case 3:
+              _cell[x + y*_size[0]].neighbour = cellNW;
+              break;
+            case 4:
+              _cell[x + y*_size[0]].neighbour = cellS;
+              break;
+            case 5:
+              _cell[x + y*_size[0]].neighbour = cellNS;
+              break;
+            case 6:
+              _cell[x + y*_size[0]].neighbour = cellSW;
+              break;
+            case 7:
+              _cell[x + y*_size[0]].neighbour = cellNWS;
+              break;
+            case 8:
+              _cell[x + y*_size[0]].neighbour = cellE;
+              break;
+            case 9:
+              _cell[x + y*_size[0]].neighbour = cellNE;
+              break;
+            case 10:
+              _cell[x + y*_size[0]].neighbour = cellWE;
+              break;
+            case 11:
+              _cell[x + y*_size[0]].neighbour = cellNWE;
+              break;
+            case 12:
+              _cell[x + y*_size[0]].neighbour = cellSE;
+              break;
+            case 13:
+              _cell[x + y*_size[0]].neighbour = cellNSE;
+              break;
+            case 14:
+              _cell[x + y*_size[0]].neighbour = cellWSE;
+              break;
+            case 15:
+              _cell[x + y*_size[0]].neighbour = cellAll;
+              break;
+            };
+            } else {
             if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeFluid)
               check |= 8;
             if (x > 0 && _cell[x - 1 + y*_size[0]].type == typeFluid)
@@ -306,7 +456,7 @@ void Geometry::Load(const char* file) {
             case 14:
             case 15:
               _cell[x + y*_size[0]].type = typeFluid;
-              _cell[x + y*_size[0]].fluid = cellNone;
+              _cell[x + y*_size[0]].neighbour = cellNone;
               // Remove single 'obstacle' cell; reset iteration to x--, y--
               if (x > 0)
                 x--;
@@ -314,30 +464,31 @@ void Geometry::Load(const char* file) {
                 y--;
               break;
             case 1:
-              _cell[x + y*_size[0]].fluid = cellN;
+              _cell[x + y*_size[0]].neighbour = cellN;
               break;
             case 2:
-              _cell[x + y*_size[0]].fluid = cellW;
+              _cell[x + y*_size[0]].neighbour = cellW;
               break;
             case 3:
-              _cell[x + y*_size[0]].fluid = cellNW;
+              _cell[x + y*_size[0]].neighbour = cellNW;
               break;
             case 4:
-              _cell[x + y*_size[0]].fluid = cellS;
+              _cell[x + y*_size[0]].neighbour = cellS;
               break;
             case 6:
-              _cell[x + y*_size[0]].fluid = cellSW;
+              _cell[x + y*_size[0]].neighbour = cellSW;
               break;
             case 8:
-              _cell[x + y*_size[0]].fluid = cellE;
+              _cell[x + y*_size[0]].neighbour = cellE;
               break;
             case 9:
-              _cell[x + y*_size[0]].fluid = cellNE;
+              _cell[x + y*_size[0]].neighbour = cellNE;
               break;
             case 12:
-              _cell[x + y*_size[0]].fluid = cellSE;
+              _cell[x + y*_size[0]].neighbour = cellSE;
               break;
             };
+          }
           }
         }
         // Parabolic stuff
@@ -392,7 +543,7 @@ const multi_real_t&  Geometry::TotalLength() const {return _length;}
 //------------------------------------------------------------------------------
 const multi_real_t&  Geometry::Mesh()        const {return _h;}
 //------------------------------------------------------------------------------
-const Cell_t& Geometry::Cell(const Iterator& it) const {
+Cell_t& Geometry::Cell(const Iterator& it) {
   return _cell[it]; // Uses cast command via Iterator::operator
 }
 //------------------------------------------------------------------------------
@@ -402,15 +553,173 @@ const real_t&        Geometry::Pressure()    const {return _pressure;}
 //------------------------------------------------------------------------------
 const real_t&        Geometry::Temperature() const {return _temperature;}
 //------------------------------------------------------------------------------
+void DynamicNeighbourhood() {
+  for (int y = 0; y < _size[1]; ++y) {
+          for (int x = 0; x < _size[0]; ++x) {
+            int check = 0;
+            if (_cell[x + y*_size[0]].type == typeEmpty)
+              continue;
+            if (_cell[x + y*_size[0]].type == typeFluid) {
+              if (_cell[x + 1 + y*_size[0]].typ == typeEmpty || _cell[x - 1 + y*_size[0]].typ == typeEmpty ||
+                _cell[x + (y + 1)*_size[0]].typ == typeEmpty || _cell[x + (y - 1)*_size[0]].typ == typeEmpty) {
+                _cell[x + y*_size[0]].type = typeSurf;
+              } else {
+                continue;
+              }
+            }
+            if (_cell[x + y*_size[0]].type == typeSurf) {
+            if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeEmpty)
+              check |= 8;
+            if (x > 0 && _cell[x - 1 + y*_size[0]].type == typeEmpty)
+              check |= 2;
+            if (y < _size[1] - 1 && _cell[x + (y + 1)*_size[0]].type == typeEmpty)
+              check |= 1;
+            if (y > 0 && _cell[x + (y - 1)*_size[0]].type == typeEmpty)
+              check |= 4;
+            switch (check) {
+            case 1:
+              _cell[x + y*_size[0]].neighbour = cellN;
+              break;
+            case 2:
+              _cell[x + y*_size[0]].neighbour = cellW;
+              break;
+            case 3:
+              _cell[x + y*_size[0]].neighbour = cellNW;
+              break;
+            case 4:
+              _cell[x + y*_size[0]].neighbour = cellS;
+              break;
+            case 5:
+              _cell[x + y*_size[0]].neighbour = cellNS;
+              break;
+            case 6:
+              _cell[x + y*_size[0]].neighbour = cellSW;
+              break;
+            case 7:
+              _cell[x + y*_size[0]].neighbour = cellNWS;
+              break;
+            case 8:
+              _cell[x + y*_size[0]].neighbour = cellE;
+              break;
+            case 9:
+              _cell[x + y*_size[0]].neighbour = cellNE;
+              break;
+            case 10:
+              _cell[x + y*_size[0]].neighbour = cellWE;
+              break;
+            case 11:
+              _cell[x + y*_size[0]].neighbour = cellNWE;
+              break;
+            case 12:
+              _cell[x + y*_size[0]].neighbour = cellSE;
+              break;
+            case 13:
+              _cell[x + y*_size[0]].neighbour = cellNSE;
+              break;
+            case 14:
+              _cell[x + y*_size[0]].neighbour = cellWSE;
+              break;
+            case 15:
+              _cell[x + y*_size[0]].neighbour = cellAll;
+              break;
+            };
+            } else {
+            bool parabolic = false;
+            if (_cell[x + y*_size[0]].type == typeInH || (_cell[x + y*_size[0]].type == typeInV)
+              parabolic = true;
+            if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeFluid)
+              check |= 8;
+            if (x > 0 && _cell[x - 1 + y*_size[0]].type == typeFluid)
+              check |= 2;
+            if (y < _size[1] - 1 && _cell[x + (y + 1)*_size[0]].type == typeFluid)
+              check |= 1;
+            if (y > 0 && _cell[x + (y - 1)*_size[0]].type == typeFluid)
+              check |= 4;
+            switch (check) {
+            case 5:
+            case 7:
+            case 10:
+            case 11:
+            case 13:
+            case 14:
+            case 15:
+              _cell[x + y*_size[0]].type = typeFluid;
+              _cell[x + y*_size[0]].neighbour = cellNone;
+              // Remove single 'obstacle' cell; reset iteration to x--, y--
+              if (x > 0)
+                x--;
+              if (y > 0)
+                y--;
+              break;
+            case 1:
+              _cell[x + y*_size[0]].neighbour = cellN;
+              break;
+            case 2:
+              _cell[x + y*_size[0]].neighbour = cellW;
+              break;
+            case 3:
+              _cell[x + y*_size[0]].neighbour = cellNW;
+              break;
+            case 4:
+              _cell[x + y*_size[0]].neighbour = cellS;
+              break;
+            case 6:
+              _cell[x + y*_size[0]].neighbour = cellSW;
+              break;
+            case 8:
+              _cell[x + y*_size[0]].neighbour = cellE;
+              break;
+            case 9:
+              _cell[x + y*_size[0]].neighbour = cellNE;
+              break;
+            case 12:
+              _cell[x + y*_size[0]].neighbour = cellSE;
+              break;
+            };
+          }
+  }
+  // Parabolic stuff
+        if (parabolic) {
+          for (int y = 0; y < _size[1]; ++y) {
+            for (int x = 0; x < _size[0]; ++x) {
+              int32_t dist1 = 0;
+              int32_t dist2 = 0;
+              switch (_cell[x + y*_size[0]].type) {
+              case typeInH:
+                while (x - dist1 >= 0 && _cell[x - dist1 + y*_size[0]].type == typeInH)
+                  ++dist1;
+                while (x + dist2 < _size[0] && _cell[x + dist2 + y*_size[0]].type == typeInH)
+                  ++dist2;
+                _cell[x + y*_size[0]].factor = 4.0*((real_t)(dist1) - 0.5)*((real_t)(dist2) - 0.5)/
+                  (real_t)((dist1 + dist2 - 1)*(dist1 + dist2 - 1));
+                break;
+              case typeInV:
+                while (y - dist1 >= 0 && _cell[x + (y - dist1)*_size[0]].type == typeInV)
+                  ++dist1;
+                while (y + dist2 < _size[1] && _cell[x + (dist2 + y)*_size[0]].type == typeInV)
+                  ++dist2;
+                _cell[x + y*_size[0]].factor = 4.0*((real_t)(dist1) - 0.5)*((real_t)(dist2) - 0.5)/
+                  (real_t)((dist1 + dist2 - 1)*(dist1 + dist2 - 1));
+                break;
+              default:
+                break;
+              };
+            }
+          }
+        }
+}
+//------------------------------------------------------------------------------
 /// Updates the velocity field u on the boundary
 // @param u     grid for the velocity in x-direction
 // @param u_Dir Dirichlet value for u from .param
-void Geometry::Update_U(Grid* u, const real_t& u_Dir) const {
+void Geometry::Update_U(Grid* u, Grid* v, const real_t& u_Dir) const {
   if (_cell) {
     /// Cell_t is used for free geometries
     Iterator it(this);
+    index_t pos;
     while (it.Valid()) {
-      switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
+      pos = it.Pos()[0] + it.Pos()[1]*_size[0];
+      switch (_cell[pos].type) {
       case typeSolid:
         UpdateCellDirichlet_U(u, 0.0, it);
         break;
@@ -438,6 +747,22 @@ void Geometry::Update_U(Grid* u, const real_t& u_Dir) const {
         break;
       case typeTDir_c:
         UpdateCellDirichlet_U(u, 0.0, it);
+        break;
+      case typeSurf:
+        if (_cell[pos].neighbour == cellN || _cell[pos].neighbour == cellW ||
+          _cell[pos].neighbour == cellS || _cell[pos].neighbour == cellE) {
+          UpdateSurfOne_U(u, v, it);
+        } else if (_cell[pos].neighbour == cellNW || _cell[pos].neighbour == cellSW ||
+          _cell[pos].neighbour == cellNE || _cell[pos].neighbour == cellSE) {
+          UpdateSurfTwo_Edge_U(u, it);
+        } else if (_cell[pos].neighbour == cellNS || _cell[pos].neighbour == cellWE) {
+          UpdateSurfTwo_Channel_U(u, it);
+        } else if (_cell[pos].neighbour == cellNWS || _cell[pos].neighbour == cellNWE ||
+          _cell[pos].neighbour == cellNSE || _cell[pos].neighbour == cellWSE) {
+          UpdateSurfThree_U(u, it);
+        } else {
+          UpdateSurfFour_U(u, it);
+        }
         break;
       default:
         break;
