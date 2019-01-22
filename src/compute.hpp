@@ -27,22 +27,13 @@ public:
   /// Deletes all grids
   ~Compute();
 
-
-
-
   /// Execute one time step of the fluid simulation (with or without debug info)
   // @ param printInfo print information about current solver state (residual
   // etc.)
   void TimeStep(bool printInfo);
 
-
   /// Returns the simulated time in total
   const real_t &GetTime() const;
-
-  /// Returns the timestep
-  const real_t &GetTimeStep() const;
-  /// Set the timestep
-  void Comp_TimeStep(const real_t &dt_param);
 
   /// Returns the pointer to U
   const Grid *GetU() const;
@@ -65,9 +56,6 @@ public:
 private:
   // current timestep
   real_t _t;
-
-  // timestep
-  real_t _dt;
 
   // donor-cell diffusion condition (p. 27)
   real_t _dtlimit;

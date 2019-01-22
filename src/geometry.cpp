@@ -156,38 +156,6 @@ void Geometry::UpdateCellDirichlet_T(Grid* T, const real_t& value,
   };
 }
 //------------------------------------------------------------------------------
-void Geometry::UpdateHeatFlux(Grid* T, const real_t& value,
-    const Iterator& it) const {
-  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].fluid) {
-  case cellN:
-    T->Cell(it) = T->Cell(it.Top()) + _h[1]*value;
-    break;
-  case cellW:
-    T->Cell(it) = T->Cell(it.Left()) + _h[0]*value;
-    break;
-  case cellNW:
-    T->Cell(it) = (T->Cell(it.Left()) + T->Cell(it.Top()) + value*(_h[0] + _h[1]))/2.0;
-    break;
-  case cellS:
-    T->Cell(it) = T->Cell(it.Down()) + _h[1]*value;
-    break;
-  case cellSW:
-    T->Cell(it) = (T->Cell(it.Left()) + T->Cell(it.Down()) + value*(_h[0] + _h[1]))/2.0;
-    break;
-  case cellE:
-    T->Cell(it) = T->Cell(it.Right()) + _h[0]*value;
-    break;
-  case cellNE:
-    T->Cell(it) = (T->Cell(it.Right()) + T->Cell(it.Top()) + value*(_h[0] + _h[1]))/2.0;
-    break;
-  case cellSE:
-    T->Cell(it) = (T->Cell(it.Right()) + T->Cell(it.Down()) + value*(_h[0] + _h[1]))/2.0;
-    break;
-  default:
-    break;
-  };
-}
-//------------------------------------------------------------------------------
 /// Constructs a default geometry
 Geometry::Geometry() {
   _length[0] = 1.0;
@@ -205,9 +173,6 @@ Geometry::Geometry() {
   _size[1] += 2;
   // No cell field set yet
   _cell    = NULL;
-  _num_coupling = 0;
-  _coupling_cell_numbs = NULL;
-  _heat_flux = NULL;
   // Message of success
   cout << "Loaded default geometry for lid driven cavity." << endl;
 }
@@ -305,10 +270,6 @@ void Geometry::Load(const char* file) {
             case 'c':
               _cell[x + y*_size[0]].type = typeTDir_c;
               break;
-            case 'C':
-              _cell[x + y*_size[0]].type = typeCoupling;
-              _num_coupling++;
-              break;
             default: // All other cases, box for bottom/top/left/right layer
               if (x == 0 || x == _size[0] - 1 || y == 0 || y == _size[1] - 1)
                 _cell[x + y*_size[0]].type = typeSolid;
@@ -322,20 +283,9 @@ void Geometry::Load(const char* file) {
         }
         if (!_cell)
           break;
-        if (_coupling_cell_numbs)
-          delete[] _coupling_cell_numbs;
-        _coupling_cell_numbs = new index_t[_num_coupling];
-        if (_heat_flux)
-          delete[] _heat_flux;
-        _heat_flux = new real_t[_num_coupling];
         // Process it
-        int count_C = 0;
         for (int y = 0; y < _size[1]; ++y) {
           for (int x = 0; x < _size[0]; ++x) {
-            if (_cell[x + y*_size[0]].type == typeCoupling) {
-              _coupling_cell_numbs[count_C] = (index_t)(x + y*_size[0]);
-              count_C++;
-            }
             int check = 0;
             if (_cell[x + y*_size[0]].type == typeFluid)
               continue;
@@ -446,23 +396,11 @@ const Cell_t& Geometry::Cell(const Iterator& it) const {
   return _cell[it]; // Uses cast command via Iterator::operator
 }
 //------------------------------------------------------------------------------
-const multi_real_t&  Geometry::Velocity()     const {return _velocity;}
+const multi_real_t&  Geometry::Velocity()    const {return _velocity;}
 //------------------------------------------------------------------------------
-const real_t&        Geometry::Pressure()     const {return _pressure;}
+const real_t&        Geometry::Pressure()    const {return _pressure;}
 //------------------------------------------------------------------------------
-const real_t&        Geometry::Temperature()  const {return _temperature;}
-//------------------------------------------------------------------------------
-const index_t&       Geometry::Num_Coupling() const {return _num_coupling;}
-//------------------------------------------------------------------------------
-const index_t*       Geometry::GetCouplingCellNumbs() const {return _coupling_cell_numbs;}
-//------------------------------------------------------------------------------
-const real_t*        Geometry::GetHeatFlux() const {return _heat_flux;}
-//------------------------------------------------------------------------------
-void Geometry::SetHeatFlux(const real_t *HeatFlux) {
-  for (index_t i = 0; i < _num_coupling; i++) {
-    _heat_flux[i] = HeatFlux[i];
-  }
-}
+const real_t&        Geometry::Temperature() const {return _temperature;}
 //------------------------------------------------------------------------------
 /// Updates the velocity field u on the boundary
 // @param u     grid for the velocity in x-direction
@@ -499,9 +437,6 @@ void Geometry::Update_U(Grid* u, const real_t& u_Dir) const {
         UpdateCellDirichlet_U(u, 0.0, it);
         break;
       case typeTDir_c:
-        UpdateCellDirichlet_U(u, 0.0, it);
-        break;
-      case typeCoupling:
         UpdateCellDirichlet_U(u, 0.0, it);
         break;
       default:
@@ -576,9 +511,6 @@ void Geometry::Update_V(Grid* v, const real_t& v_Dir) const {
         UpdateCellDirichlet_V(v, 0.0, it);
         break;
       case typeTDir_c:
-        UpdateCellDirichlet_V(v, 0.0, it);
-        break;
-      case typeCoupling:
         UpdateCellDirichlet_V(v, 0.0, it);
         break;
       default:
@@ -657,9 +589,6 @@ void Geometry::Update_P(Grid* p, const real_t& p_Dir) const {
       case typeTDir_c:
         UpdateCellNeumann_P(p, it);
         break;
-      case typeCoupling:
-        UpdateCellNeumann_P(p, it);
-        break;
       default:
         break;
       };
@@ -700,11 +629,10 @@ void Geometry::Update_P(Grid* p, const real_t& p_Dir) const {
 // @param T   grid for the temperature
 // @param T_h higher temeparture value from .param
 // @param T_c lower temperature vlaue from .param
-void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c, const real_t& k_s) const {
+void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c) const {
   if (_cell) {
     /// Cell_t is used for free geometries
     Iterator it(this);
-    int count_C = 0;
     while (it.Valid()) {
       switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
       case typeSolid:
@@ -738,10 +666,6 @@ void Geometry::Update_T(Grid* T, const real_t& T_h, const real_t& T_c, const rea
         break;
       case typeTDir_c: // possibly use T_c as negative offset to TI (which is null niveau)
         UpdateCellDirichlet_T(T, T_c, it);
-        break;
-      case typeCoupling:
-        UpdateHeatFlux(T, _heat_flux[count_C]/k_s, it);
-        count_C++;
         break;
       default:
         break;

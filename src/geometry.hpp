@@ -32,8 +32,7 @@ typedef enum {
   typeSlipV,   // Vertical slip boundary
   typeOut,     // Outflow
   typeTDir_h,  // Dirichlet value for higher temperature (u,v,p treated as no slip)
-  typeTDir_c,  // Dirichlet value for lower temperature (u,v,p treated as no slip)
-  typeCoupling // NEW  _interface to a coupled solid field
+  typeTDir_c   // Dirichlet value for lower temperature (u,v,p treated as no slip)
 } CellType_t;
 /// Typedef for cell boundary type (which boundary cells are fluid)
 //       |   NO   |
@@ -99,14 +98,6 @@ public:
   const real_t &Pressure() const;
   /// Returns the prescribed temperature value
   const real_t &Temperature() const;
-  /// Returns number of coupling cells
-  const index_t &Num_Coupling() const;
-  /// Returns field numbers of coupling cells
-  const index_t *GetCouplingCellNumbs() const;
-  /// Returns the heat flux field
-  const real_t *GetHeatFlux() const;
-  /// Setter for the heat flux field
-  void SetHeatFlux(const real_t *HeatFlux);
 
   /// Updates the velocity field u (parameter from .param used)
   void Update_U(Grid *u, const real_t &u_Dir) const;
@@ -115,13 +106,10 @@ public:
   /// Updates the pressure field p (parameter from .param used)
   void Update_P(Grid *p, const real_t &p_Dir) const;
   /// Updates the temperature field T (parameters from .param used)
-  void Update_T(Grid *T, const real_t &T_h, const real_t &T_c, const real_t &k_s) const;
+  void Update_T(Grid *T, const real_t &T_h, const real_t &T_c) const;
 
 private:
   Cell_t *_cell;
-  index_t _num_coupling;
-  index_t *_coupling_cell_numbs;
-  real_t *_heat_flux;
 
   multi_index_t _size;
   multi_real_t  _length;
@@ -136,7 +124,6 @@ private:
   void UpdateCellNeumann(Grid *grid, const Iterator &it) const;
   void UpdateCellNeumann_P(Grid *grid, const Iterator &it) const;
   void UpdateCellDirichlet_T(Grid *T, const real_t &value, const Iterator &it) const;
-  void UpdateHeatFlux(Grid *T, const real_t &value, const Iterator &it) const;
 };
 //------------------------------------------------------------------------------
 #endif // __GEOMETRY_HPP

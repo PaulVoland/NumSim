@@ -14,7 +14,7 @@ using namespace std;
 /// Creates a compute instance with given geometry and parameter
 //  @param geom  given geometry
 //  @param param given parameter data
-Compute::Compute(const Geometry* geom, const Parameter* param)
+Compute::Compute(const Geometry* geom, const Parameter* param) 
   : _geom(geom), _param(param) {
   // Initialize solver
   _solver = new SOR(geom, param->Omega());
@@ -51,8 +51,6 @@ Compute::Compute(const Geometry* geom, const Parameter* param)
   _G->Initialize(geom->Velocity()[1]);
   _rhs->Initialize(0.0);
   _tmp->Initialize(0.0);
-
-  this->Comp_TimeStep(0.0);
 }
 //------------------------------------------------------------------------------
 /// Deletes all grids
@@ -67,30 +65,6 @@ Compute::~Compute() {
   delete[] _tmp;
   delete _solver;
 }
-
-//-------------------------------------------------------------------
-
-void Compute::Comp_TimeStep(const real_t &dt_param) {
-  // If explicit timestep > 0 is given, use this instead
-  if (dt_param > 0) {
-    _dt = dt_param;
-  } else {
-  // Find timestep as a minimum of different criteria --> first timestep without tau
-  real_t dt_1 = _param->Re()*(_geom->Mesh()[0]*_geom->Mesh()[0]*_geom->Mesh()[1]*_geom->Mesh()[1])/
-    (2.0*(_geom->Mesh()[0]*_geom->Mesh()[0] + _geom->Mesh()[1]*_geom->Mesh()[1]));
-  // Second timestep
-  real_t dt_2 = _param->Tau()*fmin(_geom->Mesh()[0], _geom->Mesh()[1])/
-    fmax(_u->AbsMax(), _v->AbsMax());
-  // Use minimum of dt_1 and dt_2
-  _dt = min(dt_1, dt_2);
-  if (_param->Pr() != 0 && _param->Pr() < 1) {
-    // Third timestep
-    real_t dt_3 = dt_1*_param->Pr(); // if pr > 1, this criterium is never used?!
-    // Use minimum of dt and dt_3
-    _dt = min(_dt, dt_3);
-    }
-  }
-}
 //------------------------------------------------------------------------------
 /// Execute one time step of the fluid simulation (with or without debug info)
 // @ param printInfo print information about current solver state (residual etc.)
@@ -100,28 +74,43 @@ void Compute::TimeStep(bool printInfo) {
   // Refresh boundary values
   _geom->Update_U(_u, _param->u_D());
   _geom->Update_V(_v, _param->v_D());
-  _geom->Update_T(_T, _param->T_H(), _param->T_C(), _param->K_S());
+  _geom->Update_T(_T, _param->T_H(), _param->T_C());
   // _geom->Update_P(_p); // not necessary here
   // Measuring of computational times
   // zg.Start();
-
-
-
+  // Find timestep as a minimum of different criteria --> first timestep without tau
+  real_t dt_1 = _param->Re()*(_geom->Mesh()[0]*_geom->Mesh()[0]*_geom->Mesh()[1]*_geom->Mesh()[1])/
+    (2.0*(_geom->Mesh()[0]*_geom->Mesh()[0] + _geom->Mesh()[1]*_geom->Mesh()[1]));
+  // Second timestep
+  real_t dt_2 = _param->Tau()*fmin(_geom->Mesh()[0], _geom->Mesh()[1])/
+    fmax(_u->AbsMax(), _v->AbsMax());
+  // Use minimum of dt_1 and dt_2
+  real_t dt = min(dt_1, dt_2);
+  if (_param->Pr() != 0 && _param->Pr() < 1) {
+    // Third timestep
+    real_t dt_3 = dt_1*_param->Pr(); // if pr > 1, this criterium is never used?!
+    // Use minimum of dt and dt_3
+    dt = min(dt, dt_3);
+  }
+  // If explicit timestep > 0 is given in the paramater file, use this instead
+  if (_param->Dt() > 0) {
+    dt = _param->Dt();
+  }
   /* // 2.4.2) measuring computation of the time step
   if (_comm->getRank() == 0 && printInfo) {
       cout << "Computational time of the time step = "
         << zg.Step() << " µs\n" << endl;
   } */
   // Compute the new temperature values explicitly (only influence of old velocity values)
-  HeatTransport(_dt);
-  _geom->Update_T(_T, _param->T_H(), _param->T_C(), _param->K_S()); // possibly necessary?
+  HeatTransport(dt);
+  _geom->Update_T(_T, _param->T_H(), _param->T_C()); // possibly necessary?
   // Compute temporary velocities F, G using difference schemes
-  MomentumEqu(_dt);
+  MomentumEqu(dt);
   // Boundary update for new values of F, G
   _geom->Update_U(_F, _param->u_D());
   _geom->Update_V(_G, _param->v_D());
   // Compute RHS of the Poisson equation
-  RHS(_dt);
+  RHS(dt);
   // Boundary update for new values of rhs
   // _geom->Update_P(_rhs); // not necessary here
   // Find solution of the Poisson equation using a SOR solver
@@ -164,7 +153,7 @@ void Compute::TimeStep(bool printInfo) {
         cout << "Communication time for one step = "
           << time_comm << " µs\n" << endl;
       } */
-    // }
+    // } 
       res = _solver->Cycle(_p, _rhs);
       // 2.4.1A), 2.4.2)    time_comp += zg.Step();
       // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
@@ -196,25 +185,20 @@ void Compute::TimeStep(bool printInfo) {
       << time_comm << " µs\n" << endl;
   } */
   // Compute 'new' velocities using the pressure
-  NewVelocities(_dt);
+  NewVelocities(dt);
   // (optionally) printing informations
   if (printInfo) {
-    cout << "_t = " << fixed << _t << "\tdt = " << scientific << _dt << " \tres = " << res
+    cout << "_t = " << fixed << _t << "\tdt = " << scientific << dt << " \tres = " << res
       << " \tprogress: " << fixed << (uint32_t) 100*_t/_param->Tend() << "%\n" << endl;
   }
 
   // Next timestep
-  _t += _dt;
+  _t += dt;
 }
 /* Getter functions
 */
 /// Returns the simulated time in total
 const real_t& Compute::GetTime() const {return _t;}
-
-
-/// Returns the timestep
-const real_t& Compute::GetTimeStep() const{return _dt;}
-
 
 /// Returns the pointer to u
 const Grid* Compute::GetU() const {return _u;}
@@ -235,8 +219,6 @@ const Grid* Compute::GetT() const {return _T;}
 const Grid* Compute::GetVelocity() {
   // Initialize full Iterator
   Iterator it(_geom);
-
-
 
   // Go through all cells
   while (it.Valid()) {
@@ -303,7 +285,7 @@ void Compute::MomentumEqu(const real_t& dt) {
       // read access to u, v
       const real_t u = _u->Cell(intit);
       const real_t v = _v->Cell(intit);
-
+      
       // Parameter for Donor-Cell
       const real_t Re_inv = 1.0/_param->Re();
       const real_t alpha  = _param->Alpha();
@@ -311,8 +293,8 @@ void Compute::MomentumEqu(const real_t& dt) {
       // Update correlation, see lecture
       if (_geom->Cell(intit.Right()).type == typeFluid) {
         // Additional term through temperature inclusion (temperature value at u position)
-        real_t add_u = -_param->Gx()*_param->Beta()*
-          ((_T->Cell(intit) + _T->Cell(intit.Right())/2.0));
+        real_t add_u = _param->Gx()*(1.0 - _param->Beta()*
+          ((_T->Cell(intit) + _T->Cell(intit.Right()))/2.0));
         /* real_t add_u = -_param->Gx()*_param->Beta()*
           ((_T->Cell(intit) + _T->Cell(intit.Right())/2.0)); // Larissa */
         _F->Cell(intit) = u + dt*(Re_inv*(_u->dxx(intit) + _u->dyy(intit)) -
@@ -320,8 +302,8 @@ void Compute::MomentumEqu(const real_t& dt) {
       }
       if (_geom->Cell(intit.Top()).type == typeFluid) {
         // Additional term through temperature inclusion (temperature value at v position)
-        real_t add_v = -_param->Gy()*_param->Beta()*
-          ((_T->Cell(intit) + _T->Cell(intit.Top())/2.0));
+        real_t add_v = _param->Gy()*(1.0 - _param->Beta()*
+          ((_T->Cell(intit) + _T->Cell(intit.Top()))/2.0));
         /* real_t add_v = -_param->Gy()*_param->Beta()*
           ((_T->Cell(intit) + _T->Cell(intit.Top())/2.0)); // Larissa */
         _G->Cell(intit) = v + dt*(Re_inv*(_v->dxx(intit) + _v->dyy(intit)) -

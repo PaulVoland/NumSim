@@ -43,7 +43,6 @@ Parameter::Parameter() {
   _p_Dir   = 0.0;
   _T_h     = 0.0;
   _T_c     = 0.0;
-  _k_s     = 1.0;
 
   // Message of success
   cout << "Loaded default parameters." << endl;
@@ -92,8 +91,6 @@ void Parameter::Load(const char* file) {
       _T_h     = inval;
     else if (strcmp(name, "T_c")      == 0)
       _T_c     = inval;
-    else if (strcmp(name, "k_s")      == 0)
-      _k_s     = inval;
     else
       printf("Unknown parameter %s\n", name);
   }
@@ -136,6 +133,4 @@ const real_t&  Parameter::p_D()     const {return _p_Dir;}
 const real_t&  Parameter::T_H()     const {return _T_h;}
 //------------------------------------------------------------------------------
 const real_t&  Parameter::T_C()     const {return _T_c;}
-//------------------------------------------------------------------------------
-const real_t&  Parameter::K_S()     const {return _k_s;}
 //------------------------------------------------------------------------------

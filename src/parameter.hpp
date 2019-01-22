@@ -47,7 +47,6 @@ public:
   const real_t  &p_D()     const;
   const real_t  &T_H()     const;
   const real_t  &T_C()     const;
-  const real_t  &K_S()     const;
 
 private:
   real_t  _re;
@@ -67,7 +66,6 @@ private:
   real_t  _p_Dir;
   real_t  _T_h;
   real_t  _T_c;
-  real_t  _k_s;
 };
 //------------------------------------------------------------------------------
 #endif // __PARAMETER_HPP

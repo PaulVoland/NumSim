@@ -20,7 +20,6 @@
 #include "compute.hpp"
 #include "geometry.hpp"
 #include "parameter.hpp"
-#include "precice/SolverInterface.hpp"
 
 #ifdef USE_DEBUG_VISU
 #include "visu.hpp"
@@ -44,8 +43,6 @@
 #include <iostream>
 
 using namespace std;
-using namespace precice;
-using namespace precice::constants;
 
 /* Internal methods for debug prints on console in different colours
 */
@@ -92,21 +89,19 @@ string plusminus_to_string(double x) {
     return to_string(x);
 }
 
-
-
 //------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 
   /* // Measuring of computational times
   ZeitGeist zg;
   zg.Start(); */
-
+  
   // Create parameter and geometry instances with default values
   Parameter param;
   // param.Load("../default.param"); // Is done by the parser now.
   Geometry geom;
   // geom.Load("../default.geom"); // Is done by the parser now.
-
+  
   // Using the ARGVParser.hpp template
   // Works with commands from terminal like: -geom ../default.geom -param ../default.param
   ARGVParser parser;
@@ -120,116 +115,10 @@ int main(int argc, char **argv) {
     param.Load(av[0]);
     return 1;
   });
-  // Parser to fix 
-  /*
-  parser.bind("-config", (int ac, char **av)-> int {
-    if (ac != 1) return 0;
-    string path(av[0]);
-    return 1;
-  });
-  */
-  string path("string");
-
   parser.exec(argc, argv);
 
   // Create the fluid solver
   Compute comp(&geom, &param);
-
-  cout << "Configuring preCICE..." << endl;
-
-  // Create preCICE with the solver’s name, the rank, and the total number of processes.
-  SolverInterface precice("Fluid", 0, 1);
-  // Give path to config file
-  precice.configure(path);
-  // Get dimension of physical point coordinates from precice
-  index_t dim = (index_t)(precice.getDimensions());
-  // Get number of coupling cells from geom
-  index_t N = geom.Num_Coupling();
-  // Fields for exchange
-  double* temp;
-  temp = new double[N];
-  double* heatFlux;
-  heatFlux = new double[N];
-  // Get temperature values from fluid field
-  for (index_t i = 0; i < N; i++) {
-    Iterator it_C(&geom, geom.GetCouplingCellNumbs()[i]);
-    if (geom.Cell(it_C).type != typeCoupling)
-      break;
-    switch (geom.Cell(it_C).fluid) {
-      case cellN:
-        temp[i] = comp.GetT()->Cell(it_C.Top());
-        break;
-      case cellW:
-        temp[i] = comp.GetT()->Cell(it_C.Left());
-        break;
-      case cellNW:
-        temp[i] = (comp.GetT()->Cell(it_C.Top()) + comp.GetT()->Cell(it_C.Left()))/2.0;
-        break;
-      case cellS:
-        temp[i] = comp.GetT()->Cell(it_C.Down());
-        break;
-      case cellSW:
-        temp[i] = (comp.GetT()->Cell(it_C.Down()) + comp.GetT()->Cell(it_C.Left()))/2.0;
-        break;
-      case cellE:
-        temp[i] = comp.GetT()->Cell(it_C.Right());
-        break;
-      case cellNE:
-        temp[i] = (comp.GetT()->Cell(it_C.Top()) + comp.GetT()->Cell(it_C.Right()))/2.0;
-        break;
-      case cellSE:
-        temp[i] = (comp.GetT()->Cell(it_C.Down()) + comp.GetT()->Cell(it_C.Right()))/2.0;
-        break;
-      default:
-        break;
-    };
-  }
-
-  // Get IDs from preCICE
-  int meshID        = precice.getMeshID("Fluid-Mesh");
-  int tempID        = precice.getDataID("Temperature", meshID);
-  int heatFluxID    = precice.getDataID("Heat-Flux", meshID);
-
-  int* vertexIDs;
-  double* grid;
-  vertexIDs = new int[N];
-  grid = new double[dim*N];
-  //------------------------------------------------------------------------------
-  // Manipulate manually!!!
-  double* offset = new double[3];
-  offset[0] = 0.0;
-  offset[1] = 0.25;
-  //------------------------------------------------------------------------------ 
-  for (index_t i = 0; i < N; i++) {
-    for (index_t j = 0; j < dim; j++) {
-      Iterator it_C(&geom, geom.GetCouplingCellNumbs()[i]);
-      if (j == 2) {
-        grid[i*j + j] = 0.0;
-      } else {
-        grid[i*j + j] = (double)(it_C.Pos()[j]*geom.Mesh()[j] + geom.Mesh()[j]/2.0) + offset[j];
-      }
-    }  
-  }
-
-  // Give mesh to precice
-  precice.setMeshVertices(meshID, (int)(N), grid, vertexIDs);
-
-  cout << "Initializing preCICE..." << endl;
-  real_t dt;
-  real_t precice_dt = (real_t)(precice.initialize());
-
-  // Write initial data if required
-  if (precice.isActionRequired(actionWriteInitialData())) {
-    precice.writeBlockScalarData(tempID, (int)(N), vertexIDs, temp);
-    precice.fulfilledAction(actionWriteInitialData());
-  }
-  // Initial data is sent or received if necessary
-  precice.initializeData();
-  // Read data if available
-  if (precice.isReadDataAvailable()) {
-    precice.readBlockScalarData(heatFluxID, (int)(N), vertexIDs, heatFlux);
-  }
-  geom.SetHeatFlux(heatFlux);
 
   // Create Iterator instance for debug purposes
   Iterator it(&geom);
@@ -270,8 +159,8 @@ int main(int argc, char **argv) {
     visugrid = comp.GetVelocity();
   #endif // USE_DEBUG_VISU
 
-  while (precice.isCouplingOngoing()) {
-
+  // Run the time steps until the end is reached
+  while (comp.GetTime() < param.Tend()) {
     #ifdef USE_DEBUG_VISU
       // Render and check if window is closed
       switch (visu.Render(visugrid)) {
@@ -313,57 +202,12 @@ int main(int argc, char **argv) {
       vtk.Finish();
     #endif // USE_VTK
 
-    comp.Comp_TimeStep(0.0);
-    dt = min(comp.GetTimeStep(), precice_dt);
-    comp.Comp_TimeStep(dt);
-    comp.TimeStep(true);
-
-    // Get temperature values from fluid field
-  for (index_t i = 0; i < N; i++) {
-    Iterator it_C(&geom, geom.GetCouplingCellNumbs()[i]);
-    if (geom.Cell(it_C).type != typeCoupling)
-      break;
-    switch (geom.Cell(it_C).fluid) {
-      case cellN:
-        temp[i] = comp.GetT()->Cell(it_C.Top());
-        break;
-      case cellW:
-        temp[i] = comp.GetT()->Cell(it_C.Left());
-        break;
-      case cellNW:
-        temp[i] = (comp.GetT()->Cell(it_C.Top()) + comp.GetT()->Cell(it_C.Left()))/2.0;
-        break;
-      case cellS:
-        temp[i] = comp.GetT()->Cell(it_C.Down());
-        break;
-      case cellSW:
-        temp[i] = (comp.GetT()->Cell(it_C.Down()) + comp.GetT()->Cell(it_C.Left()))/2.0;
-        break;
-      case cellE:
-        temp[i] = comp.GetT()->Cell(it_C.Right());
-        break;
-      case cellNE:
-        temp[i] = (comp.GetT()->Cell(it_C.Top()) + comp.GetT()->Cell(it_C.Right()))/2.0;
-        break;
-      case cellSE:
-        temp[i] = (comp.GetT()->Cell(it_C.Down()) + comp.GetT()->Cell(it_C.Right()))/2.0;
-        break;
-      default:
-        break;
-    };
-  }
-
-  precice.writeBlockScalarData(tempID, (int)(N), vertexIDs, temp);
-  precice_dt = precice.advance(dt); // advance coupling
-  precice.readBlockScalarData(heatFluxID, (int)(N), vertexIDs, heatFlux);
-  geom.SetHeatFlux(heatFlux);
-  
-  }
-
-  precice.finalize();
-
-
-    
+    // Run a few steps
+    #ifndef USE_STEP_BY_STEP
+      for (uint32_t i = 0; i < 9; ++i) {
+        comp.TimeStep(false);
+      }
+    #endif // NOT USE_STEP_BY_STEP
 
     // Print coordinates with values for the velocity u TODO
     #ifdef USE_DEBUG_PRINT_U
@@ -422,6 +266,8 @@ int main(int argc, char **argv) {
       */
     #endif // USE_DEBUG_PRINT_TYPES
 
+    comp.TimeStep(true);
+  }
   /* if (!comm.getRank()) {
     cout << "Total computational time = "
       << zg.Stop() << " µs\n" << endl;
