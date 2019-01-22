@@ -32,7 +32,9 @@ typedef enum {
   typeSlipV,   // Vertical slip boundary
   typeOut,     // Outflow
   typeTDir_h,  // Dirichlet value for higher temperature (u,v,p treated as no slip)
-  typeTDir_c   // Dirichlet value for lower temperature (u,v,p treated as no slip)
+  typeTDir_c,  // Dirichlet value for lower temperature (u,v,p treated as no slip)
+  typeEmpty,   // Empty cell ("air")
+  typeSurf     // Inner surface cell between fluid and empty space
 } CellType_t;
 /// Typedef for cell boundary type (which boundary cells are fluid)
 //       |   NO   |
@@ -45,20 +47,30 @@ typedef enum {
 // Cells on the diagonals can be ignored
 // Combinations not listed are invalid
 typedef enum {
-  cellNone = 0, // Cell is not surrounded by fluid, or is fluid cell
-  cellN = 1,    // Cell N is fluid
-  cellW = 2,    // Cell W is fluid
-  cellNW = 3,   // Cells N & W are fluid
-  cellS = 4,    // Cell S is fluid
-  cellSW = 6,   // Cells S & W are fluid
-  cellE = 8,    // Cell E is fluid
-  cellNE = 9,   // Cells N & E are fluid
-  cellSE = 12   // Cells S & E are fluid
+  cellNone = 0, // Cell is surrounded by fluid cells or is empty
+  // If neighbour != cellNone, this means
+  // (a) for obstacle cells where the neighbouring fluid cell is
+  // (b) for surface cells where the neighbouring empty cell is
+  cellN = 1,    // Cell N
+  cellW = 2,    // Cell W
+  cellNW = 3,   // Cells N & W
+  cellS = 4,    // Cell S
+  cellNS = 5,   // Cells N & S
+  cellSW = 6,   // Cells S & W
+  cellNWS = 7,  // Cells N & W & S
+  cellE = 8,    // Cell E
+  cellNE = 9,   // Cells N & E
+  cellWE = 10,  // Cells W & E
+  cellNWE = 11, // Cells N & W & E
+  cellSE = 12,  // Cells S & E
+  cellNSE = 13, // Cells N & S & E
+  cellWSE = 14, // Cells W & E & S
+  cellAll = 15  // Cells N & W & S & E
 } CellBoundary_t;
 /// Typedef for cells
 typedef struct {
   CellType_t type;      // Cell type
-  CellBoundary_t fluid; // Surrounding fluid cells
+  CellBoundary_t neighbour; // Surrounding cells (different meaning for obstacle or surface!)
   real_t factor;        // Scale factor for inital values
 } Cell_t;
 //------------------------------------------------------------------------------
@@ -90,17 +102,19 @@ public:
   const multi_real_t &TotalLength() const;
   /// Returns the overall meshwidth
   const multi_real_t &Mesh() const;
-  /// Read access to the cell type field at position [it]
-  const Cell_t &Cell(const Iterator &it) const;
+  /// Write access to the cell type field at position [it]
+  Cell_t &Cell(const Iterator &it);
   /// Returns the prescribed velocity values
   const multi_real_t &Velocity() const;
   /// Returns the prescribed pressure value
   const real_t &Pressure() const;
   /// Returns the prescribed temperature value
   const real_t &Temperature() const;
+  /// Update neighbourhood realations after new interior types fluid/empty set in compute (particle tracking)
+  void DynamicNeighbourhood();
 
   /// Updates the velocity field u (parameter from .param used)
-  void Update_U(Grid *u, const real_t &u_Dir) const;
+  void Update_U(Grid *u, Grid *v, Grid *p, const real_t &u_Dir) const;
   /// Updates the velocity field v (parameter from .param used)
   void Update_V(Grid *v, const real_t &v_Dir) const;
   /// Updates the pressure field p (parameter from .param used)
@@ -124,6 +138,23 @@ private:
   void UpdateCellNeumann(Grid *grid, const Iterator &it) const;
   void UpdateCellNeumann_P(Grid *grid, const Iterator &it) const;
   void UpdateCellDirichlet_T(Grid *T, const real_t &value, const Iterator &it) const;
-};
+  // specific for each case of grid in {u, v, p}
+  void UpdateSurfOne_U(Grid *u, Grid *v, const Iterator &it) const;
+  void UpdateSurfTwo_Edge_U(Grid *u, const Iterator &it) const;
+  void UpdateSurfTwo_Channel_U(Grid *u, const Iterator &it) const;
+  void UpdateSurfThree_U(Grid *u, const Iterator &it) const;
+  void UpdateSurfFour_U(Grid *u, const Iterator &it) const;
+
+  void UpdateSurfOne_V(Grid *v, const Iterator &it) const;
+  void UpdateSurfTwo_Edge_V(Grid *v, const Iterator &it) const;
+  void UpdateSurfTwo_Channel_V(Grid *v, const Iterator &it) const;
+  void UpdateSurfThree_V(Grid *v, const Iterator &it) const;
+  void UpdateSurfFour_V(Grid *v, const Iterator &it) const;
+
+  void UpdateSurfOne_P(Grid *p, const Iterator &it) const;
+  void UpdateSurfTwo_Edge_P(Grid *p, const Iterator &it) const;
+  void UpdateSurfTwo_Channel_P(Grid *p, const Iterator &it) const;
+  void UpdateSurfThree_P(Grid *p, const Iterator &it) const;
+  void UpdateSurfFour_P(Grid *p, const Iterator &it) const;
 //------------------------------------------------------------------------------
 #endif // __GEOMETRY_HPP

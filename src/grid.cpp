@@ -194,7 +194,7 @@ real_t Grid::DC_udT_x(const Iterator& it, const real_t& alpha, const Grid* u) co
   real_t meanT_l  = _data[it.Left()] + _data[it];
   real_t diffT_r  = _data[it] - _data[it.Right()];
   real_t diffT_l  = _data[it.Left()] - _data[it];
-  return ((u_r*meanT_r) - (u_l*meanT_l) + alpha*(fabs(u_r)*diffT_r - fabs(u_l)*diffT_l))/(4.0*_geom->Mesh()[0]);
+  return ((u_r*meanT_r) - (u_l*meanT_l) + alpha*(fabs(u_r)*diffT_r - fabs(u_l)*diffT_l))/(2.0*_geom->Mesh()[0]);
 }
 //------------------------------------------------------------------------------
 /// Computes v*dT/dy with the donor cell method
@@ -208,7 +208,7 @@ real_t Grid::DC_vdT_y(const Iterator& it, const real_t& alpha, const Grid* v) co
   real_t meanT_d  = _data[it.Down()] + _data[it];
   real_t diffT_t  = _data[it] - _data[it.Top()];
   real_t diffT_d  = _data[it.Down()] - _data[it];
-  return ((v_t*meanT_t) - (v_d*meanT_d) + alpha*(fabs(v_t)*diffT_t - fabs(v_d)*diffT_d))/(4.0*_geom->Mesh()[1]);
+  return ((v_t*meanT_t) - (v_d*meanT_d) + alpha*(fabs(v_t)*diffT_t - fabs(v_d)*diffT_d))/(2.0*_geom->Mesh()[1]);
 }
 //------------------------------------------------------------------------------
 /// Returns the maximal value of the grid
