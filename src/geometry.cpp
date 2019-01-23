@@ -731,7 +731,7 @@ void Geometry::Update_U(Grid* u, Grid* v, const real_t& u_Dir) const {
         break;
       case typeInV:
         UpdateCellDirichlet_U(u, u_Dir*
-          _cell[it.Pos()[0] + it.Pos()[1]*_size[0]].factor, it);
+          _cell[pos].factor, it);
         break;
       case typeSlipH:
         UpdateCellNeumann(u, it);
