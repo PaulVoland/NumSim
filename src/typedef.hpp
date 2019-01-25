@@ -16,6 +16,7 @@
  */
 
 #include <stdint.h>
+#include <vector>
 
 //------------------------------------------------------------------------------
 
@@ -68,6 +69,8 @@ struct array_t {
 typedef array_t<real_t, DIM> multi_real_t;
 /// Typedef for d-dimensional array of integer
 typedef array_t<index_t, DIM> multi_index_t;
+/// Typedef for Vector array of reals
+typedef std::vector<real_t*> vec_arr;
 
 //------------------------------------------------------------------------------
 

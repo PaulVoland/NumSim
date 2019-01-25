@@ -63,10 +63,17 @@ private:
   // limit for residual
   real_t _epslimit;
 
+  // partical trace array
+  vec_arr _part_trace = vec_arr();
+
+  // count partical per cell
+  real_t* _ppc;
+
   // velocities
   Grid *_u;
   Grid *_v;
-
+  Grid *_u_alt;
+  Grid *_v_alt;
   // pressure
   Grid *_p;
 
@@ -96,6 +103,8 @@ private:
   void RHS(const real_t &dt);
   /// Compute the new temperature values
   void HeatTransport(const real_t &dt);
+  /// set Particals to partical trace
+  void setParticals();
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

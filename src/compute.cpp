@@ -26,37 +26,58 @@ Compute::Compute(const Geometry* geom, const Parameter* param)
   // Offsets for the grid variables
   multi_real_t off_u;
   multi_real_t off_v;
+  multi_real_t off_u_alt;
+  multi_real_t off_v_alt;
   multi_real_t off_p;
   off_u[0] = geom->Mesh()[0];
   off_u[1] = geom->Mesh()[1]/2.0;
+  off_u_alt[0] = geom->Mesh()[0];
+  off_u_alt[1] = geom->Mesh()[1]/2.0;
   off_v[0] = geom->Mesh()[0]/2.0;
   off_v[1] = geom->Mesh()[1];
+  off_v_alt[0] = geom->Mesh()[0]/2.0;
+  off_v_alt[1] = geom->Mesh()[1];
   off_p[0] = geom->Mesh()[0]/2.0;
   off_p[1] = geom->Mesh()[1]/2.0;
   // Instantiate grids with offsets
-  _u   = new Grid(geom, off_u);
-  _v   = new Grid(geom, off_v);
-  _p   = new Grid(geom, off_p);
-  _T   = new Grid(geom, off_p);
-  _F   = new Grid(geom, off_u);
-  _G   = new Grid(geom, off_v);
-  _rhs = new Grid(geom, off_p);
-  _tmp = new Grid(geom, off_p);
+  _u     = new Grid(geom, off_u);
+  _u_alt = new Grid(geom, off_u);
+  _v     = new Grid(geom, off_v);
+  _v_alt = new Grid(geom, off_u);
+  _p     = new Grid(geom, off_p);
+  _T     = new Grid(geom, off_p);
+  _F     = new Grid(geom, off_u);
+  _G     = new Grid(geom, off_v);
+  _rhs   = new Grid(geom, off_p);
+  _tmp   = new Grid(geom, off_p);
   // Set initial values for physical variables
   _u->Initialize(geom->Velocity()[0]);
-  _v->Initialize(geom->Velocity()[1]);
+  _u_alt->Initialize(geom->Velocity()[0]);
+  _v->Initialize(geom->Velocity()[1]); 
+  _v_alt->Initialize(geom->Velocity()[1]);
   _p->Initialize(geom->Pressure());
   _T->Initialize(geom->Temperature());
   _F->Initialize(geom->Velocity()[0]);
   _G->Initialize(geom->Velocity()[1]);
   _rhs->Initialize(0.0);
   _tmp->Initialize(0.0);
+  // initialize partical count array and set to zero 
+  index_t _increm_x = geom->TotalSize()[1];
+  index_t _increm_y = geom->TotalSize()[0];
+  index_t _num_cell = _increm_x*_increm_y;
+  _ppc[_num_cell] = {0};
+  // set partical trace array with fluid cells
+  setParticals();
+  _u->Cell()
+
 }
 //------------------------------------------------------------------------------
 /// Deletes all grids
 Compute::~Compute() {
   delete[] _u;
   delete[] _v;
+  delete[] _u_alt;
+  delete[] _v_alt;
   delete[] _p;
   delete[] _T;
   delete[] _F;
@@ -64,6 +85,7 @@ Compute::~Compute() {
   delete[] _rhs;
   delete[] _tmp;
   delete _solver;
+  delete[] _ppc;
 }
 //------------------------------------------------------------------------------
 /// Execute one time step of the fluid simulation (with or without debug info)
@@ -357,5 +379,9 @@ void Compute::HeatTransport(const real_t& dt) {
     // Next cell
     intit.Next();
   }
+}
+// set new Particals to _part_trace vector
+void Compute::setParticals(){
+
 }
 //------------------------------------------------------------------------------
