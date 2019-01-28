@@ -23,7 +23,7 @@
 class Compute {
 public:
   /// Creates a compute instance with given geometry and parameter
-  Compute(const Geometry *geom, const Parameter *param);
+  Compute(Geometry *geom, const Parameter *param);
   /// Deletes all grids
   ~Compute();
 
@@ -67,7 +67,7 @@ private:
   vec_arr _part_trace = vec_arr();
 
   // count partical per cell
-  real_t* _ppc;
+  index_t* _ppc;
 
   // velocities
   Grid *_u;
@@ -92,7 +92,7 @@ private:
 
   Solver *_solver;
 
-  const Geometry *_geom;
+  Geometry *_geom;
   const Parameter *_param;
 
   /// Compute the new velocites u,v
@@ -104,7 +104,21 @@ private:
   /// Compute the new temperature values
   void HeatTransport(const real_t &dt);
   /// set Particals to partical trace
-  void setParticals();
+  void SetParticals();
+  /// Random Number
+  double Randnumb(real_t max, real_t min);
+  /// Set Particals in Infow Cells
+  void SetNewInflowParticals();
+  // Partical Trace per Timestep
+  void ParticalTrace(const real_t &dt);
+  // Set the index position to a cell number
+  index_t IndexToCell(const multi_index_t value);
+  // Set the Pys Position to index Position
+  multi_index_t PysToIndex(const real_t x , const real_t y);
+  // Set the pysical position to Velocity
+  real_t PysToVelocity(const real_t x , const real_t y, const char f); 
+  // Set the the new Velocities to the old velocities
+  void CopyVelocities();
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

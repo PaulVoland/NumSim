@@ -396,6 +396,10 @@ const Cell_t& Geometry::Cell(const Iterator& it) const {
   return _cell[it]; // Uses cast command via Iterator::operator
 }
 //------------------------------------------------------------------------------
+Cell_t& Geometry::setCell(const Iterator& it) {
+  return _cell[it]; // Uses cast command via Iterator::operator
+}
+//------------------------------------------------------------------------------
 const multi_real_t&  Geometry::Velocity()    const {return _velocity;}
 //------------------------------------------------------------------------------
 const real_t&        Geometry::Pressure()    const {return _pressure;}

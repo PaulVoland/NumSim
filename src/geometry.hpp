@@ -92,6 +92,8 @@ public:
   const multi_real_t &Mesh() const;
   /// Read access to the cell type field at position [it]
   const Cell_t &Cell(const Iterator &it) const;
+  /// setter Methode to write in the cell
+  Cell_t &setCell(const Iterator &it) ;
   /// Returns the prescribed velocity values
   const multi_real_t &Velocity() const;
   /// Returns the prescribed pressure value
