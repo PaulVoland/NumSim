@@ -63,9 +63,17 @@ private:
   // limit for residual
   real_t _epslimit;
 
+  // particle trace array
+  vec_arr _part_trace = vec_arr();
+
+  // counter for particles per cell
+  index_t* _ppc;
+
   // velocities
   Grid *_u;
   Grid *_v;
+  Grid *_u_alt;
+  Grid *_v_alt;
 
   // pressure
   Grid *_p;
@@ -85,7 +93,7 @@ private:
 
   Solver *_solver;
 
-  const Geometry *_geom;
+  Geometry *_geom;
   const Parameter *_param;
 
   /// Compute the new velocites u,v
@@ -96,6 +104,23 @@ private:
   void RHS(const real_t &dt);
   /// Compute the new temperature values
   void HeatTransport(const real_t &dt);
+
+  /// Set particles initially to the _part_trace vector
+  void SetParticles();
+  /// Random number between max and min
+  real_t &RandNumb(const real_t &max, const real_t &min) const;
+  /// Set new particles in each timestep at the inflow boundaries
+  void SetNewInflowParticles();
+  /// Particle trace per timestep
+  void ParticleTrace(const real_t &dt);
+  /// Return the index position of a multi_index-type
+  index_t &IndexToCell(const multi_index_t &value) const;
+  /// Calculate the index positions from physical coordinates
+  multi_index_t &PhysToIndex(const real_t &x , const real_t &y) const;
+  /// Get special velocity defined by char f in {u, U, v, V} at physical position
+  real_t &PhysToVelocity(const real_t &x , const real_t &y, const char &f) const; 
+  /// Copy velocities of the old timestep to _._alt
+  void CopyVelocities();
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

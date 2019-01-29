@@ -156,16 +156,20 @@ void Geometry::UpdateCellDirichlet_T(Grid* T, const real_t& value,
   };
 }
 //------------------------------------------------------------------------------
+//----SURF_U--------------------------------------------------------------------
 void Geometry::UpdateSurfOne_U(Grid* u, Grid* v, const Iterator& it) const {
   switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellN:
-    // ToDo
+    u->Cell(it.Left().Top()) = u->Cell(it.Left) -
+      _h[1]*(v->Cell(it) - v->Cell(it.Left()))/_h[0];
     break;
   case cellW:
-    // ToDo
+    u->Cell(it.Left) = u->Cell(it) +
+      _h[0]*(v->Cell(it) - v->Cell(it.Down()))/_h[1];
     break;
   case cellS:
-    // ToDo
+    u->Cell(it.Left().Down()) = u->Cell(it.Left()) +
+      _h[1]*(v->Cell(it.Down()) - v->Cell(it.Down().Left()))/_h[0];
     break;
   case cellE:
     u->Cell(it) = u->Cell(it.Left()) -
@@ -176,61 +180,299 @@ void Geometry::UpdateSurfOne_U(Grid* u, Grid* v, const Iterator& it) const {
   };
 }
 //------------------------------------------------------------------------------
-void Geometry::UpdateSurfTwo_Edge_U(Grid* u, const Iterator& it) const {
+void Geometry::UpdateSurfTwo_Edge_U(Grid* u, Grid* v, const Iterator& it) const {
   switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellNW:
-    // ToDo
+    u->Cell(it.Left()) = u->Cell(it);
+    u->Cell(it.Left().Top()) = u->Cell(it.Left());
     break;
   case cellSW:
-    // ToDo
+    u->Cell(it.Left()) = u->Cell(it);
+    u->Cell(it.Left().Down()) = u->Cell(it.Left());
     break;
   case cellNE:
-    // ToDo
+    u->Cell(it) = u->Cell(it.Left());
+    u->Cell(it.Left().Top()) = u->Cell(it.Left()) -
+      _h[1]*(v->Cell(it) - v->Cell(it.Left()))/_h[0];
+    u->Cell(it.Top()) = u->Cell(it);
     break;
   case cellSE:
-    // ToDo
+    u->Cell(it) = u->Cell(it.Left());
+    u->Cell(it.Left().Down()) = u->Cell(it.Left()) +
+      _h[1]*(v->Cell(it.Down()) - v->Cell(it.Left().Down()))/_h[0];
+    u->Cell(it.Down()) = u->Cell(it);
     break;
   default:
     break;
   };
 }
 //------------------------------------------------------------------------------
-void Geometry::UpdateSurfTwo_Channel_U(Grid* u, const Iterator& it) const {
+void Geometry::UpdateSurfTwo_Channel_U(Grid* u, Grid* v, const real_t& dt, const real_t& gx, const Iterator& it) const {
   switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellNS:
-    // ToDo
+    u->Cell(it.Left().Top()) = u->Cell(it.Left()) -
+      _h[1]*(v->Cell(it) - v->Cell(it.Left()))/_h[0];
+    u->Cell(it.Left().Down()) = u->Cell(it.Left()) +
+      _h[1]*(v->Cell(it.Down()) - v->Cell(it.Left().Down()))/_h[0];
     break;
   case cellWE:
-    // ToDo
+    u->Cell(it) += dt*gx;
+    u->Cell(it.Left()) += dt*gx;
     break;
   default:
     break;
   };
 }
 //------------------------------------------------------------------------------
-void Geometry::UpdateSurfThree_U(Grid* u, const Iterator& it) const {
+void Geometry::UpdateSurfThree_U(Grid* u, Grid* v, const real_t& dt, const real_t& gx, const Iterator& it) const {
   switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellNWS:
-    // ToDo
+    u->Cell(it.Left()) = u->Cell(it) +
+      _h[0]*(v->Cell(it) - v->Cell(it.Down()))/_h[1];
+    u->Cell(it.Left().Top()) = u->Cell(it.Left());
+    u->Cell(it.Left().Down()) = u->Cell(it.Left());
     break;
   case cellNWE:
-    // ToDo
+    u->Cell(it) += dt*gx;
+    u->Cell(it.Left()) += dt*gx;
+    u->Cell(it.Left().Top()) = u->Cell(it.Left());
+    u->Cell(it.Top()) = u->Cell(it);
     break;
   case cellNSE:
-    // ToDo
+    u->Cell(it) = u->Cell(it.Left()) -
+      _h[0]*(v->Cell(it) - v->Cell(it.Down()))/_h[1];
+    u->Cell(it.Top()) = u->Cell(it);
+    u->Cell(it.Down()) = u->Cell(it);
+    u->Cell(it.Left().Top()) = u->Cell(it.Left()) -
+      _h[1]*(v->Cell(it) - v->Cell(it.Left()))/_h[0];
+    u->Cell(it.Left().Down()) = u->Cell(it.Left()) +
+      _h[1]*(v->Cell(it.Down()) - v->Cell(it.Down().Left()))/_h[0];
     break;
   case cellWSE:
-    // ToDo
+    u->Cell(it) += dt*gx;
+    u->Cell(it.Left()) += dt*gx;
+    u->Cell(it.Down()) = u->Cell(it);
+    u->Cell(it.Down().Left()) = u->Cell(it.Left());
     break;
   default:
     break;
   };
 }
 //------------------------------------------------------------------------------
-void Geometry::UpdateSurfFour_U(Grid* u, const Iterator& it) const {
+void Geometry::UpdateSurfFour_U(Grid* u, const real_t& dt, const real_t& gx, const Iterator& it) const {
   switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellAll:
-    // ToDo
+    u->Cell(it) += dt*gx;
+    u->Cell(it.Left()) += dt*gx;
+    u->Cell(it.Top()) = u->Cell(it);
+    u->Cell(it.Down()) = u->Cell(it);
+    u->Cell(it.Top().Left()) = u->Cell(it.Left());
+    u->Cell(it.Down().Left()) = u->Cell(it.Left());
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+//----SURF_V--------------------------------------------------------------------
+void Geometry::UpdateSurfOne_V(Grid* v, Grid* u, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellN:
+    v->Cell(it) = v->Cell(it.Down()) -
+        _h[1]*(u->Cell(it) - u->Cell(it.Left()))/_h[0];
+    break;
+  case cellW:
+    v->Cell(it.Left().Down()) = v->Cell(it.Down()) +
+        _h[0]*(u->Cell(it.Left()) - u->Cell(it.Left().Down()))/_h[1];
+    break;
+  case cellS:
+    v->Cell(it.Down()) = v->Cell(it) +
+        _h[1]*(u->Cell(it) - u->Cell(it.Left()))/_h[0];
+    break;
+  case cellE:
+      v->Cell(it.Right().Down()) = v->Cell(it.Down()) -
+        _h[0]*(u->Cell(it) - u->Cell(it.Down()))/_h[1];
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfTwo_Edge_V(Grid* v, Grid* u, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellNW:
+    v->Cell(it) = v->Cell(it.Down());
+    v->Cell(it.Left().Down()) = v->Cell(it.Down()) +
+        _h[0]*(u->Cell(it.Left) - u->Cell(it.Left().Down()))/_h[1];
+    v->Cell(it.Left()) = v->Cell(it);
+    break;
+  case cellSW:
+    v->Cell(it.Down()) = v->Cell(it);
+    v->Cell(it.Left().Down()) = v->Cell(it.Down());
+    break;
+  case cellNE:
+    v->Cell(it) = v->Cell(it.Down());
+    v->Cell(it.Right().Down()) = v->Cell(it.Down()) -
+        _h[0]*(u->Cell(it) - u->Cell(it.Down()))/_h[1];
+    v->Cell(it.Right()) = v->Cell(it);
+    break;
+  case cellSE:
+    v->Cell(it.Down()) = v->Cell(it);
+    v->Cell(it.Right().Down()) = v->Cell(it.Down());
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfTwo_Channel_V(Grid* v, Grid* u, const real_t& dt, const real_t& gy, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellNS:
+    v->Cell(it) += dt*gy;
+    v->Cell(it.Down()) += dt*gy;
+    break;
+  case cellWE:
+    v->Cell(it.Left().Down()) = v->Cell(it.Down()) +
+        _h[0]*(u->Cell(it.Left()) - u->Cell(it.Down().Left()))/_h[1];
+    v->Cell(it.Right().Down()) = v->Cell(it.Down()) -
+        _h[0]*(u->Cell(it) - u->Cell(it.Down()))/_h[1];
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfThree_V(Grid* v, Grid* u, const real_t& dt, const real_t& gy, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellNWS:
+    v->Cell(it) += dt*gy;
+    v->Cell(it.Down()) += dt*gy;
+    v->Cell(it.Left()) = v->Cell(it);
+    v->Cell(it.Left().Down()) = v->Cell(it);
+    break;
+  case cellNWE:
+    v->Cell(it) = v->Cell(it.Down()) -
+        _h[1]*(u->Cell(it) - u->Cell(it.Left()))/_h[0];
+    v->Cell(it.Left()) = v->Cell(it);
+    v->Cell(it.Right()) = v->Cell(it);
+    v->Cell(it.Left().Down()) = v->Cell(it.Down()) +
+        _h[0]*(u->Cell(it.Left) - u->Cell(it.Down().Left()))/_h[1];
+    v->Cell(it.Right().Down()) = v->Cell(it.Down()) -
+        _h[0]*(u->Cell(it) - u->Cell(it.Down()))/_h[1];
+    break;
+  case cellNSE:
+    v->Cell(it) += dt*gy;
+    v->Cell(it.Down()) += dt*gy;
+    v->Cell(it.Right()) = v->Cell(it);
+    v->Cell(it.Right().Down()) = v->Cell(it.Down());
+    break;
+  case cellWSE:
+    v->Cell(it.Down()) = v->Cell(it) +
+        _h[1]*(u->Cell(it) - u->Cell(it.Left()))/_h[0];
+    v->Cell(it.Right().Down()) = v->Cell(it.Down());
+    v->Cell(it.Left().Down()) = v->Cell(it.Down());
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfFour_V(Grid* v, const real_t& dt, const real_t& gy, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellAll:
+    v->Cell(it) += dt*gy;
+    v->Cell(it.Down()) += dt*gy;
+    v->Cell(it.Right()) = v->Cell(it);
+    v->Cell(it.Left()) = v->Cell(it);
+    v->Cell(it.Right().Down()) = v->Cell(it.Down());
+    v->Cell(it.Left().Down()) = v->Cell(it.Down());
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+//----SURF_P--------------------------------------------------------------------
+void Geometry::UpdateSurfOne_P(Grid* p, Grid* u, Grid* v, const real_t& re, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellN:
+    p->Cell(it) = 2.0*(v->Cell(it) - v->Cell(it.Down()))/(re*_h[1]);
+    break;
+  case cellW:
+    p->Cell(it) = 2.0*(u->Cell(it) - u->Cell(it.Left()))/(re*_h[0]);
+    break;
+  case cellS:
+    p->Cell(it) = 2.0*(v->Cell(it) - v->Cell(it.Down()))/(re*_h[1]);
+    break;
+  case cellE:
+    p->Cell(it) = 2.0*(u->Cell(it) - u->Cell(it.Left()))/(re*_h[0]);
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfTwo_Edge_P(Grid* p, Grid* u, Grid* v, const real_t& re, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellNW:
+  // Warum -1 im Nenner?
+    p->Cell(it) = ((u->Cell(it) + u->Cell(it.Left()) - u->Cell(it.Down()) - u->Cell(it.Down().Left()))/_h[1] 
+      + (v->Cell(it.Right()) + v->Cell(it.Right().Down()) - v->Cell(it) - v->Cell(it.Down()))/_h[0])/(-re*2.0);
+    break;
+  case cellSW:
+    p->Cell(it) = ((u->Cell(it.Top()) + u->Cell(it.Left().Top()) - u->Cell(it) - u->Cell(it.Left()))/_h[1] 
+      + (v->Cell(it.Right()) + v->Cell(it.Right().Down()) - v->Cell(it) - v->Cell(it.Down()))/_h[0])/(re*2.0);
+    break;
+  case cellNE:
+    p->Cell(it) = ((u->Cell(it) + u->Cell(it.Left()) - u->Cell(it.Down()) - u->Cell(it.Down().Left()))/_h[1] 
+      + (v->Cell(it) + v->Cell(it.Down()) - v->Cell(it.Left()) - v->Cell(it.Down().Left()))/_h[0])/(re*2.0);
+    break;
+  case cellSE:
+   // Warum -1 im Nenner?
+    p->Cell(it) = ((u->Cell(it.Top()) + u->Cell(it.Left().Top()) - u->Cell(it) - u->Cell(it.Left()))/_h[1] 
+      + (v->Cell(it) + v->Cell(it.Down()) - v->Cell(it.Left()) - v->Cell(it.Down().Left()))/_h[0])/(-re*2.0);
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfTwo_Channel_P(Grid* p, Grid* u, Grid* v, const real_t& re, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellNS:
+    p->Cell(it) = 2.0*(v->Cell(it) - v->Cell(it.Down()))/(re*_h[1]);
+    break;
+  case cellWE:
+    p->Cell(it) = 2.0*(u->Cell(it) - u->Cell(it.Left()))/(re*_h[0]);
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfThree_P(Grid* p, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellNWS:
+    p->Cell(it) = 0;
+    break;
+  case cellNWE:
+    p->Cell(it) = 0;
+    break;
+  case cellNSE:
+    p->Cell(it) = 0;
+    break;
+  case cellWSE:
+    p->Cell(it) = 0;
+    break;
+  default:
+    break;
+  };
+}
+//------------------------------------------------------------------------------
+void Geometry::UpdateSurfFour_P(Grid* p, const Iterator& it) const {
+  switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
+  case cellAll:
+    p->Cell(it) = 0;
     break;
   default:
     break;
@@ -543,7 +785,11 @@ const multi_real_t&  Geometry::TotalLength() const {return _length;}
 //------------------------------------------------------------------------------
 const multi_real_t&  Geometry::Mesh()        const {return _h;}
 //------------------------------------------------------------------------------
-Cell_t& Geometry::Cell(const Iterator& it) {
+const Cell_t& Geometry::Cell(const Iterator& it) const {
+  return _cell[it]; // Uses cast command via Iterator::operator
+}
+//------------------------------------------------------------------------------
+Cell_t& Geometry::SetCell(const Iterator& it) {
   return _cell[it]; // Uses cast command via Iterator::operator
 }
 //------------------------------------------------------------------------------
@@ -712,7 +958,7 @@ void DynamicNeighbourhood() {
 /// Updates the velocity field u on the boundary
 // @param u     grid for the velocity in x-direction
 // @param u_Dir Dirichlet value for u from .param
-void Geometry::Update_U(Grid* u, Grid* v, const real_t& u_Dir) const {
+void Geometry::Update_U(Grid* u, Grid* v, const real_t& u_Dir, const real_t& dt, const real_t& gx) const {
   if (_cell) {
     /// Cell_t is used for free geometries
     Iterator it(this);
@@ -754,14 +1000,14 @@ void Geometry::Update_U(Grid* u, Grid* v, const real_t& u_Dir) const {
           UpdateSurfOne_U(u, v, it);
         } else if (_cell[pos].neighbour == cellNW || _cell[pos].neighbour == cellSW ||
           _cell[pos].neighbour == cellNE || _cell[pos].neighbour == cellSE) {
-          UpdateSurfTwo_Edge_U(u, it);
+          UpdateSurfTwo_Edge_U(u, v, it);
         } else if (_cell[pos].neighbour == cellNS || _cell[pos].neighbour == cellWE) {
-          UpdateSurfTwo_Channel_U(u, it);
+          UpdateSurfTwo_Channel_U(u, v, dt, gx, it);
         } else if (_cell[pos].neighbour == cellNWS || _cell[pos].neighbour == cellNWE ||
           _cell[pos].neighbour == cellNSE || _cell[pos].neighbour == cellWSE) {
-          UpdateSurfThree_U(u, it);
+          UpdateSurfThree_U(u, v, dt, gx, it);
         } else {
-          UpdateSurfFour_U(u, it);
+          UpdateSurfFour_U(u, dt, gx, it);
         }
         break;
       default:
@@ -804,12 +1050,14 @@ void Geometry::Update_U(Grid* u, Grid* v, const real_t& u_Dir) const {
 /// Updates the velocity field v on the boundary
 // @param v     grid for the velocity in y-direction
 // @param v_Dir Dirichlet value for v from .param
-void Geometry::Update_V(Grid* v, const real_t& v_Dir) const {
+void Geometry::Update_V(Grid* v, Grid* u, const real_t& v_Dir, const real_t& dt, const real_t& gy) const {
   if (_cell) {
     /// Cell_t is used for free geometries
     Iterator it(this);
+    index_t pos;
     while (it.Valid()) {
-      switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
+      pos = it.Pos()[0] + it.Pos()[1]*_size[0];
+      switch (_cell[pos].type) {
       case typeSolid:
         UpdateCellDirichlet_V(v, 0.0, it);
         break;
@@ -818,7 +1066,7 @@ void Geometry::Update_V(Grid* v, const real_t& v_Dir) const {
         break;
       case typeInH:
         UpdateCellDirichlet_V(v, v_Dir*
-          _cell[it.Pos()[0] + it.Pos()[1]*_size[0]].factor, it);
+          _cell[pos].factor, it);
         break;
       case typeInV:
         UpdateCellDirichlet_V(v, 0.0, it);
@@ -837,6 +1085,22 @@ void Geometry::Update_V(Grid* v, const real_t& v_Dir) const {
         break;
       case typeTDir_c:
         UpdateCellDirichlet_V(v, 0.0, it);
+        break;
+      case typeSurf:
+        if (_cell[pos].neighbour == cellN || _cell[pos].neighbour == cellW ||
+          _cell[pos].neighbour == cellS || _cell[pos].neighbour == cellE) {
+          UpdateSurfOne_V(v, u, it);
+        } else if (_cell[pos].neighbour == cellNW || _cell[pos].neighbour == cellSW ||
+          _cell[pos].neighbour == cellNE || _cell[pos].neighbour == cellSE) {
+          UpdateSurfTwo_Edge_V(v, u, it);
+        } else if (_cell[pos].neighbour == cellNS || _cell[pos].neighbour == cellWE) {
+          UpdateSurfTwo_Channel_V(v, u, dt, gy, it);
+        } else if (_cell[pos].neighbour == cellNWS || _cell[pos].neighbour == cellNWE ||
+          _cell[pos].neighbour == cellNSE || _cell[pos].neighbour == cellWSE) {
+          UpdateSurfThree_V(v, u, dt, gy, it);
+        } else {
+          UpdateSurfFour_V(v, dt, gy, it);
+        }
         break;
       default:
         break;
@@ -878,12 +1142,14 @@ void Geometry::Update_V(Grid* v, const real_t& v_Dir) const {
 /// Updates the pressure field p on the boundary
 // @param p     grid for the pressure
 // @param p_Dir Dirichlet value for p from .param
-void Geometry::Update_P(Grid* p, const real_t& p_Dir) const {
+void Geometry::Update_P(Grid* p, Grid* u, Grid* v, const real_t& p_Dir, const real_t& re) const {
   if (_cell) {
     /// Cell_t is used for free geometries
     Iterator it(this);
+    index_t pos;
     while (it.Valid()) {
-      switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].type) {
+      pos = it.Pos()[0] + it.Pos()[1]*_size[0];
+      switch (_cell[pos].type) {
       case typeSolid:
         UpdateCellNeumann_P(p, it);
         break;
@@ -913,6 +1179,22 @@ void Geometry::Update_P(Grid* p, const real_t& p_Dir) const {
         break;
       case typeTDir_c:
         UpdateCellNeumann_P(p, it);
+        break;
+      case typeSurf:
+        if (_cell[pos].neighbour == cellN || _cell[pos].neighbour == cellW ||
+          _cell[pos].neighbour == cellS || _cell[pos].neighbour == cellE) {
+          UpdateSurfOne_P(p, u, v, re, it);
+        } else if (_cell[pos].neighbour == cellNW || _cell[pos].neighbour == cellSW ||
+          _cell[pos].neighbour == cellNE || _cell[pos].neighbour == cellSE) {
+          UpdateSurfTwo_Edge_P(p, u, v, re, it);
+        } else if (_cell[pos].neighbour == cellNS || _cell[pos].neighbour == cellWE) {
+          UpdateSurfTwo_Channel_P(p, u, v, re, it);
+        } else if (_cell[pos].neighbour == cellNWS || _cell[pos].neighbour == cellNWE ||
+          _cell[pos].neighbour == cellNSE || _cell[pos].neighbour == cellWSE) {
+          UpdateSurfThree_P(p, it);
+        } else {
+          UpdateSurfFour_P(p, it);
+        }
         break;
       default:
         break;
