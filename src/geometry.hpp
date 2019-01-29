@@ -102,8 +102,10 @@ public:
   const multi_real_t &TotalLength() const;
   /// Returns the overall meshwidth
   const multi_real_t &Mesh() const;
+  /// Read access to the cell type field at position [it]
+  const Cell_t &Cell(const Iterator &it) const;
   /// Write access to the cell type field at position [it]
-  Cell_t &Cell(const Iterator &it);
+  Cell_t &SetCell(const Iterator &it);
   /// Returns the prescribed velocity values
   const multi_real_t &Velocity() const;
   /// Returns the prescribed pressure value
@@ -114,11 +116,11 @@ public:
   void DynamicNeighbourhood();
 
   /// Updates the velocity field u (parameter from .param used)
-  void Update_U(Grid *u, Grid *v, Grid *p, const real_t &u_Dir) const;
+  void Update_U(Grid *u, Grid *v, const real_t &u_Dir, const real_t &dt, const real_t &gx) const;
   /// Updates the velocity field v (parameter from .param used)
-  void Update_V(Grid *v, const real_t &v_Dir) const;
+  void Update_V(Grid *v, Grid *u, const real_t &v_Dir, const real_t &dt, const real_t &gy) const;
   /// Updates the pressure field p (parameter from .param used)
-  void Update_P(Grid *p, const real_t &p_Dir) const;
+  void Update_P(Grid *p, Grid *u, Grid *v, const real_t &p_Dir, const real_t &re) const;
   /// Updates the temperature field T (parameters from .param used)
   void Update_T(Grid *T, const real_t &T_h, const real_t &T_c) const;
 
@@ -138,22 +140,24 @@ private:
   void UpdateCellNeumann(Grid *grid, const Iterator &it) const;
   void UpdateCellNeumann_P(Grid *grid, const Iterator &it) const;
   void UpdateCellDirichlet_T(Grid *T, const real_t &value, const Iterator &it) const;
+  
   // specific for each case of grid in {u, v, p}
+  // order of write/read actions inside is very important!
   void UpdateSurfOne_U(Grid *u, Grid *v, const Iterator &it) const;
-  void UpdateSurfTwo_Edge_U(Grid *u, const Iterator &it) const;
-  void UpdateSurfTwo_Channel_U(Grid *u, const Iterator &it) const;
-  void UpdateSurfThree_U(Grid *u, const Iterator &it) const;
-  void UpdateSurfFour_U(Grid *u, const Iterator &it) const;
+  void UpdateSurfTwo_Edge_U(Grid *u, Grid *v, const Iterator &it) const;
+  void UpdateSurfTwo_Channel_U(Grid *u, Grid *v, const real_t &dt, const real_t &gx, const Iterator &it) const;
+  void UpdateSurfThree_U(Grid *u, Grid *v, const real_t &dt, const real_t &gx, const Iterator &it) const;
+  void UpdateSurfFour_U(Grid *u, const real_t &dt, const real_t &gx, const Iterator &it) const;
 
-  void UpdateSurfOne_V(Grid *v, const Iterator &it) const;
-  void UpdateSurfTwo_Edge_V(Grid *v, const Iterator &it) const;
-  void UpdateSurfTwo_Channel_V(Grid *v, const Iterator &it) const;
-  void UpdateSurfThree_V(Grid *v, const Iterator &it) const;
-  void UpdateSurfFour_V(Grid *v, const Iterator &it) const;
+  void UpdateSurfOne_V(Grid *v, Grid *u, const Iterator &it) const;
+  void UpdateSurfTwo_Edge_V(Grid *v, Grid *u, const Iterator &it) const;
+  void UpdateSurfTwo_Channel_V(Grid *v, Grid *u, const real_t &dt, const real_t &gy, const Iterator &it) const;
+  void UpdateSurfThree_V(Grid *v, Grid *u, const real_t &dt, const real_t &gy, const Iterator &it) const;
+  void UpdateSurfFour_V(Grid *v, const real_t &dt, const real_t &gy, const Iterator &it) const;
 
-  void UpdateSurfOne_P(Grid *p, const Iterator &it) const;
-  void UpdateSurfTwo_Edge_P(Grid *p, const Iterator &it) const;
-  void UpdateSurfTwo_Channel_P(Grid *p, const Iterator &it) const;
+  void UpdateSurfOne_P(Grid *p, Grid *u, Grid *v, const real_t &re, const Iterator &it) const;
+  void UpdateSurfTwo_Edge_P(Grid *p, Grid *u, Grid *v, const real_t &re, const Iterator &it) const;
+  void UpdateSurfTwo_Channel_P(Grid *p, Grid *u, Grid *v, const real_t &re, const Iterator &it) const;
   void UpdateSurfThree_P(Grid *p, const Iterator &it) const;
   void UpdateSurfFour_P(Grid *p, const Iterator &it) const;
 //------------------------------------------------------------------------------
