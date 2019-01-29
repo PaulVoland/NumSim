@@ -160,5 +160,6 @@ private:
   void UpdateSurfTwo_Channel_P(Grid *p, Grid *u, Grid *v, const real_t &re, const Iterator &it) const;
   void UpdateSurfThree_P(Grid *p, const Iterator &it) const;
   void UpdateSurfFour_P(Grid *p, const Iterator &it) const;
+};
 //------------------------------------------------------------------------------
 #endif // __GEOMETRY_HPP
