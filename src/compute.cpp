@@ -14,7 +14,7 @@ using namespace std;
 /// Creates a compute instance with given geometry and parameter
 //  @param geom  given geometry
 //  @param param given parameter data
-Compute::Compute(Geometry* geom, const Parameter* param) 
+Compute::Compute(Geometry* geom, const Parameter* param)
   : _geom(geom), _param(param) {
   // Initialize solver
   _solver = new SOR(geom, param->Omega());
@@ -47,7 +47,7 @@ Compute::Compute(Geometry* geom, const Parameter* param)
   // Set initial values for physical variables
   _u->Initialize(geom->Velocity()[0]);
   _u_alt->Initialize(geom->Velocity()[0]);
-  _v->Initialize(geom->Velocity()[1]); 
+  _v->Initialize(geom->Velocity()[1]);
   _v_alt->Initialize(geom->Velocity()[1]);
   _p->Initialize(geom->Pressure());
   _T->Initialize(geom->Temperature());
@@ -58,12 +58,31 @@ Compute::Compute(Geometry* geom, const Parameter* param)
 
   // Instantiate particle counter field and set to zero
   _ppc = new index_t[geom->TotalSize()[0]*geom->TotalSize()[1]];
-  for (int i=0; i<_num_cell; i++) {
+  for (int i = 0; i < geom->TotalSize()[0]*geom->TotalSize()[1]; i++) {
     _ppc[i] = 0;
   }
 
   // Set particles initially to the _part_trace vector
   SetParticles();
+
+  // Find timestep as a minimum of different criteria --> first timestep without tau
+  real_t dt_1 = _param->Re()*(_geom->Mesh()[0]*_geom->Mesh()[0]*_geom->Mesh()[1]*_geom->Mesh()[1])/
+    (2.0*(_geom->Mesh()[0]*_geom->Mesh()[0] + _geom->Mesh()[1]*_geom->Mesh()[1]));
+  // Second timestep
+  real_t dt_2 = _param->Tau()*fmin(_geom->Mesh()[0], _geom->Mesh()[1])/
+    fmax(_u->AbsMax(), _v->AbsMax());
+  // Use minimum of dt_1 and dt_2
+  real_t _dt = min(dt_1, dt_2);
+  if (_param->Pr() != 0 && _param->Pr() < 1) {
+    // Third timestep
+    real_t dt_3 = dt_1*_param->Pr(); // if pr > 1, this criterium is never used?!
+    // Use minimum of dt and dt_3
+    _dt = min(_dt, dt_3);
+  }
+  // If explicit timestep > 0 is given in the paramater file, use this instead
+  if (_param->Dt() > 0) {
+    _dt = _param->Dt();
+  }
 }
 //------------------------------------------------------------------------------
 /// Deletes all grids
@@ -88,11 +107,11 @@ void Compute::TimeStep(bool printInfo) {
   // Measuring of computational times
   // ZeitGeist zg;
   // Refresh boundary values
-  _geom->Update_U(_u, _v, _param->u_D(), dt, _param->Gx());
-  _geom->Update_V(_v, _u, _param->v_D(), dt, _param->Gy());
+  _geom->Update_U(_u, _v, _param->u_D(), _dt, _param->Gx());
+  _geom->Update_V(_v, _u, _param->v_D(), _dt, _param->Gy());
   _geom->Update_T(_T, _param->T_H(), _param->T_C());
 
-  // copy velocities of the old timestep to _._alt 
+  // copy velocities of the old timestep to _._alt
   CopyVelocities();
 
   // _geom->Update_P(_p); // not necessary here
@@ -105,16 +124,16 @@ void Compute::TimeStep(bool printInfo) {
   real_t dt_2 = _param->Tau()*fmin(_geom->Mesh()[0], _geom->Mesh()[1])/
     fmax(_u->AbsMax(), _v->AbsMax());
   // Use minimum of dt_1 and dt_2
-  real_t dt = min(dt_1, dt_2);
+  real_t _dt = min(dt_1, dt_2);
   if (_param->Pr() != 0 && _param->Pr() < 1) {
     // Third timestep
     real_t dt_3 = dt_1*_param->Pr(); // if pr > 1, this criterium is never used?!
     // Use minimum of dt and dt_3
-    dt = min(dt, dt_3);
+    _dt = min(_dt, dt_3);
   }
   // If explicit timestep > 0 is given in the paramater file, use this instead
   if (_param->Dt() > 0) {
-    dt = _param->Dt();
+    _dt = _param->Dt();
   }
   /* // 2.4.2) measuring computation of the time step
   if (_comm->getRank() == 0 && printInfo) {
@@ -122,15 +141,15 @@ void Compute::TimeStep(bool printInfo) {
         << zg.Step() << " µs\n" << endl;
   } */
   // Compute the new temperature values explicitly (only influence of old velocity values)
-  HeatTransport(dt);
+  HeatTransport(_dt);
   _geom->Update_T(_T, _param->T_H(), _param->T_C()); // possibly necessary?
   // Compute temporary velocities F, G using difference schemes
-  MomentumEqu(dt);
+  MomentumEqu(_dt);
   // Boundary update for new values of F, G
-  _geom->Update_U(_F, _G, _param->u_D(), dt, _param->Gx());
-  _geom->Update_V(_G, _F, _param->v_D(), dt, _param->Gy());
+  _geom->Update_U(_F, _G, _param->u_D(), _dt, _param->Gx());
+  _geom->Update_V(_G, _F, _param->v_D(), _dt, _param->Gy());
   // Compute RHS of the Poisson equation
-  RHS(dt);
+  RHS(_dt);
   // Boundary update for new values of rhs
   // _geom->Update_P(_rhs); // not necessary here
   // Find solution of the Poisson equation using a SOR solver
@@ -173,7 +192,7 @@ void Compute::TimeStep(bool printInfo) {
         cout << "Communication time for one step = "
           << time_comm << " µs\n" << endl;
       } */
-    // } 
+    // }
       res = _solver->Cycle(_p, _rhs);
       // 2.4.1A), 2.4.2)    time_comp += zg.Step();
       // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
@@ -205,26 +224,26 @@ void Compute::TimeStep(bool printInfo) {
       << time_comm << " µs\n" << endl;
   } */
   // Compute 'new' velocities using the pressure
-  NewVelocities(dt);
+  NewVelocities(_dt);
 
   //real_t text1 = PhysToVelocity(1.0 , 2.0, 'U');
   //real_t text2 = PhysToVelocity(1.0 , 2.0, 'V');
   //cout << text1 << " | " << text2  << endl;
 
   // Particle trace per timestep
-  ParticleTrace(dt);
+  ParticleTrace(_dt);
 
   // Update cell type list for the new particle constellation
   _geom->DynamicNeighbourhood();
 
   // (optionally) printing informations
   if (printInfo) {
-    cout << "_t = " << fixed << _t << "\tdt = " << scientific << dt << " \tres = " << res
+    cout << "_t = " << fixed << _t << "\tdt = " << scientific << _dt << " \tres = " << res
       << " \tprogress: " << fixed << (uint32_t) 100*_t/_param->Tend() << "%\n" << endl;
   }
 
   // Next timestep
-  _t += dt;
+  _t += _dt;
 }
 //------------------------------------------------------------------------------
 /* Getter functions
@@ -317,7 +336,7 @@ void Compute::MomentumEqu(const real_t& dt) {
       // read access to u, v
       const real_t u = _u->Cell(intit);
       const real_t v = _v->Cell(intit);
-      
+
       // Parameter for Donor-Cell
       const real_t Re_inv = 1.0/_param->Re();
       const real_t alpha  = _param->Alpha();
@@ -397,7 +416,7 @@ void Compute::SetParticles(){
   index_t s = 0;
   //index_t an_inflow = 4; // should be even?!
   //index_t an_inflow = 3; // not used here
-  index_t an_cell = 9; 
+  index_t an_cell = 9;
   //it_pc.First();
   while (it_pc.Valid()) {
     if (_geom->Cell(it_pc).type == typeFluid) {
@@ -406,18 +425,18 @@ void Compute::SetParticles(){
           real_t *foo;
           foo = new real_t[2];
           _part_trace.push_back(foo);
-          //cout << "hiervor x: " << _part_trace[s][0] << " y: " << _part_trace[s][1] << " s="<< s << endl;          
+          //cout << "hiervor x: " << _part_trace[s][0] << " y: " << _part_trace[s][1] << " s="<< s << endl;
           _part_trace[s][0] = RandNumb(it_pc.Pos()[0],it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
           _part_trace[s][1] = RandNumb(it_pc.Pos()[1],it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
           //cout << "Hiernach x: " << _part_trace[s][0] << " y: " << _part_trace[s][1] << " s="<< s << endl;
           //cout << "x: " << RandNumb(it_pc.Pos()[0],it_pc.Pos()[0]-1)*_geom->TotalLength()[0]/(_geom->TotalSize()[0]-2) << " y: " << RandNumb(it_pc.Pos()[1],it_pc.Pos()[1]-1)*_geom->TotalLength()[1]/(_geom->TotalSize()[1]-2) << " s="<< s << endl;
           s++;
         }
-      } 
-    it_pc.Next();    
+      }
+    it_pc.Next();
   }
   // Set new particles in each timestep at the inflow boundaries
-  SetNewInflowParticles(); 
+  SetNewInflowParticles();
   //int i = 0;
   /*for(std::vector<double*>::iterator it = _part_trace.begin(); it != _part_trace.end(); ++it) {
       cout << "Integer :" << i << " with Value 1: " <<  _part_trace[i][0] << "with Value 2:"<< _part_trace[i][1] << "\n ";
@@ -426,12 +445,12 @@ void Compute::SetParticles(){
   //cout << " x=  " <<  _part_trace[15777][0] << " y: "<< _part_trace[15777][1];
   //cout << " x=  " <<  _part_trace[15778][0] << " y: "<< _part_trace[15778][1];
   //cout << " x=  " <<  _part_trace[15777][0] << " y: "<< _part_trace[15777][1];
-  // Inflow 
+  // Inflow
   // zusätzliche frage nach nord süd und west
 }
 //------------------------------------------------------------------------------
 // Random number between max and min
-real_t& Compute::RandNumb(const real_t& max, const real_t& min) {
+real_t Compute::RandNumb(const real_t& max, const real_t& min) const {
   return ((real_t)(rand()/RAND_MAX))*(max - min) + min;
 }
 //------------------------------------------------------------------------------
@@ -441,9 +460,9 @@ void Compute::SetNewInflowParticles() {
   index_t s = 0;
   //index_t an_inflow = 4; // should be even?!
   index_t an_inflow = 3;
-  //index_t an_cell = 9; // not used here 
+  //index_t an_cell = 9; // not used here
   //it_pc.First();
-    while (it_pc.Valid()) {  
+    while (it_pc.Valid()) {
       if (_geom->Cell(it_pc).type == typeIn || _geom->Cell(it_pc).type == typeInH || _geom->Cell(it_pc).type == typeInV) {
         switch (_geom->Cell(it_pc).neighbour) {
         case cellN:
@@ -452,7 +471,7 @@ void Compute::SetNewInflowParticles() {
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = RandNumb(it_pc.Pos()[0], it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
-            _part_trace[s][1] = it_pc.Pos()[1]*_geom->Mesh()[1];              
+            _part_trace[s][1] = it_pc.Pos()[1]*_geom->Mesh()[1];
             s++;
           }
           break;
@@ -462,7 +481,7 @@ void Compute::SetNewInflowParticles() {
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = (it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
-            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1]; 
+            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
             s++;
           }
           break;
@@ -473,7 +492,7 @@ void Compute::SetNewInflowParticles() {
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = RandNumb(it_pc.Pos()[0], it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
-            _part_trace[s][1] = it_pc.Pos()[1]*_geom->Mesh()[1];              
+            _part_trace[s][1] = it_pc.Pos()[1]*_geom->Mesh()[1];
             s++;
           }
           // for (int i = 0; i < an_inflow; i++) {
@@ -482,9 +501,9 @@ void Compute::SetNewInflowParticles() {
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = (it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
-            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1]; 
+            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
             s++;
-          }      
+          }
           break;
         case cellS:
           for (int i = 0; i < an_inflow; i++) {
@@ -494,7 +513,7 @@ void Compute::SetNewInflowParticles() {
             _part_trace[s][0] = RandNumb(it_pc.Pos()[0], it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
             _part_trace[s][1] = (it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
             s++;
-          }     
+          }
           break;
         case cellSW:
           // for (int i = 0; i < an_inflow; i++) {
@@ -512,7 +531,7 @@ void Compute::SetNewInflowParticles() {
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = (it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
-            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1]; 
+            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
             s++;
           }
           break;
@@ -522,7 +541,7 @@ void Compute::SetNewInflowParticles() {
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = it_pc.Pos()[0]*_geom->Mesh()[0];
-            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];            
+            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
             s++;
           }
           break;
@@ -533,7 +552,7 @@ void Compute::SetNewInflowParticles() {
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = RandNumb(it_pc.Pos()[0], it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
-            _part_trace[s][1] = it_pc.Pos()[1]*_geom->Mesh()[1];              
+            _part_trace[s][1] = it_pc.Pos()[1]*_geom->Mesh()[1];
             s++;
           }
           // for (int i = 0; i < an_inflow; i++) {
@@ -542,7 +561,7 @@ void Compute::SetNewInflowParticles() {
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = it_pc.Pos()[0]*_geom->Mesh()[0];
-            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];            
+            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
             s++;
           }
           break;
@@ -562,7 +581,7 @@ void Compute::SetNewInflowParticles() {
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = it_pc.Pos()[0]*_geom->Mesh()[0];
-            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];            
+            _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
             s++;
           }
           break;
@@ -571,7 +590,7 @@ void Compute::SetNewInflowParticles() {
         };
       }
     it_pc.Next();
-  }  
+  }
 }
 //------------------------------------------------------------------------------
 // Particle trace per timestep
@@ -586,7 +605,7 @@ void Compute::ParticleTrace(const real_t &dt) {
   multi_index_t index_pos;
   index_t cell_number;
   index_t part_crit = 1; // particle criterion to set a cell to fluid cell
-  
+
   for (int i=0; i < _num_cell; i++) {
     _ppc[i] = 0;
   }
@@ -599,7 +618,7 @@ void Compute::ParticleTrace(const real_t &dt) {
       vel_u_new = PhysToVelocity(_part_trace[i][0], _part_trace[i][1], 'U');
       vel_v_old = PhysToVelocity(_part_trace[i][0], _part_trace[i][1], 'v');
       vel_v_new = PhysToVelocity(_part_trace[i][0], _part_trace[i][1], 'V');
-      
+
       // Calculate next position via Leap Frog with mean of old and new velocity
       _part_trace[i][0] += dt*(vel_u_old + vel_u_new)/2.0;
       _part_trace[i][1] += dt*(vel_v_old + vel_v_new)/2.0;
@@ -610,7 +629,7 @@ void Compute::ParticleTrace(const real_t &dt) {
       //cout << "New x=" << _part_trace[i][0] << " y=" << _part_trace[i][1] <<" Cell Number " << cell_number << endl;
       // sort Partical in to the right cellnumber or delete
       //cout << _num_cell << endl;
-      // if (_part_trace[i][0] < 0 || _part_trace[i][0] > _geom->TotalLength()[0] 
+      // if (_part_trace[i][0] < 0 || _part_trace[i][0] > _geom->TotalLength()[0]
       //   || _part_trace[i][1] < 0 || _part_trace[i][1] > _geom->TotalLength()[1]) {
       if ( 1 > index_pos[0] || index_pos[0] >= _increm_y || 1 > index_pos[1] || index_pos[1] >= _increm_x) {
         //cout << "Raus x=" << index_pos[0] << " y=" << index_pos[1] << endl;
@@ -624,7 +643,7 @@ void Compute::ParticleTrace(const real_t &dt) {
         // New Interator at position cell_number
         Iterator it_cell(_geom, cell_number);
         // Set the type of the cell
-        if (_geom->Cell(it_cell).type == typeFluid || _geom->Cell(it_cell).type == typeEmpty 
+        if (_geom->Cell(it_cell).type == typeFluid || _geom->Cell(it_cell).type == typeEmpty
           || _geom->Cell(it_cell).type == typeSurf) { // particle in inner cell where at least there is no obstacle
           _ppc[cell_number] += 1;
           if (part_crit <= _ppc[cell_number]) {
@@ -636,12 +655,12 @@ void Compute::ParticleTrace(const real_t &dt) {
           _part_trace.erase(it);
           it--;
           i--;
-        }  
+        }
         i++;
       }
     }
   // ############################ Hier zu Debugzwecken #############################
-  string zeile;   
+  string zeile;
   string spalte;
   for (int i=0; i < _num_cell; i++) {
     if (i % _increm_y == 0) {
@@ -704,7 +723,7 @@ multi_index_t& Compute::PhysToIndex(const real_t& x , const real_t& y) const {
 }
 //------------------------------------------------------------------------------
 // Return the index position of a multi_index-type
-index_t& Compute::IndexToCell(const multi_index_t& value) const {
+index_t Compute::IndexToCell(const multi_index_t& value) const {
   index_t x = value[0];
   index_t y = value[1];
   index_t _increm_y = _geom->TotalSize()[0];
@@ -723,16 +742,16 @@ real_t& Compute::PhysToVelocity(const real_t& x , const real_t& y ,const char& f
   if (f == 'u' || f == 'U' || f == 'v' || f == 'V' ) {
     if (f == 'u') {
       value = _u_alt->Interpolate(pos);
-      //cout <<"value" << value << endl; 
+      //cout <<"value" << value << endl;
     } else if (f == 'U') {
       value = _u->Interpolate(pos);
-      //cout <<"value" << value << endl; 
+      //cout <<"value" << value << endl;
     } else if (f == 'v') {
       value = _v_alt->Interpolate(pos);
-      //cout <<"value" << value << endl; 
+      //cout <<"value" << value << endl;
     } else if (f == 'V') {
       value = _v->Interpolate(pos);
-      //cout <<"value" << value << endl; 
+      //cout <<"value" << value << endl;
     }
   }
   return value;

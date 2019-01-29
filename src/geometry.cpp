@@ -160,11 +160,11 @@ void Geometry::UpdateCellDirichlet_T(Grid* T, const real_t& value,
 void Geometry::UpdateSurfOne_U(Grid* u, Grid* v, const Iterator& it) const {
   switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellN:
-    u->Cell(it.Left().Top()) = u->Cell(it.Left) -
+    u->Cell(it.Left().Top()) = u->Cell(it.Left()) -
       _h[1]*(v->Cell(it) - v->Cell(it.Left()))/_h[0];
     break;
   case cellW:
-    u->Cell(it.Left) = u->Cell(it) +
+    u->Cell(it.Left()) = u->Cell(it) +
       _h[0]*(v->Cell(it) - v->Cell(it.Down()))/_h[1];
     break;
   case cellS:
@@ -303,7 +303,7 @@ void Geometry::UpdateSurfTwo_Edge_V(Grid* v, Grid* u, const Iterator& it) const 
   case cellNW:
     v->Cell(it) = v->Cell(it.Down());
     v->Cell(it.Left().Down()) = v->Cell(it.Down()) +
-        _h[0]*(u->Cell(it.Left) - u->Cell(it.Left().Down()))/_h[1];
+        _h[0]*(u->Cell(it.Left()) - u->Cell(it.Left().Down()))/_h[1];
     v->Cell(it.Left()) = v->Cell(it);
     break;
   case cellSW:
@@ -356,7 +356,7 @@ void Geometry::UpdateSurfThree_V(Grid* v, Grid* u, const real_t& dt, const real_
     v->Cell(it.Left()) = v->Cell(it);
     v->Cell(it.Right()) = v->Cell(it);
     v->Cell(it.Left().Down()) = v->Cell(it.Down()) +
-        _h[0]*(u->Cell(it.Left) - u->Cell(it.Down().Left()))/_h[1];
+        _h[0]*(u->Cell(it.Left()) - u->Cell(it.Down().Left()))/_h[1];
     v->Cell(it.Right().Down()) = v->Cell(it.Down()) -
         _h[0]*(u->Cell(it) - u->Cell(it.Down()))/_h[1];
     break;
@@ -416,20 +416,20 @@ void Geometry::UpdateSurfTwo_Edge_P(Grid* p, Grid* u, Grid* v, const real_t& re,
   switch (_cell[it.Pos()[0] + it.Pos()[1]*_size[0]].neighbour) {
   case cellNW:
   // Warum -1 im Nenner?
-    p->Cell(it) = ((u->Cell(it) + u->Cell(it.Left()) - u->Cell(it.Down()) - u->Cell(it.Down().Left()))/_h[1] 
+    p->Cell(it) = ((u->Cell(it) + u->Cell(it.Left()) - u->Cell(it.Down()) - u->Cell(it.Down().Left()))/_h[1]
       + (v->Cell(it.Right()) + v->Cell(it.Right().Down()) - v->Cell(it) - v->Cell(it.Down()))/_h[0])/(-re*2.0);
     break;
   case cellSW:
-    p->Cell(it) = ((u->Cell(it.Top()) + u->Cell(it.Left().Top()) - u->Cell(it) - u->Cell(it.Left()))/_h[1] 
+    p->Cell(it) = ((u->Cell(it.Top()) + u->Cell(it.Left().Top()) - u->Cell(it) - u->Cell(it.Left()))/_h[1]
       + (v->Cell(it.Right()) + v->Cell(it.Right().Down()) - v->Cell(it) - v->Cell(it.Down()))/_h[0])/(re*2.0);
     break;
   case cellNE:
-    p->Cell(it) = ((u->Cell(it) + u->Cell(it.Left()) - u->Cell(it.Down()) - u->Cell(it.Down().Left()))/_h[1] 
+    p->Cell(it) = ((u->Cell(it) + u->Cell(it.Left()) - u->Cell(it.Down()) - u->Cell(it.Down().Left()))/_h[1]
       + (v->Cell(it) + v->Cell(it.Down()) - v->Cell(it.Left()) - v->Cell(it.Down().Left()))/_h[0])/(re*2.0);
     break;
   case cellSE:
    // Warum -1 im Nenner?
-    p->Cell(it) = ((u->Cell(it.Top()) + u->Cell(it.Left().Top()) - u->Cell(it) - u->Cell(it.Left()))/_h[1] 
+    p->Cell(it) = ((u->Cell(it.Top()) + u->Cell(it.Left().Top()) - u->Cell(it) - u->Cell(it.Left()))/_h[1]
       + (v->Cell(it) + v->Cell(it.Down()) - v->Cell(it.Left()) - v->Cell(it.Down().Left()))/_h[0])/(-re*2.0);
     break;
   default:
@@ -617,8 +617,8 @@ void Geometry::Load(const char* file) {
             if (_cell[x + y*_size[0]].type == typeEmpty)
               continue;
             if (_cell[x + y*_size[0]].type == typeFluid) {
-              if (_cell[x + 1 + y*_size[0]].typ == typeEmpty || _cell[x - 1 + y*_size[0]].typ == typeEmpty ||
-                _cell[x + (y + 1)*_size[0]].typ == typeEmpty || _cell[x + (y - 1)*_size[0]].typ == typeEmpty) {
+              if (_cell[x + 1 + y*_size[0]].type == typeEmpty || _cell[x - 1 + y*_size[0]].type == typeEmpty ||
+                _cell[x + (y + 1)*_size[0]].type == typeEmpty || _cell[x + (y - 1)*_size[0]].type == typeEmpty) {
                 _cell[x + y*_size[0]].type = typeSurf;
               } else {
                 continue;
@@ -799,15 +799,16 @@ const real_t&        Geometry::Pressure()    const {return _pressure;}
 //------------------------------------------------------------------------------
 const real_t&        Geometry::Temperature() const {return _temperature;}
 //------------------------------------------------------------------------------
-void DynamicNeighbourhood() {
+void Geometry::DynamicNeighbourhood() {
   for (int y = 0; y < _size[1]; ++y) {
           for (int x = 0; x < _size[0]; ++x) {
             int check = 0;
+            bool parabolic = false;
             if (_cell[x + y*_size[0]].type == typeEmpty)
               continue;
             if (_cell[x + y*_size[0]].type == typeFluid) {
-              if (_cell[x + 1 + y*_size[0]].typ == typeEmpty || _cell[x - 1 + y*_size[0]].typ == typeEmpty ||
-                _cell[x + (y + 1)*_size[0]].typ == typeEmpty || _cell[x + (y - 1)*_size[0]].typ == typeEmpty) {
+              if (_cell[x + 1 + y*_size[0]].type == typeEmpty || _cell[x - 1 + y*_size[0]].type == typeEmpty ||
+                _cell[x + (y + 1)*_size[0]].type == typeEmpty || _cell[x + (y - 1)*_size[0]].type == typeEmpty) {
                 _cell[x + y*_size[0]].type = typeSurf;
               } else {
                 continue;
@@ -870,8 +871,7 @@ void DynamicNeighbourhood() {
               break;
             };
             } else {
-            bool parabolic = false;
-            if (_cell[x + y*_size[0]].type == typeInH || (_cell[x + y*_size[0]].type == typeInV)
+            if (_cell[x + y*_size[0]].type == typeInH || _cell[x + y*_size[0]].type == typeInV)
               parabolic = true;
             if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeFluid)
               check |= 8;
@@ -923,7 +923,7 @@ void DynamicNeighbourhood() {
               break;
             };
           }
-  }
+
   // Parabolic stuff
         if (parabolic) {
           for (int y = 0; y < _size[1]; ++y) {
@@ -951,6 +951,9 @@ void DynamicNeighbourhood() {
                 break;
               };
             }
+          }
+        }
+
           }
         }
 }

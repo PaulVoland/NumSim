@@ -23,7 +23,7 @@
 class Compute {
 public:
   /// Creates a compute instance with given geometry and parameter
-  Compute(const Geometry *geom, const Parameter *param);
+  Compute(Geometry *geom, const Parameter *param);
   /// Deletes all grids
   ~Compute();
 
@@ -56,6 +56,9 @@ public:
 private:
   // current timestep
   real_t _t;
+
+  // current step width
+  real_t _dt;
 
   // donor-cell diffusion condition (p. 27)
   real_t _dtlimit;
@@ -108,17 +111,17 @@ private:
   /// Set particles initially to the _part_trace vector
   void SetParticles();
   /// Random number between max and min
-  real_t &RandNumb(const real_t &max, const real_t &min) const;
+  real_t RandNumb(const real_t &max, const real_t &min) const;
   /// Set new particles in each timestep at the inflow boundaries
   void SetNewInflowParticles();
   /// Particle trace per timestep
   void ParticleTrace(const real_t &dt);
   /// Return the index position of a multi_index-type
-  index_t &IndexToCell(const multi_index_t &value) const;
+  index_t IndexToCell(const multi_index_t &value) const;
   /// Calculate the index positions from physical coordinates
   multi_index_t &PhysToIndex(const real_t &x , const real_t &y) const;
   /// Get special velocity defined by char f in {u, U, v, V} at physical position
-  real_t &PhysToVelocity(const real_t &x , const real_t &y, const char &f) const; 
+  real_t &PhysToVelocity(const real_t &x , const real_t &y, const char &f) const;
   /// Copy velocities of the old timestep to _._alt
   void CopyVelocities();
 };
