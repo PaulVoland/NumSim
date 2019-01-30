@@ -119,6 +119,7 @@ int main(int argc, char **argv) {
 
   // Create the fluid solver
   Compute comp(&geom, &param);
+  
 
   // Create Iterator instance for debug purposes
   Iterator it(&geom);

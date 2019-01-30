@@ -119,9 +119,9 @@ private:
   /// Return the index position of a multi_index-type
   index_t IndexToCell(const multi_index_t &value) const;
   /// Calculate the index positions from physical coordinates
-  multi_index_t &PhysToIndex(const real_t &x , const real_t &y) const;
+  multi_index_t PhysToIndex(const real_t &x , const real_t &y) const;
   /// Get special velocity defined by char f in {u, U, v, V} at physical position
-  real_t &PhysToVelocity(const real_t &x , const real_t &y, const char &f) const;
+  real_t PhysToVelocity(const real_t &x , const real_t &y, const char &f) const;
   /// Copy velocities of the old timestep to _._alt
   void CopyVelocities();
 };

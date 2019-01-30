@@ -233,6 +233,7 @@ void Compute::TimeStep(bool printInfo) {
   // Particle trace per timestep
   ParticleTrace(_dt);
 
+
   // Update cell type list for the new particle constellation
   _geom->DynamicNeighbourhood();
 
@@ -693,7 +694,7 @@ void Compute::ParticleTrace(const real_t &dt) {
 }
 //------------------------------------------------------------------------------
 // Calculate the index positions from physical coordinates
-multi_index_t& Compute::PhysToIndex(const real_t& x , const real_t& y) const {
+multi_index_t Compute::PhysToIndex(const real_t& x , const real_t& y) const {
   multi_real_t h    = _geom->Mesh();
   // Instantiate indices and distances
   index_t i, j;
@@ -734,7 +735,7 @@ index_t Compute::IndexToCell(const multi_index_t& value) const {
 }
 //------------------------------------------------------------------------------
 // Get special velocity defined by char f in {u, U, v, V} at physical position
-real_t& Compute::PhysToVelocity(const real_t& x , const real_t& y ,const char& f) const {
+real_t Compute::PhysToVelocity(const real_t& x , const real_t& y ,const char& f) const {
   multi_real_t pos;
   pos[0] = x;
   pos[1] = y;
