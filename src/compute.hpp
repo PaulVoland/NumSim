@@ -124,6 +124,8 @@ private:
   real_t PhysToVelocity(const real_t &x , const real_t &y, const char &f) const;
   /// Copy velocities of the old timestep to _._alt
   void CopyVelocities();
+  /// Show Particals
+  void ShowParticals();
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

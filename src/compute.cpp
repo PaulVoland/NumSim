@@ -436,6 +436,10 @@ void Compute::SetParticles(){
       }
     it_pc.Next();
   }
+
+
+
+
   // Set new particles in each timestep at the inflow boundaries
   SetNewInflowParticles();
   //int i = 0;
@@ -459,8 +463,8 @@ real_t Compute::RandNumb(const real_t& max, const real_t& min) const {
 void Compute::SetNewInflowParticles() {
   Iterator it_pc(_geom);
   index_t s = 0;
-  //index_t an_inflow = 4; // should be even?!
-  index_t an_inflow = 3;
+  index_t an_inflow = 4; // should be even?!
+  //index_t an_inflow = 4;
   //index_t an_cell = 9; // not used here
   //it_pc.First();
     while (it_pc.Valid()) {
@@ -621,8 +625,8 @@ void Compute::ParticleTrace(const real_t &dt) {
       vel_v_new = PhysToVelocity(_part_trace[i][0], _part_trace[i][1], 'V');
 
       // Calculate next position via Leap Frog with mean of old and new velocity
-      _part_trace[i][0] += dt*(vel_u_old + vel_u_new)/2.0;
-      _part_trace[i][1] += dt*(vel_v_old + vel_v_new)/2.0;
+      //_part_trace[i][0] += dt*(vel_u_old + vel_u_new)/2.0;
+      //_part_trace[i][1] += dt*(vel_v_old + vel_v_new)/2.0;
       // Calculate the corresponding index of the physical coordinates
       index_pos = PhysToIndex(_part_trace[i][0], _part_trace[i][1]);
       //cout << "New x=" << index_pos[0] << " y=" << index_pos[1] << endl;
@@ -661,33 +665,7 @@ void Compute::ParticleTrace(const real_t &dt) {
       }
     }
   // ############################ Hier zu Debugzwecken #############################
-  string zeile;
-  string spalte;
-  for (int i=0; i < _num_cell; i++) {
-    if (i % _increm_y == 0) {
-      spalte = zeile + "\n" + spalte;
-      zeile = "";
-      // only formatting
-      if (_ppc[i] > 99) {
-        zeile = zeile + "|" + to_string(_ppc[i]);
-      } else if (_ppc[i] > 9) {
-        zeile = zeile + "|" + " " + to_string(_ppc[i]);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_ppc[i]);
-      }
-    } else {
-      // only formatting
-      if (_ppc[i] > 99) {
-        zeile = zeile + "|" + to_string(_ppc[i]);
-      } else if (_ppc[i] > 9) {
-        zeile = zeile + "|" + " " + to_string(_ppc[i]);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_ppc[i]);
-      }
-    }
-  }
-  spalte = zeile + "\n" + spalte;
-  cout << spalte << endl;
+  ShowParticals();
   // ###############################################################################
   // Set new particles in each timestep at the inflow boundaries
   SetNewInflowParticles();
@@ -768,3 +746,37 @@ void Compute::CopyVelocities() {
   }
 }
 //------------------------------------------------------------------------------
+void Compute::ShowParticals(){
+  // ############################ Hier zu Debugzwecken #############################
+  index_t _increm_x = _geom->TotalSize()[1];
+  index_t _increm_y = _geom->TotalSize()[0];
+  index_t _num_cell = _increm_x*_increm_y;
+  string zeile;
+  string spalte;
+  for (int i=0; i < _num_cell; i++) {
+    if (i % _increm_y == 0) {
+      spalte = zeile + "\n" + spalte;
+      zeile = "";
+      // only formatting
+      if (_ppc[i] > 99) {
+        zeile = zeile + "|" + to_string(_ppc[i]);
+      } else if (_ppc[i] > 9) {
+        zeile = zeile + "|" + " " + to_string(_ppc[i]);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_ppc[i]);
+      }
+    } else {
+      // only formatting
+      if (_ppc[i] > 99) {
+        zeile = zeile + "|" + to_string(_ppc[i]);
+      } else if (_ppc[i] > 9) {
+        zeile = zeile + "|" + " " + to_string(_ppc[i]);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_ppc[i]);
+      }
+    }
+  }
+  spalte = zeile + "\n" + spalte;
+  cout << spalte << endl;
+  // ###############################################################################
+}
