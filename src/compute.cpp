@@ -26,17 +26,11 @@ Compute::Compute(Geometry* geom, const Parameter* param)
   // Offsets for the grid variables
   multi_real_t off_u;
   multi_real_t off_v;
-  multi_real_t off_u_alt;
-  multi_real_t off_v_alt;
   multi_real_t off_p;
   off_u[0] = geom->Mesh()[0];
   off_u[1] = geom->Mesh()[1]/2.0;
-  off_u_alt[0] = geom->Mesh()[0];
-  off_u_alt[1] = geom->Mesh()[1]/2.0;
   off_v[0] = geom->Mesh()[0]/2.0;
   off_v[1] = geom->Mesh()[1];
-  off_v_alt[0] = geom->Mesh()[0]/2.0;
-  off_v_alt[1] = geom->Mesh()[1];
   off_p[0] = geom->Mesh()[0]/2.0;
   off_p[1] = geom->Mesh()[1]/2.0;
   // Instantiate grids with offsets
@@ -62,16 +56,11 @@ Compute::Compute(Geometry* geom, const Parameter* param)
   _rhs->Initialize(0.0);
   _tmp->Initialize(0.0);
 
-  // initialize partical count array and set to zero
-  index_t _increm_x = geom->TotalSize()[1];
-  index_t _increm_y = geom->TotalSize()[0];
-  index_t _num_cell = _increm_x*_increm_y;
-  _ppc = new index_t[_num_cell];
-
-  //cout << _increm_x << " | " << _increm_y << " | " << _num_cell << endl;
-  for (int i=0;i<_num_cell;i++)
+  // Instantiate particle counter field and set to zero
+  _ppc = new index_t[geom->TotalSize()[0]*geom->TotalSize()[1]];
+  for (index_t i = 0; i < geom->TotalSize()[0]*geom->TotalSize()[1]; i++) {
     _ppc[i] = 0;
-
+  }
 
   // set partical trace array with fluid cells
   SetParticles();
@@ -421,14 +410,14 @@ void Compute::HeatTransport(const real_t& dt) {
 void Compute::SetParticles() {
   Iterator it_pc(_geom);
   index_t s = 0;
-  index_t an_inflow = 4; // shoud be even
+  //index_t an_inflow = 4; // shoud be even
   index_t an_cell = 10;
   it_pc.First();
   while (it_pc.Valid()) {
     if (_geom->Cell(it_pc).type == typeFluid ) // hier sollte auch jeder neuer typ als bedingung reinkommen
       {
         //cout << "Ref. ##### x: " << (it_pc.Pos()[0]-1)*_geom->TotalLength()[0]/(_geom->TotalSize()[0]-2) << " y: " << (it_pc.Pos()[1]-1)*_geom->TotalLength()[1]/(_geom->TotalSize()[1]-2) << endl;
-      for (int i = 0; i < an_cell; ++i)
+      for (index_t i = 0; i < an_cell; ++i)
         {
           real_t * foo;
           foo = new real_t[2];
@@ -444,7 +433,7 @@ void Compute::SetParticles() {
   it_pc.Next();
   }
   SetNewInflowParticles();
-  int i = 0;
+  //index_t i = 0;
   /*for(std::vector<double*>::iterator it = _part_trace.begin(); it != _part_trace.end(); ++it) {
       cout << "Integer :" << i << " with Value 1: " <<  _part_trace[i][0] << "with Value 2:"<< _part_trace[i][1] << "\n ";
       i++;
@@ -462,14 +451,14 @@ void Compute::SetNewInflowParticles(){
   Iterator it_pc(_geom);
   index_t s = _part_trace.size();
   index_t an_inflow = 4; // shoud be even
-  index_t an_cell = 10;
+  //index_t an_cell = 10;
   it_pc.First();
     while (it_pc.Valid()) {
       if(_geom->Cell(it_pc).type == typeIn || _geom->setCell(it_pc).type == typeInH || _geom->setCell(it_pc).type == typeInV)
       {
       switch (_geom->Cell(it_pc).neighbour){
         case cellN:
-          for (int i = 0; i < an_inflow; ++i)
+          for (index_t i = 0; i < an_inflow; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -480,7 +469,7 @@ void Compute::SetNewInflowParticles(){
             }
           break;
         case cellW:
-          for (int i = 0; i < an_inflow; ++i)
+          for (index_t i = 0; i < an_inflow; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -491,7 +480,7 @@ void Compute::SetNewInflowParticles(){
             }
           break;
         case cellNW:
-          for (int i = 0; i < (index_t)an_inflow/2; ++i)
+          for (index_t i = 0; i < (index_t)an_inflow/2; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -500,7 +489,7 @@ void Compute::SetNewInflowParticles(){
             _part_trace[s][1] = it_pc.Pos()[1]*_geom->TotalLength()[1]/(_geom->TotalSize()[1]-2);
             s++;
             }
-          for (int i = 0; i < (index_t)an_inflow/2; ++i)
+          for (index_t i = 0; i < (index_t)an_inflow/2; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -511,7 +500,7 @@ void Compute::SetNewInflowParticles(){
             }
           break;
         case cellS:
-          for (int i = 0; i < an_inflow; ++i)
+          for (index_t i = 0; i < an_inflow; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -523,7 +512,7 @@ void Compute::SetNewInflowParticles(){
 
           break;
         case cellSW:
-          for (int i = 0; i < (index_t)an_inflow/2; ++i)
+          for (index_t i = 0; i < (index_t)an_inflow/2; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -532,7 +521,7 @@ void Compute::SetNewInflowParticles(){
             _part_trace[s][1] = (it_pc.Pos()[1]-1)*_geom->TotalLength()[1]/(_geom->TotalSize()[1]-2);
             s++;
             }
-          for (int i = 0; i < (index_t)an_inflow/2; ++i)
+          for (index_t i = 0; i < (index_t)an_inflow/2; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -543,7 +532,7 @@ void Compute::SetNewInflowParticles(){
             }
           break;
         case cellE:
-          for (int i = 0; i < an_inflow; ++i)
+          for (index_t i = 0; i < an_inflow; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -554,7 +543,7 @@ void Compute::SetNewInflowParticles(){
             }
           break;
         case cellNE:
-          for (int i = 0; i < (index_t)an_inflow/2; ++i)
+          for (index_t i = 0; i < (index_t)an_inflow/2; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -563,7 +552,7 @@ void Compute::SetNewInflowParticles(){
             _part_trace[s][1] = it_pc.Pos()[1]*_geom->TotalLength()[1]/(_geom->TotalSize()[1]-2);
             s++;
             }
-          for (int i = 0; i < (index_t)an_inflow/2; ++i)
+          for (index_t i = 0; i < (index_t)an_inflow/2; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -574,7 +563,7 @@ void Compute::SetNewInflowParticles(){
             }
           break;
         case cellSE:
-          for (int i = 0; i < an_inflow; ++i)
+          for (index_t i = 0; i < an_inflow; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -583,7 +572,7 @@ void Compute::SetNewInflowParticles(){
             _part_trace[s][1] = (it_pc.Pos()[1]-1)*_geom->TotalLength()[1]/(_geom->TotalSize()[1]-2);
             s++;
             }
-          for (int i = 0; i < an_inflow; ++i)
+          for (index_t i = 0; i < an_inflow; ++i)
             {
             real_t * foo;
             foo = new real_t[2];
@@ -611,11 +600,11 @@ void Compute::ParticleTrace(const real_t &dt){
   index_t cell_number = 0;
   index_t part_crit = 1; // criterion to set fluid cell
   multi_index_t index_pos;
-  for (int i=0;i<_num_cell;i++)
+  for (index_t i=0;i<_num_cell;i++)
     _ppc[i] = 0;
 
 // Leap Frog
-  int i= 0;
+  index_t i= 0;
   for(vec_arr::iterator it = _part_trace.begin(); it != _part_trace.end(); ++it) {
       // Calculate Velocity V_i+1/2
       vel_v_old =  PhysToVelocity(_part_trace[i][0],_part_trace[i][1] , 'v');
@@ -669,7 +658,7 @@ void Compute::ParticleTrace(const real_t &dt){
   string spalte;
   //cout << _num_cell << endl;
   //cout << _increm_y << endl;
-  for (int i=0;i<_num_cell;i++){
+  for (index_t i=0;i<_num_cell;i++){
     if (i%(_increm_y) ==0 )
     {
 
@@ -704,7 +693,6 @@ void Compute::ParticleTrace(const real_t &dt){
 }
 multi_index_t Compute::PhysToIndex(const real_t& x , const real_t& y) const {
   multi_real_t h    = _geom->Mesh();
-  index_t _increm_y = _geom->TotalSize()[0];
   // Instantiate indices and distances
   index_t i, j;
   multi_index_t value;
@@ -746,7 +734,7 @@ real_t Compute::PhysToVelocity(const real_t& x , const real_t& y ,const char& f)
   multi_real_t velo;
   velo[0] = x ;
   velo[1] = y;
-  real_t value;
+  real_t value = 0;
   if (f=='v' || f=='V' || f=='u' || f=='U' ) // klein ist alt groß ist neu
   {
     if (f=='u')
