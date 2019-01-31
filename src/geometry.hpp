@@ -47,7 +47,7 @@ typedef enum {
 // Cells on the diagonals can be ignored
 // Combinations not listed are invalid
 typedef enum {
-  cellNone = 0, // Cell is surrounded by fluid cells or is empty
+  cellNone = 0,  // Cell is surrounded by fluid cells or is empty
   // If neighbour != cellNone, this means
   // (a) for obstacle cells where the neighbouring fluid cell is
   // (b) for surface cells where the neighbouring empty cell is
@@ -70,7 +70,7 @@ typedef enum {
 /// Typedef for cells
 typedef struct {
   CellType_t type;      // Cell type
-  CellBoundary_t neighbour; // Surrounding cells (different meaning for obstacle or surface!)
+  CellBoundary_t neighbour; // Surrounding fluid cells
   real_t factor;        // Scale factor for inital values
 } Cell_t;
 //------------------------------------------------------------------------------
@@ -104,8 +104,8 @@ public:
   const multi_real_t &Mesh() const;
   /// Read access to the cell type field at position [it]
   const Cell_t &Cell(const Iterator &it) const;
-  /// Write access to the cell type field at position [it]
-  Cell_t &SetCell(const Iterator &it);
+  /// setter Methode to write in the cell
+  Cell_t &setCell(const Iterator &it) ;
   /// Returns the prescribed velocity values
   const multi_real_t &Velocity() const;
   /// Returns the prescribed pressure value
@@ -140,7 +140,7 @@ private:
   void UpdateCellNeumann(Grid *grid, const Iterator &it) const;
   void UpdateCellNeumann_P(Grid *grid, const Iterator &it) const;
   void UpdateCellDirichlet_T(Grid *T, const real_t &value, const Iterator &it) const;
-  
+
   // specific for each case of grid in {u, v, p}
   // order of write/read actions inside is very important!
   void UpdateSurfOne_U(Grid *u, Grid *v, const Iterator &it) const;
