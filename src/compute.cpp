@@ -604,75 +604,9 @@ void Compute::ParticleTrace(const real_t &dt){
   for (index_t i=0;i<_num_cell;i++)
     _ppc[i] = 0;
 
-  string zeile;
-  string spalte;
-  //cout << _num_cell << endl;
-  //cout << _increm_y << endl;
-  for (index_t i=0;i<_num_cell;i++){
-    Iterator it(_geom, i);
-    if (i%(_increm_y) ==0 )
-    {
+  
 
-      spalte = zeile + "\n" + spalte;
-      zeile = "";
-
-      if (_geom->Cell(it).type > 99)
-      {
-        zeile = zeile + "|" + to_string(_geom->Cell(it).type);
-      } else if (_geom->Cell(it).type > 9){
-        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).type);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).type);
-      }
-
-    } else{
-      if (_geom->Cell(it).type > 99)
-      {
-        zeile = zeile + "|" + to_string(_geom->Cell(it).type);
-      } else if (_geom->Cell(it).type > 9){
-        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).type);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).type);
-      }
-    }
-  }
-  spalte = zeile + "\n" + spalte;
-  cout << spalte;
-
-  zeile = "";
-  spalte = "";
-  //cout << _num_cell << endl;
-  //cout << _increm_y << endl;
-  for (index_t i=0;i<_num_cell;i++){
-    Iterator it(_geom, i);
-    if (i%(_increm_y) ==0 )
-    {
-
-      spalte = zeile + "\n" + spalte;
-      zeile = "";
-
-      if (_geom->Cell(it).neighbour > 99)
-      {
-        zeile = zeile + "|" + to_string(_geom->Cell(it).neighbour);
-      } else if (_geom->Cell(it).neighbour > 9){
-        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).neighbour);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).neighbour);
-      }
-
-    } else{
-      if (_geom->Cell(it).neighbour > 99)
-      {
-        zeile = zeile + "|" + to_string(_geom->Cell(it).neighbour);
-      } else if (_geom->Cell(it).neighbour > 9){
-        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).neighbour);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).neighbour);
-      }
-    }
-  }
-  spalte = zeile + "\n" + spalte;
-  cout << spalte;
+  
 
 // Leap Frog
   index_t i= 0;
@@ -725,111 +659,7 @@ void Compute::ParticleTrace(const real_t &dt){
         i++;
       }
     }
-  // ############################ Hier zu debug zwecke #############################
-  zeile = "";
-  spalte = "";
-  //cout << _num_cell << endl;
-  //cout << _increm_y << endl;
-  for (index_t i=0;i<_num_cell;i++){
-    if (i%(_increm_y) ==0 )
-    {
-
-      spalte = zeile + "\n" + spalte;
-      zeile = "";
-
-      if (_ppc[i] > 99)
-      {
-        zeile = zeile + "|" + to_string(_ppc[i]);
-      } else if (_ppc[i] > 9){
-        zeile = zeile + "|" + " " + to_string(_ppc[i]);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_ppc[i]);
-      }
-
-    } else{
-      if (_ppc[i] > 99)
-      {
-        zeile = zeile + "|" + to_string(_ppc[i]);
-      } else if (_ppc[i] > 9){
-        zeile = zeile + "|" + " " + to_string(_ppc[i]);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_ppc[i]);
-      }
-    }
-  }
-  spalte = zeile + "\n" + spalte;
-  cout << spalte;
-
-  zeile = "";
-  spalte = "";
-  //cout << _num_cell << endl;
-  //cout << _increm_y << endl;
-  for (index_t i=0;i<_num_cell;i++){
-    Iterator it(_geom, i);
-    if (i%(_increm_y) ==0 )
-    {
-
-      spalte = zeile + "\n" + spalte;
-      zeile = "";
-
-      if (_geom->Cell(it).type > 99)
-      {
-        zeile = zeile + "|" + to_string(_geom->Cell(it).type);
-      } else if (_geom->Cell(it).type > 9){
-        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).type);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).type);
-      }
-
-    } else{
-      if (_geom->Cell(it).type > 99)
-      {
-        zeile = zeile + "|" + to_string(_geom->Cell(it).type);
-      } else if (_geom->Cell(it).type > 9){
-        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).type);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).type);
-      }
-    }
-  }
-  spalte = zeile + "\n" + spalte;
-  cout << spalte;
-
-  zeile = "";
-  spalte = "";
-  //cout << _num_cell << endl;
-  //cout << _increm_y << endl;
-  for (index_t i=0;i<_num_cell;i++){
-    Iterator it(_geom, i);
-    if (i%(_increm_y) ==0 )
-    {
-
-      spalte = zeile + "\n" + spalte;
-      zeile = "";
-
-      if (_geom->Cell(it).neighbour > 99)
-      {
-        zeile = zeile + "|" + to_string(_geom->Cell(it).neighbour);
-      } else if (_geom->Cell(it).neighbour > 9){
-        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).neighbour);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).neighbour);
-      }
-
-    } else{
-      if (_geom->Cell(it).neighbour > 99)
-      {
-        zeile = zeile + "|" + to_string(_geom->Cell(it).neighbour);
-      } else if (_geom->Cell(it).neighbour > 9){
-        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).neighbour);
-      } else {
-        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).neighbour);
-      }
-    }
-  }
-  spalte = zeile + "\n" + spalte;
-  cout << spalte;
-  // #############################################################################
+  ShowParticle();
   // new Partikel from Inflow
   SetNewInflowParticles();
 }
@@ -910,5 +740,128 @@ void Compute::CopyVelocities(){
     it.Next();
   }
 }
+
+  void Compute::ShowParticle(){
+  index_t _increm_x = _geom->TotalSize()[1];
+  index_t _increm_y = _geom->TotalSize()[0];
+  index_t _num_cell = _increm_x*_increm_y;
+  string zeile;
+  string spalte;
+  //cout << _num_cell << endl;
+  //cout << _increm_y << endl;
+  for (index_t i=0;i<_num_cell;i++){
+    if (i%(_increm_y) ==0 )
+    {
+
+      spalte = zeile + "\n" + spalte;
+      zeile = "";
+
+      if (_ppc[i] > 99)
+      {
+        zeile = zeile + "|" + to_string(_ppc[i]);
+      } else if (_ppc[i] > 9){
+        zeile = zeile + "|" + " " + to_string(_ppc[i]);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_ppc[i]);
+      }
+
+    } else{
+      if (_ppc[i] > 99)
+      {
+        zeile = zeile + "|" + to_string(_ppc[i]);
+      } else if (_ppc[i] > 9){
+        zeile = zeile + "|" + " " + to_string(_ppc[i]);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_ppc[i]);
+      }
+    }
+  }
+  spalte = zeile + "\n" + spalte;
+  cout << spalte;
+
+
+  }
+  // Show Neighbour
+  void Compute::ShowNeighbour(){
+  index_t _increm_x = _geom->TotalSize()[1];
+  index_t _increm_y = _geom->TotalSize()[0];
+  index_t _num_cell = _increm_x*_increm_y;
+  string zeile;
+  string spalte;
+  //cout << _num_cell << endl;
+  //cout << _increm_y << endl;
+  for (index_t i=0;i<_num_cell;i++){
+    Iterator it(_geom, i);
+    if (i%(_increm_y) ==0 )
+    {
+
+      spalte = zeile + "\n" + spalte;
+      zeile = "";
+
+      if (_geom->Cell(it).neighbour > 99)
+      {
+        zeile = zeile + "|" + to_string(_geom->Cell(it).neighbour);
+      } else if (_geom->Cell(it).neighbour > 9){
+        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).neighbour);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).neighbour);
+      }
+
+    } else{
+      if (_geom->Cell(it).neighbour > 99)
+      {
+        zeile = zeile + "|" + to_string(_geom->Cell(it).neighbour);
+      } else if (_geom->Cell(it).neighbour > 9){
+        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).neighbour);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).neighbour);
+      }
+    }
+  }
+  spalte = zeile + "\n" + spalte;
+  cout << spalte;
+
+  }
+  // Show Type
+  void Compute::ShowType(){
+  index_t _increm_x = _geom->TotalSize()[1];
+  index_t _increm_y = _geom->TotalSize()[0];
+  index_t _num_cell = _increm_x*_increm_y;
+  string zeile;
+  string spalte;
+  //cout << _num_cell << endl;
+  //cout << _increm_y << endl;
+  for (index_t i=0;i<_num_cell;i++){
+    Iterator it(_geom, i);
+    if (i%(_increm_y) ==0 )
+    {
+
+      spalte = zeile + "\n" + spalte;
+      zeile = "";
+
+      if (_geom->Cell(it).type > 99)
+      {
+        zeile = zeile + "|" + to_string(_geom->Cell(it).type);
+      } else if (_geom->Cell(it).type > 9){
+        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).type);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).type);
+      }
+
+    } else{
+      if (_geom->Cell(it).type > 99)
+      {
+        zeile = zeile + "|" + to_string(_geom->Cell(it).type);
+      } else if (_geom->Cell(it).type > 9){
+        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).type);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).type);
+      }
+    }
+  }
+  spalte = zeile + "\n" + spalte;
+  cout << spalte;
+
+  }
 
 //------------------------------------------------------------------------------
