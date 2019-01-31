@@ -604,6 +604,76 @@ void Compute::ParticleTrace(const real_t &dt){
   for (index_t i=0;i<_num_cell;i++)
     _ppc[i] = 0;
 
+  string zeile;
+  string spalte;
+  //cout << _num_cell << endl;
+  //cout << _increm_y << endl;
+  for (index_t i=0;i<_num_cell;i++){
+    Iterator it(_geom, i);
+    if (i%(_increm_y) ==0 )
+    {
+
+      spalte = zeile + "\n" + spalte;
+      zeile = "";
+
+      if (_geom->Cell(it).type > 99)
+      {
+        zeile = zeile + "|" + to_string(_geom->Cell(it).type);
+      } else if (_geom->Cell(it).type > 9){
+        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).type);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).type);
+      }
+
+    } else{
+      if (_geom->Cell(it).type > 99)
+      {
+        zeile = zeile + "|" + to_string(_geom->Cell(it).type);
+      } else if (_geom->Cell(it).type > 9){
+        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).type);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).type);
+      }
+    }
+  }
+  spalte = zeile + "\n" + spalte;
+  cout << spalte;
+
+  zeile = "";
+  spalte = "";
+  //cout << _num_cell << endl;
+  //cout << _increm_y << endl;
+  for (index_t i=0;i<_num_cell;i++){
+    Iterator it(_geom, i);
+    if (i%(_increm_y) ==0 )
+    {
+
+      spalte = zeile + "\n" + spalte;
+      zeile = "";
+
+      if (_geom->Cell(it).neighbour > 99)
+      {
+        zeile = zeile + "|" + to_string(_geom->Cell(it).neighbour);
+      } else if (_geom->Cell(it).neighbour > 9){
+        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).neighbour);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).neighbour);
+      }
+
+    } else{
+      if (_geom->Cell(it).neighbour > 99)
+      {
+        zeile = zeile + "|" + to_string(_geom->Cell(it).neighbour);
+      } else if (_geom->Cell(it).neighbour > 9){
+        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).neighbour);
+      } else {
+        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).neighbour);
+      }
+    }
+  }
+  spalte = zeile + "\n" + spalte;
+  cout << spalte;
+
 // Leap Frog
   index_t i= 0;
   for(vec_arr::iterator it = _part_trace.begin(); it != _part_trace.end(); ++it) {
@@ -613,8 +683,8 @@ void Compute::ParticleTrace(const real_t &dt){
       vel_u_old =  PhysToVelocity(_part_trace[i][0],_part_trace[i][1] , 'u');
       vel_u_new =  PhysToVelocity(_part_trace[i][0],_part_trace[i][1] , 'U');
       // Calculate next Position
-      //_part_trace[i][0] = _part_trace[i][0] +  dt*(vel_u_old + vel_u_new)/2.0;
-      //_part_trace[i][1] = _part_trace[i][1] +  dt*(vel_v_old + vel_v_new)/2.0;
+      _part_trace[i][0] = _part_trace[i][0] +  dt*(vel_u_old + vel_u_new)/2.0;
+      _part_trace[i][1] = _part_trace[i][1] +  dt*(vel_v_old + vel_v_new)/2.0;
       // calculate the index from the phys coord.
       index_pos = PhysToIndex(_part_trace[i][0],_part_trace[i][1]);
       //cout << "New x=" << index_pos[0] << " y=" << index_pos[1] << endl;
@@ -643,6 +713,7 @@ void Compute::ParticleTrace(const real_t &dt){
           if ( part_crit <= _ppc[cell_number])
           {
             _geom->setCell(it_cell).type = typeFluid;
+            _geom->setCell(it_cell).neighbour = cellNone;
           } else{
             _geom->setCell(it_cell).type = typeEmpty;
           }
@@ -655,8 +726,8 @@ void Compute::ParticleTrace(const real_t &dt){
       }
     }
   // ############################ Hier zu debug zwecke #############################
-  string zeile;
-  string spalte;
+  zeile = "";
+  spalte = "";
   //cout << _num_cell << endl;
   //cout << _increm_y << endl;
   for (index_t i=0;i<_num_cell;i++){

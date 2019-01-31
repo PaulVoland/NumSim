@@ -680,14 +680,26 @@ void Geometry::Load(const char* file) {
               break;
             };
             } else {
-            if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeFluid)
+            if (x < _size[0] - 1 && (_cell[x + 1 + y*_size[0]].type == typeFluid || _cell[x + 1 + y*_size[0]].type == typeSurf))
               check |= 8;
-            if (x > 0 && _cell[x - 1 + y*_size[0]].type == typeFluid)
+            if (x > 0 && (_cell[x - 1 + y*_size[0]].type == typeFluid || _cell[x - 1 + y*_size[0]].type == typeSurf))
               check |= 2;
-            if (y < _size[1] - 1 && _cell[x + (y + 1)*_size[0]].type == typeFluid)
+            if (y < _size[1] - 1 && (_cell[x + (y + 1)*_size[0]].type == typeFluid || _cell[x + (y + 1)*_size[0]].type == typeSurf))
               check |= 1;
-            if (y > 0 && _cell[x + (y - 1)*_size[0]].type == typeFluid)
+            if (y > 0 && (_cell[x + (y - 1)*_size[0]].type == typeFluid || _cell[x + (y - 1)*_size[0]].type == typeSurf))
               check |= 4;
+            // only in the first step, if domain is filled with empty cells only
+            if (_cell[x + y*_size[0]].type == typeIn || _cell[x + y*_size[0]].type == typeInH 
+              || _cell[x + y*_size[0]].type == typeInV) {
+              if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeEmpty)
+                check |= 8;
+              if (x > 0 && _cell[x - 1 + y*_size[0]].type == typeEmpty)
+                check |= 2;
+              if (y < _size[1] - 1 && _cell[x + (y + 1)*_size[0]].type == typeEmpty)
+                check |= 1;
+              if (y > 0 && _cell[x + (y - 1)*_size[0]].type == typeEmpty)
+                check |= 4;
+            }
             switch (check) {
             case 5:
             case 7:
@@ -870,15 +882,13 @@ void Geometry::DynamicNeighbourhood() {
               break;
             };
             } else {
-            if (_cell[x + y*_size[0]].type == typeInH || _cell[x + y*_size[0]].type == typeInV)
-              parabolic = true;
-            if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeFluid)
+            if (x < _size[0] - 1 && (_cell[x + 1 + y*_size[0]].type == typeFluid || _cell[x + 1 + y*_size[0]].type == typeSurf))
               check |= 8;
-            if (x > 0 && _cell[x - 1 + y*_size[0]].type == typeFluid)
+            if (x > 0 && (_cell[x - 1 + y*_size[0]].type == typeFluid || _cell[x - 1 + y*_size[0]].type == typeSurf))
               check |= 2;
-            if (y < _size[1] - 1 && _cell[x + (y + 1)*_size[0]].type == typeFluid)
+            if (y < _size[1] - 1 && (_cell[x + (y + 1)*_size[0]].type == typeFluid || _cell[x + (y + 1)*_size[0]].type == typeSurf))
               check |= 1;
-            if (y > 0 && _cell[x + (y - 1)*_size[0]].type == typeFluid)
+            if (y > 0 && (_cell[x + (y - 1)*_size[0]].type == typeFluid || _cell[x + (y - 1)*_size[0]].type == typeSurf))
               check |= 4;
             switch (check) {
             case 5:
