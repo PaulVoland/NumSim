@@ -5,12 +5,12 @@ pressure = 0.000000
 temperature = 0.000000
 geometry = free
 ##################################################
-I                                                O 
-I                                                O
-I          ##                                    O
-I         ###                                    O
-I       ###                                      O
-I       ##                                       O
-I                                                O
-I                                                O
+IEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEO 
+IEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEO
+IEEEEEEEEEE##EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEO
+IEEEEEEEEE###EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEO
+IEEEEEEE###EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEO
+IEEEEEEE##EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEO
+IEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEO
+IEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEO
 ##################################################
