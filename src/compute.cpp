@@ -429,7 +429,7 @@ void Compute::SetParticles() {
           //cout << "hiervor x: " << _part_trace[s][0] << " y: " << _part_trace[s][1] << " s="<< s << endl;
           _part_trace[s][0] = RandNumb(it_pc.Pos()[0],it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
           _part_trace[s][1] = RandNumb(it_pc.Pos()[1],it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
-          //cout << "Hiernach x: " << _part_trace[s][0] << " y: " << _part_trace[s][1] << " s="<< s << endl;
+          //ShowParticleToCellDebug(_part_trace[s][0],_part_trace[s][1]);
           //cout << "x: " << RandNumb(it_pc.Pos()[0],it_pc.Pos()[0]-1)*_geom->TotalLength()[0]/(_geom->TotalSize()[0]-2) << " y: " << RandNumb(it_pc.Pos()[1],it_pc.Pos()[1]-1)*_geom->TotalLength()[1]/(_geom->TotalSize()[1]-2) << " s="<< s << endl;
           s++;
         }
@@ -604,9 +604,16 @@ void Compute::ParticleTrace(const real_t &dt){
   for (index_t i=0;i<_num_cell;i++)
     _ppc[i] = 0;
 
-  
+  cout << "############## Before #######" << endl;
 
+  cout << "ShowParticle" << endl;
+  //ShowParticle();
+  cout << "ShowNeighbour" << endl;
+  //ShowNeighbour();
+  cout << "ShowType" << endl;
+  //ShowType();
   
+  cout << "############## After #######" << endl;
 
 // Leap Frog
   index_t i= 0;
@@ -617,8 +624,12 @@ void Compute::ParticleTrace(const real_t &dt){
       vel_u_old =  PhysToVelocity(_part_trace[i][0],_part_trace[i][1] , 'u');
       vel_u_new =  PhysToVelocity(_part_trace[i][0],_part_trace[i][1] , 'U');
       // Calculate next Position
+      //cout << "########## Before ##################" << endl;
+      //ShowParticleToCellDebug(_part_trace[i][0],_part_trace[i][1]);
       _part_trace[i][0] = _part_trace[i][0] +  dt*(vel_u_old + vel_u_new)/2.0;
       _part_trace[i][1] = _part_trace[i][1] +  dt*(vel_v_old + vel_v_new)/2.0;
+      //cout << "########## After ###################" << endl;
+      //ShowParticleToCellDebug(_part_trace[i][0],_part_trace[i][1]);
       // calculate the index from the phys coord.
       index_pos = PhysToIndex(_part_trace[i][0],_part_trace[i][1]);
       //cout << "New x=" << index_pos[0] << " y=" << index_pos[1] << endl;
@@ -659,7 +670,13 @@ void Compute::ParticleTrace(const real_t &dt){
         i++;
       }
     }
+  cout << "ShowParticle" << endl;
   ShowParticle();
+  cout << "ShowNeighbour" << endl;
+  ShowNeighbour();
+  cout << "ShowType" << endl;
+  ShowType();
+
   // new Partikel from Inflow
   SetNewInflowParticles();
 }
@@ -862,6 +879,12 @@ void Compute::CopyVelocities(){
   spalte = zeile + "\n" + spalte;
   cout << spalte;
 
+  }
+
+  void Compute::ShowParticleToCellDebug(const real_t &x , const real_t &y){
+    multi_index_t versuch;
+    versuch = PhysToIndex(x,y);
+    cout << "Phys: x= " << x << " y= " << y << " Index x: " << versuch[0] << " y: " << versuch[1] <<" Cell: "<<IndexToCell(versuch) << endl;
   }
 
 //------------------------------------------------------------------------------

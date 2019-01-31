@@ -130,6 +130,8 @@ private:
   void ShowNeighbour();
   // Show Type
   void ShowType();
+  //  Particle to Cell Number + Output
+  void ShowParticleToCellDebug(const real_t &x , const real_t &y);
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP
