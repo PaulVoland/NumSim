@@ -66,10 +66,10 @@ private:
   // limit for residual
   real_t _epslimit;
 
-  // partical trace array
+  // particle trace array
   vec_arr _part_trace = vec_arr();
 
-  // count partical per cell
+  // counter for particles per cell
   index_t* _ppc;
 
   // velocities
@@ -77,6 +77,7 @@ private:
   Grid *_v;
   Grid *_u_alt;
   Grid *_v_alt;
+
   // pressure
   Grid *_p;
 
@@ -107,21 +108,21 @@ private:
   /// Compute the new temperature values
   void HeatTransport(const real_t &dt);
 
-  /// set Particals to partical trace
-  void SetParticals();
-  /// Random Number
-  double Randnumb(real_t max, real_t min);
-  /// Set Particals in Infow Cells
-  void SetNewInflowParticals();
-  // Partical Trace per Timestep
-  void ParticalTrace(const real_t &dt);
-  // Set the index position to a cell number
-  index_t IndexToCell(const multi_index_t value);
-  // Set the Pys Position to index Position
-  multi_index_t PysToIndex(const real_t x , const real_t y);
-  // Set the pysical position to Velocity
-  real_t PysToVelocity(const real_t x , const real_t y, const char f);
-  // Set the the new Velocities to the old velocities
+  /// Set particles initially to the _part_trace vector
+  void SetParticles();
+  /// Random number between max and min
+  real_t RandNumb(const real_t &max, const real_t &min) const;
+  /// Set new particles in each timestep at the inflow boundaries
+  void SetNewInflowParticles();
+  /// Particle trace per timestep
+  void ParticleTrace(const real_t &dt);
+  /// Return the index position of a multi_index-type
+  index_t IndexToCell(const multi_index_t &value) const;
+  /// Calculate the index positions from physical coordinates
+  multi_index_t PhysToIndex(const real_t &x , const real_t &y) const;
+  /// Get special velocity defined by char f in {u, U, v, V} at physical position
+  real_t PhysToVelocity(const real_t &x , const real_t &y, const char &f) const;
+  /// Copy velocities of the old timestep to _._alt
   void CopyVelocities();
 };
 //------------------------------------------------------------------------------
