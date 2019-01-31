@@ -593,6 +593,9 @@ void Geometry::Load(const char* file) {
             case 'c':
               _cell[x + y*_size[0]].type = typeTDir_c;
               break;
+            case 'E':
+              _cell[x + y*_size[0]].type = typeEmpty;
+              break;
             default: // All other cases, box for bottom/top/left/right layer
               if (x == 0 || x == _size[0] - 1 || y == 0 || y == _size[1] - 1)
                 _cell[x + y*_size[0]].type = typeSolid;
@@ -610,8 +613,73 @@ void Geometry::Load(const char* file) {
         for (int y = 0; y < _size[1]; ++y) {
           for (int x = 0; x < _size[0]; ++x) {
             int check = 0;
-            if (_cell[x + y*_size[0]].type == typeFluid)
+            if (_cell[x + y*_size[0]].type == typeEmpty)
               continue;
+            if (_cell[x + y*_size[0]].type == typeFluid) {
+              if (_cell[x + 1 + y*_size[0]].type == typeEmpty || _cell[x - 1 + y*_size[0]].type == typeEmpty ||
+                _cell[x + (y + 1)*_size[0]].type == typeEmpty || _cell[x + (y - 1)*_size[0]].type == typeEmpty) {
+                _cell[x + y*_size[0]].type = typeSurf;
+              } else {
+                continue;
+              }
+            }
+            if (_cell[x + y*_size[0]].type == typeSurf) {
+            if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeEmpty)
+              check |= 8;
+            if (x > 0 && _cell[x - 1 + y*_size[0]].type == typeEmpty)
+              check |= 2;
+            if (y < _size[1] - 1 && _cell[x + (y + 1)*_size[0]].type == typeEmpty)
+              check |= 1;
+            if (y > 0 && _cell[x + (y - 1)*_size[0]].type == typeEmpty)
+              check |= 4;
+            switch (check) {
+            case 1:
+              _cell[x + y*_size[0]].neighbour = cellN;
+              break;
+            case 2:
+              _cell[x + y*_size[0]].neighbour = cellW;
+              break;
+            case 3:
+              _cell[x + y*_size[0]].neighbour = cellNW;
+              break;
+            case 4:
+              _cell[x + y*_size[0]].neighbour = cellS;
+              break;
+            case 5:
+              _cell[x + y*_size[0]].neighbour = cellNS;
+              break;
+            case 6:
+              _cell[x + y*_size[0]].neighbour = cellSW;
+              break;
+            case 7:
+              _cell[x + y*_size[0]].neighbour = cellNWS;
+              break;
+            case 8:
+              _cell[x + y*_size[0]].neighbour = cellE;
+              break;
+            case 9:
+              _cell[x + y*_size[0]].neighbour = cellNE;
+              break;
+            case 10:
+              _cell[x + y*_size[0]].neighbour = cellWE;
+              break;
+            case 11:
+              _cell[x + y*_size[0]].neighbour = cellNWE;
+              break;
+            case 12:
+              _cell[x + y*_size[0]].neighbour = cellSE;
+              break;
+            case 13:
+              _cell[x + y*_size[0]].neighbour = cellNSE;
+              break;
+            case 14:
+              _cell[x + y*_size[0]].neighbour = cellWSE;
+              break;
+            case 15:
+              _cell[x + y*_size[0]].neighbour = cellAll;
+              break;
+            };
+            } else {
             if (x < _size[0] - 1 && _cell[x + 1 + y*_size[0]].type == typeFluid)
               check |= 8;
             if (x > 0 && _cell[x - 1 + y*_size[0]].type == typeFluid)
@@ -661,6 +729,7 @@ void Geometry::Load(const char* file) {
               _cell[x + y*_size[0]].neighbour = cellSE;
               break;
             };
+            }
           }
         }
         // Parabolic stuff
