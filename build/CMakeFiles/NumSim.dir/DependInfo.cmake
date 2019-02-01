@@ -18,10 +18,8 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 
 # Preprocessor definitions for this target.
 set(CMAKE_TARGET_DEFINITIONS_CXX
-  "USE_DEBUG_PRINT_PARTICLE"
   "USE_DEBUG_PRINT_TYPES"
   "USE_DEBUG_VISU"
-  "USE_STEP_BY_STEP"
   "USE_VTK"
   )
 
