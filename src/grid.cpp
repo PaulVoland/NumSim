@@ -31,7 +31,15 @@ Grid::~Grid() {delete[] _data;}
 /// Initializes the grid with a given value
 // @param value initial value for the whole grid
 void Grid::Initialize(const real_t& value) {
-  fill_n(_data, _geom->TotalSize()[0]*_geom->TotalSize()[1], value);
+  //fill_n(_data, _geom->TotalSize()[0]*_geom->TotalSize()[1], value);
+  for (index_t i = 0; i < _geom->TotalSize()[0]*_geom->TotalSize()[1]; i++) {
+    Iterator it(_geom, i);
+    if (_geom->Cell(it).type == typeFluid || _geom->Cell(it).type == typeSurf) {
+      _data[it] = value;
+    } else {
+      _data[it] = 0.0;
+    }
+  }
 }
 //------------------------------------------------------------------------------
 /// Write access to the grid cell at position [it]

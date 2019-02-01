@@ -122,6 +122,7 @@ void Compute::TimeStep(bool printInfo) {
   // Refresh boundary values
   _geom->Update_U(_u, _v, _param->u_D(), _dt, _param->Gx());
   _geom->Update_V(_v, _u, _param->v_D(), _dt, _param->Gy());
+  _geom->Update_P(_p, _u, _v, _param->p_D(), _param->Re());
   _geom->Update_T(_T, _param->T_H(), _param->T_C());
 
   // copy velocities of the old timestep to _._alt
@@ -238,6 +239,8 @@ void Compute::TimeStep(bool printInfo) {
   } */
   // Compute 'new' velocities using the pressure
   NewVelocities(_dt);
+  _geom->Update_U(_u, _v, _param->u_D(), _dt, _param->Gx());
+  _geom->Update_V(_v, _u, _param->v_D(), _dt, _param->Gy());
 
   //real_t text1 = PhysToVelocity(1.0 , 2.0, 'U');
   //real_t text2 = PhysToVelocity(1.0 , 2.0, 'V');
