@@ -119,10 +119,16 @@ Compute::~Compute() {
 void Compute::TimeStep(bool printInfo) {
   // Measuring of computational times
   // ZeitGeist zg;
+  //ShowVelocitysPressures('U');
+  //ShowVelocitysPressures('V');
   // Refresh boundary values
   _geom->Update_U(_u, _v, _param->u_D(), _dt, _param->Gx());
+  //ShowVelocitysPressures('U');
+  //ShowVelocitysPressures('V');
   _geom->Update_V(_v, _u, _param->v_D(), _dt, _param->Gy());
+  //ShowVelocitysPressures('U');
   _geom->Update_P(_p, _u, _v, _param->p_D(), _param->Re());
+  //ShowVelocitysPressures('U');
   _geom->Update_T(_T, _param->T_H(), _param->T_C());
 
   // copy velocities of the old timestep to _._alt
@@ -159,9 +165,12 @@ void Compute::TimeStep(bool printInfo) {
   _geom->Update_T(_T, _param->T_H(), _param->T_C()); // possibly necessary?
   // Compute temporary velocities F, G using difference schemes
   MomentumEqu(_dt);
+  //ShowVelocitysPressures('F');
   // Boundary update for new values of F, G
   _geom->Update_U(_F, _G, _param->u_D(), _dt, _param->Gx());
+  //ShowVelocitysPressures('F');
   _geom->Update_V(_G, _F, _param->v_D(), _dt, _param->Gy());
+  //ShowVelocitysPressures('F');
   // Compute RHS of the Poisson equation
   RHS(_dt);
   // Boundary update for new values of rhs
@@ -210,8 +219,10 @@ void Compute::TimeStep(bool printInfo) {
       res = _solver->Cycle(_p, _rhs);
       // 2.4.1A), 2.4.2)    time_comp += zg.Step();
       // 2.4.1B)    time_comp_inv += 1.0/zg.Step();
+      //ShowVelocitysPressures('U');
       // Update boundary values for pressure
       _geom->Update_P(_p, _u, _v, _param->p_D(), _param->Re());
+      //ShowVelocitysPressures('U');
       // 2.4.1A), 2.4.2)    time_comm += zg.Step();
       // 2.4.1B)    time_comm_inv += 1.0/zg.Step();
       /* // only 2.4.1A)
@@ -239,8 +250,11 @@ void Compute::TimeStep(bool printInfo) {
   } */
   // Compute 'new' velocities using the pressure
   NewVelocities(_dt);
+  //ShowVelocitysPressures('U');
   _geom->Update_U(_u, _v, _param->u_D(), _dt, _param->Gx());
+  //ShowVelocitysPressures('U');
   _geom->Update_V(_v, _u, _param->v_D(), _dt, _param->Gy());
+  //ShowVelocitysPressures('U');
 
   //real_t text1 = PhysToVelocity(1.0 , 2.0, 'U');
   //real_t text2 = PhysToVelocity(1.0 , 2.0, 'V');
@@ -320,14 +334,15 @@ void Compute::NewVelocities(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
+    //if (_geom->Cell(intit).type == typeFluid || _geom->Cell(intit).type == typeSurf) {
     if (_geom->Cell(intit).type == typeFluid) {
-      if (_geom->Cell(intit.Right()).type == typeFluid) {
+      if (_geom->Cell(intit.Right()).type == typeFluid || _geom->Cell(intit.Right()).type == typeSurf) {
         // Read access to temporary velocity F
         const real_t F = _F->Cell(intit);
         // Calculate 'new' velocity
         _u->Cell(intit) = F - dt*_p->dx_r(intit);
       }
-      if (_geom->Cell(intit.Top()).type == typeFluid) {
+      if (_geom->Cell(intit.Top()).type == typeFluid || _geom->Cell(intit.Top()).type == typeSurf) {
         // Read access to temporary velocity G
         const real_t G = _G->Cell(intit);
         // Calculate 'new' velocity
@@ -348,6 +363,7 @@ void Compute::MomentumEqu(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
+    //if (_geom->Cell(intit).type == typeFluid || _geom->Cell(intit).type == typeSurf) {
     if (_geom->Cell(intit).type == typeFluid) {
       // read access to u, v
       const real_t u = _u->Cell(intit);
@@ -358,7 +374,7 @@ void Compute::MomentumEqu(const real_t& dt) {
       const real_t alpha  = _param->Alpha();
 
       // Update correlation, see lecture
-      if (_geom->Cell(intit.Right()).type == typeFluid) {
+      if (_geom->Cell(intit.Right()).type == typeFluid || _geom->Cell(intit.Right()).type == typeSurf) {
         // Additional term through temperature inclusion (temperature value at u position)
         real_t add_u = _param->Gx()*(1.0 - _param->Beta()*
           ((_T->Cell(intit) + _T->Cell(intit.Right()))/2.0));
@@ -367,7 +383,7 @@ void Compute::MomentumEqu(const real_t& dt) {
         _F->Cell(intit) = u + dt*(Re_inv*(_u->dxx(intit) + _u->dyy(intit)) -
           _u->DC_udu_x(intit, alpha) - _u->DC_vdu_y(intit, alpha, _v) + add_u);
       }
-      if (_geom->Cell(intit.Top()).type == typeFluid) {
+      if (_geom->Cell(intit.Top()).type == typeFluid || _geom->Cell(intit.Top()).type == typeSurf) {
         // Additional term through temperature inclusion (temperature value at v position)
         real_t add_v = _param->Gy()*(1.0 - _param->Beta()*
           ((_T->Cell(intit) + _T->Cell(intit.Top()))/2.0));
@@ -390,6 +406,7 @@ void Compute::RHS(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
+    //if (_geom->Cell(intit).type == typeFluid || _geom->Cell(intit).type == typeSurf) {
     if (_geom->Cell(intit).type == typeFluid) {
       // Update correlation for RHS, see lecture
       _rhs->Cell(intit) = (_F->dx_l(intit) + _G->dy_d(intit))/dt;
@@ -408,8 +425,8 @@ void Compute::HeatTransport(const real_t& dt) {
 
   // Cycle through all inner cells
   while (intit.Valid()) {
+    //if ((_geom->Cell(intit).type == typeFluid || _geom->Cell(intit).type == typeSurf) && (_param->Pr() != 0)) {
     if (_geom->Cell(intit).type == typeFluid && (_param->Pr() != 0)) {
-    // if (_param->Pr() != 0) {
       // read access to T
       const real_t T = _T->Cell(intit);
 
@@ -669,8 +686,7 @@ void Compute::ParticleTrace(const real_t &dt){
         i++;
       }
     }
-      for (index_t i=0;i<_num_cell;i++)
-      { 
+      for (index_t i = 0; i < _num_cell; i++) {
       Iterator it_cell = Iterator(_geom,i); 
         if (_geom->Cell(it_cell).type == typeFluid || _geom->Cell(it_cell).type == typeEmpty
           || _geom->Cell(it_cell).type == typeSurf ) // hier sollte noch E und g abgefragt werden
@@ -681,7 +697,11 @@ void Compute::ParticleTrace(const real_t &dt){
             _geom->setCell(it_cell).neighbour = cellNone;
           } else{
             _geom->setCell(it_cell).type = typeEmpty;
-            //cout << "Zelle " << i << " ist Leer" << endl ;
+            //cout << "Zelle " << i << " ist Leer" << endl;
+            _geom->setCell(it_cell).neighbour = cellNone;
+            _u->Cell(it_cell) = 0.0;
+            _v->Cell(it_cell) = 0.0;
+            _p->Cell(it_cell) = 0.0;
           }
         }
       }

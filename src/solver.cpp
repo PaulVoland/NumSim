@@ -63,6 +63,7 @@ real_t SOR::Cycle(Grid* p, const Grid* rhs) const {
 
     while(intit.Valid()) {
         n++;
+        //if (_geom->Cell(intit).type == typeFluid || _geom->Cell(intit).type == typeSurf) {
         if (_geom->Cell(intit).type == typeFluid) {
             // Calcute the corrector = local residuum
             res_loc = localRes(intit, p, rhs);
