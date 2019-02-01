@@ -16,6 +16,7 @@
 */
 
 #include "typedef.hpp"
+#include <string>
 //------------------------------------------------------------------------------
 #ifndef __COMPUTE_HPP
 #define __COMPUTE_HPP
@@ -52,6 +53,16 @@ public:
   const Grid *GetVorticity();
   /// Computes and returns the stream line values
   const Grid *GetStream();
+  // Show pressure velocity and temperatur 
+  // Options 'v' 'u' for old velocities, 'V' 'U' new Velocitys  
+  // 'F' 'G' 'p' 'T' for the other dynamic parameter 
+  void ShowVelocitysPressures(char f);
+  // Show Particle Trace
+  void ShowParticle();
+  // Show Neighbour
+  void ShowNeighbour();
+  // Show Type
+  void ShowType();
 
 private:
   // current timestep
@@ -124,14 +135,18 @@ private:
   real_t PhysToVelocity(const real_t &x , const real_t &y, const char &f) const;
   /// Copy velocities of the old timestep to _._alt
   void CopyVelocities();
-  // Show Particle Trace
-  void ShowParticle();
-  // Show Neighbour
-  void ShowNeighbour();
-  // Show Type
-  void ShowType();
   //  Particle to Cell Number + Output
   void ShowParticleToCellDebug(const real_t &x , const real_t &y);
+  
+  // Colors 
+  void red(std::string x);
+  void green(std::string x);
+  void yellow(std::string x);
+  void blue(std::string x);
+  void magenta(std::string x);
+  void cyan(std::string x);
+  // formating string 
+  std::string plusminus_to_string(double x);
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

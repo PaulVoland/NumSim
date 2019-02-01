@@ -44,16 +44,46 @@ option (VTK_VISU
 # Use debug print for grid u?
 option (USE_DEBUG_PRINT_U
   "Enable debug print for grid u" OFF)
+
+# Use debug print for grid u_old?
+option (USE_DEBUG_PRINT_U_OLD
+  "Enable debug print for grid u_old" OFF)
+
 # Use debug print for grid v?
 option (USE_DEBUG_PRINT_V
   "Enable debug print for grid v" OFF)
+
+# Use debug print for grid v_old?
+option (USE_DEBUG_PRINT_V_OLD
+  "Enable debug print for grid v_old" OFF)
+
 # Use debug print for grid p?
 option (USE_DEBUG_PRINT_P
   "Enable debug print for grid p" OFF)
 
+# Use debug print for grid T?
+option (USE_DEBUG_PRINT_T
+  "Enable debug print for grid T" OFF)
+
+# Use debug print for grid F?
+option (USE_DEBUG_PRINT_F
+  "Enable debug print for grid F" OFF)
+
+# Use debug print for grid G?
+option (USE_DEBUG_PRINT_G
+  "Enable debug print for grid G" OFF)
+
 # Use debug print for field of cell types?
 option (USE_DEBUG_PRINT_TYPES
   "Enable debug print for field of cell types" OFF)
+
+# Use debug print for particles in field?
+option (USE_DEBUG_PRINT_PARTICLE
+  "Enable debug print for particles in field" OFF)
+
+# Use debug print for field of cell neighbour?
+option (USE_DEBUG_PRINT_NEIGHBOUR
+  "Enable debug print for field of cell neighbour" OFF)
 
 # Print in main.cpp after each single step?
 option (USE_STEP_BY_STEP
@@ -129,17 +159,45 @@ if (USE_DEBUG_PRINT_U)
   add_definitions(-DUSE_DEBUG_PRINT_U)
 endif (USE_DEBUG_PRINT_U)
 
+if (USE_DEBUG_PRINT_U_OLD)
+  add_definitions(-DUSE_DEBUG_PRINT_U_OLD)
+endif (USE_DEBUG_PRINT_U_OLD)
+
 if (USE_DEBUG_PRINT_V)
   add_definitions(-DUSE_DEBUG_PRINT_V)
 endif (USE_DEBUG_PRINT_V)
+
+if (USE_DEBUG_PRINT_V_OLD)
+  add_definitions(-DUSE_DEBUG_PRINT_V_OLD)
+endif (USE_DEBUG_PRINT_V_OLD)
 
 if (USE_DEBUG_PRINT_P)
   add_definitions(-DUSE_DEBUG_PRINT_P)
 endif (USE_DEBUG_PRINT_P)
 
+if (USE_DEBUG_PRINT_T)
+  add_definitions(-DUSE_DEBUG_PRINT_T)
+endif (USE_DEBUG_PRINT_T)
+
+if (USE_DEBUG_PRINT_F)
+  add_definitions(-DUSE_DEBUG_PRINT_F)
+endif (USE_DEBUG_PRINT_F)
+
+if (USE_DEBUG_PRINT_G)
+  add_definitions(-DUSE_DEBUG_PRINT_G)
+endif (USE_DEBUG_PRINT_G)
+
 if (USE_DEBUG_PRINT_TYPES)
   add_definitions(-DUSE_DEBUG_PRINT_TYPES)
 endif (USE_DEBUG_PRINT_TYPES)
+
+if (USE_DEBUG_PRINT_PARTICLE)
+  add_definitions(-DUSE_DEBUG_PRINT_PARTICLE)
+endif (USE_DEBUG_PRINT_PARTICLE)
+
+if (USE_DEBUG_PRINT_NEIGHBOUR)
+  add_definitions(-DUSE_DEBUG_PRINT_NEIGHBOUR)
+endif (USE_DEBUG_PRINT_NEIGHBOUR)
 
 if (USE_STEP_BY_STEP)
   add_definitions(-DUSE_STEP_BY_STEP)

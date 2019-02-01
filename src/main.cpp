@@ -223,324 +223,53 @@ int main(int argc, char **argv) {
 
     // Print coordinates with values for the velocity u TODO
     #ifdef USE_DEBUG_PRINT_U
-    if(true){
-    green("Das ist die Ausgabe für u \n");  
-    string writelocation = "";
-    string writevalue = "";
-    bit0.SetBoundary(2);
-    bit0.First();
-    while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
-      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
-      writevalue = writevalue + plusminus_to_string(comp.GetU()->Cell(bit0))+ "  ";
-    bit0.Next();
-    }
-    yellow("       " +writelocation + " \n ");
-    blue("     " + writevalue + "\n");
-  
-    string writelocation1 = "";
-    string writevalue1 = "";
-    int counter = 0;
-    int counter1 = 0;
-    int counter2 = 0;
-    
-    bit0.SetBoundary(1);
-    bit2.SetBoundary(3);
-    bit3.SetBoundary(0);
-    bit1.SetBoundary(3);
-    bit0.First();
-    bit2.First();
-    bit3.First();
-    while (bit0.Valid()){
-        counter ++;
-        counter1 ++;
-        counter2 ++;
-        //red(to_string(bit3.Pos()[1]));
-        bit0.Next();
-    }
-    bit0.First();
-    
-    while (bit2.Valid()){
+    comp.ShowVelocitysPressures('U');
+    #endif // USE_DEBUG_PRINT_U
 
-      bit1.First();
-
-      while (bit1.Valid()){
-        if (counter1 == bit1.Pos()[1])
-        {
-          writevalue1 = plusminus_to_string(comp.GetU()->Cell(bit1));
-          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
-          yellow(writelocation1 +" ");
-          blue(writevalue1 + "  ");
-          counter1 --;    
-        }
-        bit1.Next();
-      }
-
-      init.First();
-      while (init.Valid()){
-        if (counter2 == init.Pos()[1])
-        {
-
-          writevalue1 = plusminus_to_string(comp.GetU()->Cell(init));
-          red(writevalue1 + "  "); 
-        }
-        init.Next();
-      }      
-      if (counter2 > 1)
-      {
-        counter2 --;
-      }
-
-
-      bit0.First();
-
-      while (bit0.Valid()){
-        if (counter == bit0.Pos()[1])
-        {
-          writevalue1 = plusminus_to_string(comp.GetU()->Cell(bit0));
-          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
-          blue(writevalue1 +" ");
-          yellow(writelocation1 + "\n");
-          counter --;    
-        }
-        bit0.Next();
-      }
-    
-    bit2.Next();
-    }
-  
-    writelocation = "      ";
-    writevalue = "     ";
-    bit0.SetBoundary(0);
-    bit0.First();
-    while (bit0.Valid()){
-      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
-      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
-      writevalue =  writevalue + plusminus_to_string(comp.GetU()->Cell(bit0))+ "  ";
-    bit0.Next();
-    }
-    blue(" " + writevalue + "\n");
-    yellow(" " +writelocation + " \n ");
-  }
+    #ifdef USE_DEBUG_PRINT_U_OLD
+    comp.ShowVelocitysPressures('u');
     #endif // USE_DEBUG_PRINT_U
 
     // Print coordinates with values for the velocity v TODO
     #ifdef USE_DEBUG_PRINT_V
-    if(true){
-    green("Das ist die Ausgabe für v \n");  
-    string writelocation = "";
-    string writevalue = "";
-    bit0.SetBoundary(2);
-    bit0.First();
-    while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
-      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
-      writevalue = writevalue + plusminus_to_string(comp.GetV()->Cell(bit0))+ "  ";
-    bit0.Next();
-    }
-    yellow("       " +writelocation + " \n ");
-    blue("     " + writevalue + "\n");
-  
-    string writelocation1 = "";
-    string writevalue1 = "";
-    int counter = 0;
-    int counter1 = 0;
-    int counter2 = 0;
-    
-    bit0.SetBoundary(1);
-    bit2.SetBoundary(3);
-    bit3.SetBoundary(0);
-    bit1.SetBoundary(3);
-    bit0.First();
-    bit2.First();
-    bit3.First();
-    while (bit0.Valid()){
-        counter ++;
-        counter1 ++;
-        counter2 ++;
-        //red(to_string(bit3.Pos()[1]));
-        bit0.Next();
-    }
-    bit0.First();
-    
-    while (bit2.Valid()){
-
-      bit1.First();
-
-      while (bit1.Valid()){
-        if (counter1 == bit1.Pos()[1])
-        {
-          writevalue1 = plusminus_to_string(comp.GetV()->Cell(bit1));
-          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
-          yellow(writelocation1 +" ");
-          blue(writevalue1 + "  ");
-          counter1 --;    
-        }
-        bit1.Next();
-      }
-
-      init.First();
-      while (init.Valid()){
-        if (counter2 == init.Pos()[1])
-        {
-
-          writevalue1 = plusminus_to_string(comp.GetV()->Cell(init));
-          red(writevalue1 + "  "); 
-        }
-        init.Next();
-      }      
-      if (counter2 > 1)
-      {
-        counter2 --;
-      }
-
-
-      bit0.First();
-
-      while (bit0.Valid()){
-        if (counter == bit0.Pos()[1])
-        {
-          writevalue1 = plusminus_to_string(comp.GetV()->Cell(bit0));
-          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
-          blue(writevalue1 +" ");
-          yellow(writelocation1 + "\n");
-          counter --;    
-        }
-        bit0.Next();
-      }
-    
-    bit2.Next();
-    }
-  
-    writelocation = "      ";
-    writevalue = "     ";
-    bit0.SetBoundary(0);
-    bit0.First();
-    while (bit0.Valid()){
-      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
-      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
-      writevalue =  writevalue + plusminus_to_string(comp.GetV()->Cell(bit0))+ "  ";
-    bit0.Next();
-    }
-    blue(" " + writevalue + "\n");
-    yellow(" " +writelocation + " \n ");
-  }
+    comp.ShowVelocitysPressures('V');
     #endif // USE_DEBUG_PRINT_V
+
+    #ifdef USE_DEBUG_PRINT_V_OLD
+    comp.ShowVelocitysPressures('v');
+    #endif // USE_DEBUG_PRINT_U
 
     // Print coordinates with values for the velocity p TODO
     #ifdef USE_DEBUG_PRINT_P
-   if(true){
-    green("Das ist die Ausgabe für p \n");  
-    string writelocation = "";
-    string writevalue = "";
-    bit0.SetBoundary(2);
-    bit0.First();
-    while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
-      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
-      writevalue = writevalue + plusminus_to_string(comp.GetP()->Cell(bit0))+ "  ";
-    bit0.Next();
-    }
-    yellow("       " +writelocation + " \n ");
-    blue("     " + writevalue + "\n");
-  
-    string writelocation1 = "";
-    string writevalue1 = "";
-    int counter = 0;
-    int counter1 = 0;
-    int counter2 = 0;
-    
-    bit0.SetBoundary(1);
-    bit2.SetBoundary(3);
-    bit3.SetBoundary(0);
-    bit1.SetBoundary(3);
-    bit0.First();
-    bit2.First();
-    bit3.First();
-    while (bit0.Valid()){
-        counter ++;
-        counter1 ++;
-        counter2 ++;
-        //red(to_string(bit3.Pos()[1]));
-        bit0.Next();
-    }
-    bit0.First();
-    
-    while (bit2.Valid()){
-
-      bit1.First();
-
-      while (bit1.Valid()){
-        if (counter1 == bit1.Pos()[1])
-        {
-          writevalue1 = plusminus_to_string(comp.GetP()->Cell(bit1));
-          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
-          yellow(writelocation1 +" ");
-          blue(writevalue1 + "  ");
-          counter1 --;    
-        }
-        bit1.Next();
-      }
-
-      init.First();
-      while (init.Valid()){
-        if (counter2 == init.Pos()[1])
-        {
-
-          writevalue1 = plusminus_to_string(comp.GetP()->Cell(init));
-          red(writevalue1 + "  "); 
-        }
-        init.Next();
-      }      
-      if (counter2 > 1)
-      {
-        counter2 --;
-      }
-
-
-      bit0.First();
-
-      while (bit0.Valid()){
-        if (counter == bit0.Pos()[1])
-        {
-          writevalue1 = plusminus_to_string(comp.GetP()->Cell(bit0));
-          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
-          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
-          blue(writevalue1 +" ");
-          yellow(writelocation1 + "\n");
-          counter --;    
-        }
-        bit0.Next();
-      }
-    
-    bit2.Next();
-    }
-  
-    writelocation = "      ";
-    writevalue = "     ";
-    bit0.SetBoundary(0);
-    bit0.First();
-    while (bit0.Valid()){
-      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
-      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
-      writevalue =  writevalue + plusminus_to_string(comp.GetP()->Cell(bit0))+ "  ";
-    bit0.Next();
-    }
-    blue(" " + writevalue + "\n");
-    yellow(" " +writelocation + " \n ");
-  }
+    comp.ShowVelocitysPressures('p');
     #endif // USE_DEBUG_PRINT_P
+
+    #ifdef USE_DEBUG_PRINT_T
+    comp.ShowVelocitysPressures('T');
+    #endif // USE_DEBUG_PRINT_T
+
+    #ifdef USE_DEBUG_PRINT_F
+    comp.ShowVelocitysPressures('F');
+    #endif // USE_DEBUG_PRINT_F
+
+    #ifdef USE_DEBUG_PRINT_G
+    comp.ShowVelocitysPressures('G');
+    #endif // USE_DEBUG_PRINT_F
 
     // Print field types and neighbourhood from geometry.cpp TODO
     #ifdef USE_DEBUG_PRINT_TYPES
-      /* TODO
-      */
+    comp.ShowType();
     #endif // USE_DEBUG_PRINT_TYPES
+    
+    #ifdef USE_DEBUG_PRINT_PARTICLE
+    comp.ShowParticle();
+    #endif // USE_DEBUG_PRINT_PARTICLE
+
+    #ifdef USE_DEBUG_PRINT_NEIGHBOUR
+    comp.ShowNeighbour();
+    #endif // USE_DEBUG_PRINT_NEIGHBOUR
+
+
 
     comp.TimeStep(true);
   }

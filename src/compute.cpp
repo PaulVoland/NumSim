@@ -5,11 +5,24 @@
 #include "solver.hpp"
 #include "iterator.hpp"
 #include "zeitgeist.hpp"
+#include "typedef.hpp"
+
 
 #include <iostream>
 #include <cmath>
+#include <string>
 
 using namespace std;
+
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
+
 //------------------------------------------------------------------------------
 /// Creates a compute instance with given geometry and parameter
 //  @param geom  given geometry
@@ -604,17 +617,7 @@ void Compute::ParticleTrace(const real_t &dt){
   for (index_t i=0;i<_num_cell;i++)
     _ppc[i] = 0;
 
-  cout << "############## Before #######" << endl;
-
-  cout << "ShowParticle" << endl;
-  //ShowParticle();
-  cout << "ShowNeighbour" << endl;
-  //ShowNeighbour();
-  cout << "ShowType" << endl;
-  //ShowType();
   
-  cout << "############## After #######" << endl;
-
 // Leap Frog
   index_t i= 0;
   for(vec_arr::iterator it = _part_trace.begin(); it != _part_trace.end(); ++it) {
@@ -670,13 +673,11 @@ void Compute::ParticleTrace(const real_t &dt){
         i++;
       }
     }
-  cout << "ShowParticle" << endl;
-  ShowParticle();
-  cout << "ShowNeighbour" << endl;
-  ShowNeighbour();
-  cout << "ShowType" << endl;
-  ShowType();
-
+  //################ Debug #################################
+  //ShowParticle();
+  //ShowNeighbour();
+  //ShowType();
+  //########################################################
   // new Partikel from Inflow
   SetNewInflowParticles();
 }
@@ -759,6 +760,9 @@ void Compute::CopyVelocities(){
 }
 
   void Compute::ShowParticle(){
+  cout << "\n";
+  green("Das ist die Ausgabe für Anzahl Partikel pro Zelle \n ");
+  cout << "\n";
   index_t _increm_x = _geom->TotalSize()[1];
   index_t _increm_y = _geom->TotalSize()[0];
   index_t _num_cell = _increm_x*_increm_y;
@@ -800,6 +804,26 @@ void Compute::CopyVelocities(){
   }
   // Show Neighbour
   void Compute::ShowNeighbour(){
+  cout << "\n";
+  green("Das ist die Ausgabe für den Zellnachbarn \n");
+  blue("\n\
+  cellN = 1,    // Cell N\n\
+  cellW = 2,    // Cell W\n\
+  cellNW = 3,   // Cells N & W\n\
+  cellS = 4,    // Cell S\n\
+  cellNS = 5,   // Cells N & S\n\
+  cellSW = 6,   // Cells S & W\n\
+  cellNWS = 7,  // Cells N & W & S\n\
+  cellE = 8,    // Cell E\n\
+  cellNE = 9,   // Cells N & E\n\
+  cellWE = 10,  // Cells W & E\n\
+  cellNWE = 11, // Cells N & W & E\n\
+  cellSE = 12,  // Cells S & E\n\
+  cellNSE = 13, // Cells N & S & E\n\
+  cellWSE = 14, // Cells W & E & S\n\
+  cellAll = 15  // Cells N & W & S & E\n\
+  ");
+  cout << "\n";
   index_t _increm_x = _geom->TotalSize()[1];
   index_t _increm_y = _geom->TotalSize()[0];
   index_t _num_cell = _increm_x*_increm_y;
@@ -841,11 +865,30 @@ void Compute::CopyVelocities(){
   }
   // Show Type
   void Compute::ShowType(){
+  cout << "\n";
+  green("Das ist die Ausgabe für den Zelltypen \n");
+  blue("\n\
+  1  typeFluid,   // Standard fluid cell\n\
+  2  typeSolid,   // Simple wall, no slip, isolated against heat transfer\n\
+  3  typeIn,      // Simple inflow (forced velocity)\n\
+  4  typeInH,     // Horizontal inflow (parabolic)\n\
+  5  typeInV,     // Vertical inflow (parabolic)\n\
+  6  typeSlipH,   // Horizontal slip boundary\n\
+  7  typeSlipV,   // Vertical slip boundary\n\
+  8  typeOut,     // Outflow\n\
+  9  typeTDir_h,  // Dirichlet value for higher temperature (u,v,p treated as no slip)\n\
+  10 typeTDir_c,  // Dirichlet value for lower temperature (u,v,p treated as no slip)\n\
+  11 typeEmpty,   // Empty cell (air)\n\
+  12 typeSurf     // Inner surface cell between fluid and empty space\n\
+  ");
+  cout << "\n";
+
   index_t _increm_x = _geom->TotalSize()[1];
   index_t _increm_y = _geom->TotalSize()[0];
   index_t _num_cell = _increm_x*_increm_y;
   string zeile;
   string spalte;
+
   //cout << _num_cell << endl;
   //cout << _increm_y << endl;
   for (index_t i=0;i<_num_cell;i++){
@@ -886,5 +929,896 @@ void Compute::CopyVelocities(){
     versuch = PhysToIndex(x,y);
     cout << "Phys: x= " << x << " y= " << y << " Index x: " << versuch[0] << " y: " << versuch[1] <<" Cell: "<<IndexToCell(versuch) << endl;
   }
+  // Options 'v' 'u' for old velocities, 'V' 'U' new Velocitys  
+  // 'F' 'G' 'p' 'T' for the other dynamic parameter
+  void Compute::ShowVelocitysPressures(char f){
+    cout << "\n";
+    Iterator it(_geom);
+    // Create Boundary Iterator instances for debug purposes
+    BoundaryIterator bit0(_geom);
+    BoundaryIterator bit1(_geom);
+    BoundaryIterator bit2(_geom);
+    BoundaryIterator bit3(_geom);
+    // Create Interior Iterator instance for debug purposes
+    //InteriorIterator intit(_geom);
+    InteriorIterator init(_geom);
+
+    if (f=='v' || f=='V' || f=='u' || f=='U' || f=='p' || f=='F' || f=='G' || f=='T' ) // klein ist alt groß ist neu
+  {
+    if (f=='u')
+    {
+    green("Das ist die Ausgabe für _u_alt \n"); 
+    cout << "\n"; 
+    string writelocation = "";
+    string writevalue = "";
+    bit0.SetBoundary(2);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
+      writevalue = writevalue + plusminus_to_string(_u_alt->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    yellow("       " +writelocation + " \n ");
+    blue("     " + writevalue + "\n");
+  
+    string writelocation1 = "";
+    string writevalue1 = "";
+    int counter = 0;
+    int counter1 = 0;
+    int counter2 = 0;
+    
+    bit0.SetBoundary(1);
+    bit2.SetBoundary(3);
+    bit3.SetBoundary(0);
+    bit1.SetBoundary(3);
+    bit0.First();
+    bit2.First();
+    bit3.First();
+    while (bit0.Valid()){
+        counter ++;
+        counter1 ++;
+        counter2 ++;
+        //red(to_string(bit3.Pos()[1]));
+        bit0.Next();
+    }
+    bit0.First();
+    
+    while (bit2.Valid()){
+
+      bit1.First();
+
+      while (bit1.Valid()){
+        if (counter1 == bit1.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_u_alt->Cell(bit1));
+          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
+          yellow(writelocation1 +" ");
+          blue(writevalue1 + "  ");
+          counter1 --;    
+        }
+        bit1.Next();
+      }
+
+      init.First();
+      while (init.Valid()){
+        if (counter2 == init.Pos()[1])
+        {
+
+          writevalue1 = plusminus_to_string(_u_alt->Cell(init));
+          red(writevalue1 + "  "); 
+        }
+        init.Next();
+      }      
+      if (counter2 > 1)
+      {
+        counter2 --;
+      }
+
+
+      bit0.First();
+
+      while (bit0.Valid()){
+        if (counter == bit0.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_u_alt->Cell(bit0));
+          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
+          blue(writevalue1 +" ");
+          yellow(writelocation1 + "\n");
+          counter --;    
+        }
+        bit0.Next();
+      }
+    
+    bit2.Next();
+    }
+  
+    writelocation = "      ";
+    writevalue = "     ";
+    bit0.SetBoundary(0);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
+      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
+      writevalue =  writevalue + plusminus_to_string(_u_alt->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    blue(" " + writevalue + "\n");
+    yellow(" " +writelocation + " \n ");
+  
+    } else if (f=='U')
+    {
+    green("Das ist die Ausgabe für _u \n");
+    cout << "\n";  
+    string writelocation = "";
+    string writevalue = "";
+    bit0.SetBoundary(2);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
+      writevalue = writevalue + plusminus_to_string(_u->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    yellow("       " +writelocation + " \n ");
+    blue("     " + writevalue + "\n");
+  
+    string writelocation1 = "";
+    string writevalue1 = "";
+    int counter = 0;
+    int counter1 = 0;
+    int counter2 = 0;
+    
+    bit0.SetBoundary(1);
+    bit2.SetBoundary(3);
+    bit3.SetBoundary(0);
+    bit1.SetBoundary(3);
+    bit0.First();
+    bit2.First();
+    bit3.First();
+    while (bit0.Valid()){
+        counter ++;
+        counter1 ++;
+        counter2 ++;
+        //red(to_string(bit3.Pos()[1]));
+        bit0.Next();
+    }
+    bit0.First();
+    
+    while (bit2.Valid()){
+
+      bit1.First();
+
+      while (bit1.Valid()){
+        if (counter1 == bit1.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_u->Cell(bit1));
+          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
+          yellow(writelocation1 +" ");
+          blue(writevalue1 + "  ");
+          counter1 --;    
+        }
+        bit1.Next();
+      }
+
+      init.First();
+      while (init.Valid()){
+        if (counter2 == init.Pos()[1])
+        {
+
+          writevalue1 = plusminus_to_string(_u->Cell(init));
+          red(writevalue1 + "  "); 
+        }
+        init.Next();
+      }      
+      if (counter2 > 1)
+      {
+        counter2 --;
+      }
+
+
+      bit0.First();
+
+      while (bit0.Valid()){
+        if (counter == bit0.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_u->Cell(bit0));
+          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
+          blue(writevalue1 +" ");
+          yellow(writelocation1 + "\n");
+          counter --;    
+        }
+        bit0.Next();
+      }
+    
+    bit2.Next();
+    }
+  
+    writelocation = "      ";
+    writevalue = "     ";
+    bit0.SetBoundary(0);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
+      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
+      writevalue =  writevalue + plusminus_to_string(_u->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    blue(" " + writevalue + "\n");
+    yellow(" " +writelocation + " \n ");
+    }
+    else if (f=='v')
+    {
+    green("Das ist die Ausgabe für _v_alt \n");
+    cout << "\n";  
+    string writelocation = "";
+    string writevalue = "";
+    bit0.SetBoundary(2);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
+      writevalue = writevalue + plusminus_to_string(_v_alt->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    yellow("       " +writelocation + " \n ");
+    blue("     " + writevalue + "\n");
+  
+    string writelocation1 = "";
+    string writevalue1 = "";
+    int counter = 0;
+    int counter1 = 0;
+    int counter2 = 0;
+    
+    bit0.SetBoundary(1);
+    bit2.SetBoundary(3);
+    bit3.SetBoundary(0);
+    bit1.SetBoundary(3);
+    bit0.First();
+    bit2.First();
+    bit3.First();
+    while (bit0.Valid()){
+        counter ++;
+        counter1 ++;
+        counter2 ++;
+        //red(to_string(bit3.Pos()[1]));
+        bit0.Next();
+    }
+    bit0.First();
+    
+    while (bit2.Valid()){
+
+      bit1.First();
+
+      while (bit1.Valid()){
+        if (counter1 == bit1.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_v_alt->Cell(bit1));
+          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
+          yellow(writelocation1 +" ");
+          blue(writevalue1 + "  ");
+          counter1 --;    
+        }
+        bit1.Next();
+      }
+
+      init.First();
+      while (init.Valid()){
+        if (counter2 == init.Pos()[1])
+        {
+
+          writevalue1 = plusminus_to_string(_v_alt->Cell(init));
+          red(writevalue1 + "  "); 
+        }
+        init.Next();
+      }      
+      if (counter2 > 1)
+      {
+        counter2 --;
+      }
+
+
+      bit0.First();
+
+      while (bit0.Valid()){
+        if (counter == bit0.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_v_alt->Cell(bit0));
+          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
+          blue(writevalue1 +" ");
+          yellow(writelocation1 + "\n");
+          counter --;    
+        }
+        bit0.Next();
+      }
+    
+    bit2.Next();
+    }
+  
+    writelocation = "      ";
+    writevalue = "     ";
+    bit0.SetBoundary(0);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
+      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
+      writevalue =  writevalue + plusminus_to_string(_v_alt->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    blue(" " + writevalue + "\n");
+    yellow(" " +writelocation + " \n ");
+    }
+    else if (f=='V')
+    {
+    green("Das ist die Ausgabe für _v \n");
+    cout << "\n";  
+    string writelocation = "";
+    string writevalue = "";
+    bit0.SetBoundary(2);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
+      writevalue = writevalue + plusminus_to_string(_v->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    yellow("       " +writelocation + " \n ");
+    blue("     " + writevalue + "\n");
+  
+    string writelocation1 = "";
+    string writevalue1 = "";
+    int counter = 0;
+    int counter1 = 0;
+    int counter2 = 0;
+    
+    bit0.SetBoundary(1);
+    bit2.SetBoundary(3);
+    bit3.SetBoundary(0);
+    bit1.SetBoundary(3);
+    bit0.First();
+    bit2.First();
+    bit3.First();
+    while (bit0.Valid()){
+        counter ++;
+        counter1 ++;
+        counter2 ++;
+        //red(to_string(bit3.Pos()[1]));
+        bit0.Next();
+    }
+    bit0.First();
+    
+    while (bit2.Valid()){
+
+      bit1.First();
+
+      while (bit1.Valid()){
+        if (counter1 == bit1.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_v->Cell(bit1));
+          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
+          yellow(writelocation1 +" ");
+          blue(writevalue1 + "  ");
+          counter1 --;    
+        }
+        bit1.Next();
+      }
+
+      init.First();
+      while (init.Valid()){
+        if (counter2 == init.Pos()[1])
+        {
+
+          writevalue1 = plusminus_to_string(_v->Cell(init));
+          red(writevalue1 + "  "); 
+        }
+        init.Next();
+      }      
+      if (counter2 > 1)
+      {
+        counter2 --;
+      }
+
+
+      bit0.First();
+
+      while (bit0.Valid()){
+        if (counter == bit0.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_v->Cell(bit0));
+          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
+          blue(writevalue1 +" ");
+          yellow(writelocation1 + "\n");
+          counter --;    
+        }
+        bit0.Next();
+      }
+    
+    bit2.Next();
+    }
+  
+    writelocation = "      ";
+    writevalue = "     ";
+    bit0.SetBoundary(0);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
+      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
+      writevalue =  writevalue + plusminus_to_string(_v->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    blue(" " + writevalue + "\n");
+    yellow(" " +writelocation + " \n ");
+    }
+    else if (f=='p')
+    {
+    green("Das ist die Ausgabe für _p \n");
+    cout << "\n";  
+    string writelocation = "";
+    string writevalue = "";
+    bit0.SetBoundary(2);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
+      writevalue = writevalue + plusminus_to_string(_p->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    yellow("       " +writelocation + " \n ");
+    blue("     " + writevalue + "\n");
+  
+    string writelocation1 = "";
+    string writevalue1 = "";
+    int counter = 0;
+    int counter1 = 0;
+    int counter2 = 0;
+    
+    bit0.SetBoundary(1);
+    bit2.SetBoundary(3);
+    bit3.SetBoundary(0);
+    bit1.SetBoundary(3);
+    bit0.First();
+    bit2.First();
+    bit3.First();
+    while (bit0.Valid()){
+        counter ++;
+        counter1 ++;
+        counter2 ++;
+        //red(to_string(bit3.Pos()[1]));
+        bit0.Next();
+    }
+    bit0.First();
+    
+    while (bit2.Valid()){
+
+      bit1.First();
+
+      while (bit1.Valid()){
+        if (counter1 == bit1.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_p->Cell(bit1));
+          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
+          yellow(writelocation1 +" ");
+          blue(writevalue1 + "  ");
+          counter1 --;    
+        }
+        bit1.Next();
+      }
+
+      init.First();
+      while (init.Valid()){
+        if (counter2 == init.Pos()[1])
+        {
+
+          writevalue1 = plusminus_to_string(_p->Cell(init));
+          red(writevalue1 + "  "); 
+        }
+        init.Next();
+      }      
+      if (counter2 > 1)
+      {
+        counter2 --;
+      }
+
+
+      bit0.First();
+
+      while (bit0.Valid()){
+        if (counter == bit0.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_p->Cell(bit0));
+          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
+          blue(writevalue1 +" ");
+          yellow(writelocation1 + "\n");
+          counter --;    
+        }
+        bit0.Next();
+      }
+    
+    bit2.Next();
+    }
+  
+    writelocation = "      ";
+    writevalue = "     ";
+    bit0.SetBoundary(0);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
+      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
+      writevalue =  writevalue + plusminus_to_string(_p->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    blue(" " + writevalue + "\n");
+    yellow(" " +writelocation + " \n ");
+    }
+    else if (f=='F')
+    {
+      green("Das ist die Ausgabe für _F \n");
+      cout << "\n";  
+    string writelocation = "";
+    string writevalue = "";
+    bit0.SetBoundary(2);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
+      writevalue = writevalue + plusminus_to_string(_F->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    yellow("       " +writelocation + " \n ");
+    blue("     " + writevalue + "\n");
+  
+    string writelocation1 = "";
+    string writevalue1 = "";
+    int counter = 0;
+    int counter1 = 0;
+    int counter2 = 0;
+    
+    bit0.SetBoundary(1);
+    bit2.SetBoundary(3);
+    bit3.SetBoundary(0);
+    bit1.SetBoundary(3);
+    bit0.First();
+    bit2.First();
+    bit3.First();
+    while (bit0.Valid()){
+        counter ++;
+        counter1 ++;
+        counter2 ++;
+        //red(to_string(bit3.Pos()[1]));
+        bit0.Next();
+    }
+    bit0.First();
+    
+    while (bit2.Valid()){
+
+      bit1.First();
+
+      while (bit1.Valid()){
+        if (counter1 == bit1.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_F->Cell(bit1));
+          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
+          yellow(writelocation1 +" ");
+          blue(writevalue1 + "  ");
+          counter1 --;    
+        }
+        bit1.Next();
+      }
+
+      init.First();
+      while (init.Valid()){
+        if (counter2 == init.Pos()[1])
+        {
+
+          writevalue1 = plusminus_to_string(_F->Cell(init));
+          red(writevalue1 + "  "); 
+        }
+        init.Next();
+      }      
+      if (counter2 > 1)
+      {
+        counter2 --;
+      }
+
+
+      bit0.First();
+
+      while (bit0.Valid()){
+        if (counter == bit0.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_F->Cell(bit0));
+          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
+          blue(writevalue1 +" ");
+          yellow(writelocation1 + "\n");
+          counter --;    
+        }
+        bit0.Next();
+      }
+    
+    bit2.Next();
+    }
+  
+    writelocation = "      ";
+    writevalue = "     ";
+    bit0.SetBoundary(0);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
+      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
+      writevalue =  writevalue + plusminus_to_string(_F->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    blue(" " + writevalue + "\n");
+    yellow(" " +writelocation + " \n ");
+    }
+    else if (f=='G')
+    {
+      green("Das ist die Ausgabe für _G \n");
+      cout << "\n";  
+    string writelocation = "";
+    string writevalue = "";
+    bit0.SetBoundary(2);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
+      writevalue = writevalue + plusminus_to_string(_G->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    yellow("       " +writelocation + " \n ");
+    blue("     " + writevalue + "\n");
+  
+    string writelocation1 = "";
+    string writevalue1 = "";
+    int counter = 0;
+    int counter1 = 0;
+    int counter2 = 0;
+    
+    bit0.SetBoundary(1);
+    bit2.SetBoundary(3);
+    bit3.SetBoundary(0);
+    bit1.SetBoundary(3);
+    bit0.First();
+    bit2.First();
+    bit3.First();
+    while (bit0.Valid()){
+        counter ++;
+        counter1 ++;
+        counter2 ++;
+        //red(to_string(bit3.Pos()[1]));
+        bit0.Next();
+    }
+    bit0.First();
+    
+    while (bit2.Valid()){
+
+      bit1.First();
+
+      while (bit1.Valid()){
+        if (counter1 == bit1.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_G->Cell(bit1));
+          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
+          yellow(writelocation1 +" ");
+          blue(writevalue1 + "  ");
+          counter1 --;    
+        }
+        bit1.Next();
+      }
+
+      init.First();
+      while (init.Valid()){
+        if (counter2 == init.Pos()[1])
+        {
+
+          writevalue1 = plusminus_to_string(_G->Cell(init));
+          red(writevalue1 + "  "); 
+        }
+        init.Next();
+      }      
+      if (counter2 > 1)
+      {
+        counter2 --;
+      }
+
+
+      bit0.First();
+
+      while (bit0.Valid()){
+        if (counter == bit0.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_G->Cell(bit0));
+          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
+          blue(writevalue1 +" ");
+          yellow(writelocation1 + "\n");
+          counter --;    
+        }
+        bit0.Next();
+      }
+    
+    bit2.Next();
+    }
+  
+    writelocation = "      ";
+    writevalue = "     ";
+    bit0.SetBoundary(0);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
+      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
+      writevalue =  writevalue + plusminus_to_string(_G->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    blue(" " + writevalue + "\n");
+    yellow(" " +writelocation + " \n ");
+    }
+    else if (f=='T')
+    {
+      green("Das ist die Ausgabe für _T \n");
+      cout << "\n";  
+    string writelocation = "";
+    string writevalue = "";
+    bit0.SetBoundary(2);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
+      writevalue = writevalue + plusminus_to_string(_T->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    yellow("       " +writelocation + " \n ");
+    blue("     " + writevalue + "\n");
+  
+    string writelocation1 = "";
+    string writevalue1 = "";
+    int counter = 0;
+    int counter1 = 0;
+    int counter2 = 0;
+    
+    bit0.SetBoundary(1);
+    bit2.SetBoundary(3);
+    bit3.SetBoundary(0);
+    bit1.SetBoundary(3);
+    bit0.First();
+    bit2.First();
+    bit3.First();
+    while (bit0.Valid()){
+        counter ++;
+        counter1 ++;
+        counter2 ++;
+        //red(to_string(bit3.Pos()[1]));
+        bit0.Next();
+    }
+    bit0.First();
+    
+    while (bit2.Valid()){
+
+      bit1.First();
+
+      while (bit1.Valid()){
+        if (counter1 == bit1.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_T->Cell(bit1));
+          writelocation1 = "(" + to_string(bit1.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
+          yellow(writelocation1 +" ");
+          blue(writevalue1 + "  ");
+          counter1 --;    
+        }
+        bit1.Next();
+      }
+
+      init.First();
+      while (init.Valid()){
+        if (counter2 == init.Pos()[1])
+        {
+
+          writevalue1 = plusminus_to_string(_T->Cell(init));
+          red(writevalue1 + "  "); 
+        }
+        init.Next();
+      }      
+      if (counter2 > 1)
+      {
+        counter2 --;
+      }
+
+
+      bit0.First();
+
+      while (bit0.Valid()){
+        if (counter == bit0.Pos()[1])
+        {
+          writevalue1 = plusminus_to_string(_T->Cell(bit0));
+          writelocation1 = "(" + to_string(bit0.Pos()[0])  ;
+          writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
+          blue(writevalue1 +" ");
+          yellow(writelocation1 + "\n");
+          counter --;    
+        }
+        bit0.Next();
+      }
+    
+    bit2.Next();
+    }
+  
+    writelocation = "      ";
+    writevalue = "     ";
+    bit0.SetBoundary(0);
+    bit0.First();
+    while (bit0.Valid()){
+      writelocation = writelocation +"(" + to_string(bit0.Pos()[0]) ;
+      writelocation = writelocation +"," + to_string(bit0.Pos()[1]) + ")   |  " ;
+      writevalue =  writevalue + plusminus_to_string(_T->Cell(bit0))+ "  ";
+    bit0.Next();
+    }
+    blue(" " + writevalue + "\n");
+    yellow(" " +writelocation + " \n ");
+    }
+  } 
+  else{
+    red("NOT CORRECT CHAR \n");
+  }
+}
+
+/* Internal methods for debug prints on console in different colours
+*/
+void Compute::red(string x) {
+  string y = string(ANSI_COLOR_RED);
+  string z = string(ANSI_COLOR_RESET);
+  cout << y << x << z;
+}
+
+void Compute::green(string x) {
+  string y = string(ANSI_COLOR_GREEN);
+  string z = string(ANSI_COLOR_RESET);
+  cout << y << x << z;
+}
+
+void Compute::yellow(string x) {
+  string y = string(ANSI_COLOR_YELLOW);
+  string z = string(ANSI_COLOR_RESET);
+  cout << y << x << z;
+}
+
+void Compute::blue(string x) {
+  string y = string(ANSI_COLOR_BLUE);
+  string z = string(ANSI_COLOR_RESET);
+  cout << y << x << z;
+}
+
+void Compute::magenta(string x) {
+  string y = string(ANSI_COLOR_MAGENTA);
+  string z = string(ANSI_COLOR_RESET);
+  cout << y << x << z;
+}
+
+void Compute::cyan(string x) {
+  string y = string(ANSI_COLOR_CYAN);
+  string z = string(ANSI_COLOR_RESET);
+  cout << y << x << z;
+}
+
+string Compute::plusminus_to_string(double x) {
+  if (x >= 0)
+    return "+" + to_string(x);
+  else
+    return to_string(x);
+}
+
 
 //------------------------------------------------------------------------------

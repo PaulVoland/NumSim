@@ -1,0 +1,3 @@
+/mnt/c/Users/Marce/Nextcloud/MarcelMesser/Dokumente/SimTec/Studium/Studium 7 Semester/Numerische Simulation/Übungen/Programmierung/Referenz_Blatt_2/NumSim/build/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/Marce/Nextcloud/MarcelMesser/Dokumente/SimTec/Studium/Studium 7 Semester/Numerische Simulation/Übungen/Programmierung/Referenz_Blatt_2/NumSim/build/CMakeFiles/NumSim.dir
+/mnt/c/Users/Marce/Nextcloud/MarcelMesser/Dokumente/SimTec/Studium/Studium 7 Semester/Numerische Simulation/Übungen/Programmierung/Referenz_Blatt_2/NumSim/build/CMakeFiles/edit_cache.dir
