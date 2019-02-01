@@ -147,6 +147,7 @@ private:
   void cyan(std::string x);
   // formating string 
   std::string plusminus_to_string(double x);
+  std::string to_string_color(int a);
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP
