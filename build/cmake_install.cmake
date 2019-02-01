@@ -1,4 +1,4 @@
-# Install script for directory: /mnt/c/Users/Marce/Nextcloud/MarcelMesser/Dokumente/SimTec/Studium/Studium 7 Semester/Numerische Simulation/Übungen/Programmierung/Referenz_Blatt_2/NumSim
+# Install script for directory: /mnt/c/Users/Marce/Nextcloud/MarcelMesser/Dokumente/SimTec/Studium/Studium 7 Semester/Numerische Simulation/Übungen/Programmierung/NumSim
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/mnt/c/Users/Marce/Nextcloud/MarcelMesser/Dokumente/SimTec/Studium/Studium 7 Semester/Numerische Simulation/Übungen/Programmierung/Referenz_Blatt_2/NumSim/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/mnt/c/Users/Marce/Nextcloud/MarcelMesser/Dokumente/SimTec/Studium/Studium 7 Semester/Numerische Simulation/Übungen/Programmierung/NumSim/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

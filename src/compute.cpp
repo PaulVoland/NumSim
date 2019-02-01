@@ -658,13 +658,6 @@ void Compute::ParticleTrace(const real_t &dt){
           || _geom->Cell(it_cell).type == typeSurf ) // hier sollte noch E und g abgefragt werden
         {
           _ppc[cell_number] = _ppc[cell_number]+1;
-          if ( part_crit <= _ppc[cell_number])
-          {
-            _geom->setCell(it_cell).type = typeFluid;
-            _geom->setCell(it_cell).neighbour = cellNone;
-          } else{
-            _geom->setCell(it_cell).type = typeEmpty;
-          }
         } else {
           _part_trace.erase(it);
           it--;
@@ -673,6 +666,25 @@ void Compute::ParticleTrace(const real_t &dt){
         i++;
       }
     }
+      for (index_t i=0;i<_num_cell;i++)
+      { 
+      Iterator it_cell = Iterator(_geom,i); 
+        if (_geom->Cell(it_cell).type == typeFluid || _geom->Cell(it_cell).type == typeEmpty
+          || _geom->Cell(it_cell).type == typeSurf ) // hier sollte noch E und g abgefragt werden
+        {
+          if ( part_crit <= _ppc[i])
+          {
+            _geom->setCell(it_cell).type = typeFluid;
+            _geom->setCell(it_cell).neighbour = cellNone;
+          } else{
+            _geom->setCell(it_cell).type = typeEmpty;
+            //cout << "Zelle " << i << " ist Leer" << endl ;
+          }
+        }
+      }
+
+
+
   //################ Debug #################################
   //ShowParticle();
   //ShowNeighbour();
@@ -868,18 +880,18 @@ void Compute::CopyVelocities(){
   cout << "\n";
   green("Das ist die Ausgabe für den Zelltypen \n");
   blue("\n\
-  1  typeFluid,   // Standard fluid cell\n\
-  2  typeSolid,   // Simple wall, no slip, isolated against heat transfer\n\
-  3  typeIn,      // Simple inflow (forced velocity)\n\
-  4  typeInH,     // Horizontal inflow (parabolic)\n\
-  5  typeInV,     // Vertical inflow (parabolic)\n\
-  6  typeSlipH,   // Horizontal slip boundary\n\
-  7  typeSlipV,   // Vertical slip boundary\n\
-  8  typeOut,     // Outflow\n\
-  9  typeTDir_h,  // Dirichlet value for higher temperature (u,v,p treated as no slip)\n\
-  10 typeTDir_c,  // Dirichlet value for lower temperature (u,v,p treated as no slip)\n\
-  11 typeEmpty,   // Empty cell (air)\n\
-  12 typeSurf     // Inner surface cell between fluid and empty space\n\
+  0  typeFluid,   // Standard fluid cell\n\
+  1  typeSolid,   // Simple wall, no slip, isolated against heat transfer\n\
+  2  typeIn,      // Simple inflow (forced velocity)\n\
+  3  typeInH,     // Horizontal inflow (parabolic)\n\
+  4  typeInV,     // Vertical inflow (parabolic)\n\
+  5  typeSlipH,   // Horizontal slip boundary\n\
+  6  typeSlipV,   // Vertical slip boundary\n\
+  7  typeOut,     // Outflow\n\
+  8  typeTDir_h,  // Dirichlet value for higher temperature (u,v,p treated as no slip)\n\
+  9  typeTDir_c,  // Dirichlet value for lower temperature (u,v,p treated as no slip)\n\
+  10 typeEmpty,   // Empty cell (air)\n\
+  11 typeSurf     // Inner surface cell between fluid and empty space\n\
   ");
   cout << "\n";
 
@@ -901,21 +913,21 @@ void Compute::CopyVelocities(){
 
       if (_geom->Cell(it).type > 99)
       {
-        zeile = zeile + "|" + to_string(_geom->Cell(it).type);
+        zeile = zeile + "|" + to_string_color(_geom->Cell(it).type);
       } else if (_geom->Cell(it).type > 9){
-        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).type);
+        zeile = zeile + "|" + " " + to_string_color(_geom->Cell(it).type);
       } else {
-        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).type);
+        zeile = zeile + "|" + "  " + to_string_color(_geom->Cell(it).type);
       }
 
     } else{
       if (_geom->Cell(it).type > 99)
       {
-        zeile = zeile + "|" + to_string(_geom->Cell(it).type);
+        zeile = zeile + "|" + to_string_color(_geom->Cell(it).type);
       } else if (_geom->Cell(it).type > 9){
-        zeile = zeile + "|" + " " + to_string(_geom->Cell(it).type);
+        zeile = zeile + "|" + " " + to_string_color(_geom->Cell(it).type);
       } else {
-        zeile = zeile + "|" + "  " + to_string(_geom->Cell(it).type);
+        zeile = zeile + "|" + "  " + to_string_color(_geom->Cell(it).type);
       }
     }
   }
@@ -1818,6 +1830,26 @@ string Compute::plusminus_to_string(double x) {
     return "+" + to_string(x);
   else
     return to_string(x);
+}
+string Compute::to_string_color(int a){
+  string value;
+  if (a == 0)
+  {
+    value = string(ANSI_COLOR_BLUE) + to_string(a) + string(ANSI_COLOR_RESET);
+  } 
+  else if ( a == 10)
+  {
+    value = to_string(a) ;
+  }
+  else if ( a == 11)
+  {
+    value = string(ANSI_COLOR_YELLOW) + to_string(a) + string(ANSI_COLOR_RESET);
+  }
+  else
+  {
+    value = string(ANSI_COLOR_GREEN) + to_string(a) + string(ANSI_COLOR_RESET);
+  }
+  return value;
 }
 
 
