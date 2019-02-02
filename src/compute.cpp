@@ -303,9 +303,24 @@ const Grid* Compute::GetVelocity() {
   Iterator it(_geom);
   // Go through all cells
   while (it.Valid()) {
-    real_t _u_m = (_u->Cell(it.Left()) + _u->Cell(it))/2.0;
-    real_t _v_m = (_v->Cell(it.Down()) + _v->Cell(it))/2.0;
-    _tmp->Cell(it) = sqrt(_u_m*_u_m + _v_m*_v_m);
+    real_t _u_m, _v_m;
+    if (_geom->Cell(it).type == typeFluid || _geom->Cell(it).type == typeSurf) {
+      if (_geom->Cell(it.Left()).type == typeFluid || _geom->Cell(it.Left()).type == typeSurf) {
+        _u_m = (_u->Cell(it.Left()) + _u->Cell(it))/2.0;
+      } else {
+        _u_m = _u->Cell(it);
+      }
+      if (_geom->Cell(it.Down()).type == typeFluid || _geom->Cell(it.Down()).type == typeSurf) {
+        _v_m = (_v->Cell(it.Down()) + _v->Cell(it))/2.0;
+      } else {
+        _v_m = _v->Cell(it);
+      }
+      _tmp->Cell(it) = sqrt(_u_m*_u_m + _v_m*_v_m);
+    } else if (_geom->Cell(it).type == typeEmpty) {
+      _tmp->Cell(it) = -10.0;
+    } else {
+      _tmp->Cell(it) = -5.0;
+    }
     it.Next();
   }
   return _tmp;

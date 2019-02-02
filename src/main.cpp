@@ -145,8 +145,13 @@ int main(int argc, char **argv) {
   // Create and initialize the debug visualization
   #ifdef USE_DEBUG_VISU
     Renderer visu(geom.TotalLength(), geom.Mesh());
-    double ratio = geom.TotalLength()[1]/geom.TotalLength()[0];
-    visu.Init(800, 800*ratio);
+    if (geom.TotalLength()[0] > geom.TotalLength()[1]) {
+      double ratio = geom.TotalLength()[1]/geom.TotalLength()[0];
+      visu.Init(500, 500*ratio);
+    } else {
+      double ratio = geom.TotalLength()[0]/geom.TotalLength()[1];
+      visu.Init(500*ratio, 500);
+    }
   #endif // USE_DEBUG_VISU
 
   #ifdef USE_VTK
