@@ -147,10 +147,10 @@ int main(int argc, char **argv) {
     Renderer visu(geom.TotalLength(), geom.Mesh());
     if (geom.TotalLength()[0] > geom.TotalLength()[1]) {
       double ratio = geom.TotalLength()[1]/geom.TotalLength()[0];
-      visu.Init(500, 500*ratio);
+      visu.Init(600, 600*ratio);
     } else {
       double ratio = geom.TotalLength()[0]/geom.TotalLength()[1];
-      visu.Init(500*ratio, 500);
+      visu.Init(600*ratio, 600);
     }
   #endif // USE_DEBUG_VISU
 

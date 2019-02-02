@@ -465,10 +465,15 @@ void Compute::SetParticles() {
   //index_t an_inflow = 4; // should be even?!
   //index_t an_inflow = 3; // not used here
   index_t an_cell = 9;
+  //index_t root    = sqrt(an_cell);
+  //index_t k, l, posx, posy;
   //it_pc.First();
   while (it_pc.Valid()) {
     if (_geom->Cell(it_pc).type == typeFluid || _geom->Cell(it_pc).type == typeSurf) {
         //cout << "Ref. ##### x: " << (it_pc.Pos()[0]-1)*_geom->TotalLength()[0]/(_geom->TotalSize()[0]-2) << " y: " << (it_pc.Pos()[1]-1)*_geom->TotalLength()[1]/(_geom->TotalSize()[1]-2) << endl;
+      // Fluid/Surf only in the inner domain
+      //posx = it_pc.Pos()[0];
+      //posy = it_pc.Pos()[1];
       for (index_t i = 0; i < an_cell; ++i)
         {
           real_t * foo;
@@ -479,9 +484,16 @@ void Compute::SetParticles() {
           _part_trace[s][1] = RandNumb(it_pc.Pos()[1],it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
           //ShowParticleToCellDebug(_part_trace[s][0],_part_trace[s][1]);
           //cout << "x: " << RandNumb(it_pc.Pos()[0],it_pc.Pos()[0]-1)*_geom->TotalLength()[0]/(_geom->TotalSize()[0]-2) << " y: " << RandNumb(it_pc.Pos()[1],it_pc.Pos()[1]-1)*_geom->TotalLength()[1]/(_geom->TotalSize()[1]-2) << " s="<< s << endl;
+          
+          /*k = i % root;
+          l = (index_t)(i/root);
+          _part_trace[s][0] = (real_t)(posx - 1 + (k/(root - 1)))*_geom->Mesh()[0];
+          _part_trace[s][1] = (real_t)(posy - 1 + (l/(root - 1)))*_geom->Mesh()[1];*/
+
           s++;
         }
-      }
+    }
+
   it_pc.Next();
   }
   SetNewInflowParticles();
@@ -506,18 +518,26 @@ void Compute::SetNewInflowParticles() {
   index_t s = _part_trace.size();
   //index_t an_inflow = 4; // should be even?!
   index_t an_inflow = 3;
+  //index_t posx, posy;
   //index_t an_cell = 9; // not used here
   //it_pc.First();
     while (it_pc.Valid()) {
       if (_geom->Cell(it_pc).type == typeIn || _geom->Cell(it_pc).type == typeInH || _geom->Cell(it_pc).type == typeInV) {
+        //posx = it_pc.Pos()[0];
+        //posy = it_pc.Pos()[1];
         switch (_geom->Cell(it_pc).neighbour) {
         case cellN:
           for (index_t i = 0; i < an_inflow; i++) {
             real_t *foo;
             foo = new real_t[2];
             _part_trace.push_back(foo);
+
             _part_trace[s][0] = RandNumb(it_pc.Pos()[0], it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
             _part_trace[s][1] = it_pc.Pos()[1]*_geom->Mesh()[1];
+            
+            /*_part_trace[s][0] = (real_t)(posx - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy)*_geom->Mesh()[1];*/
+
             s++;
           }
           break;
@@ -528,26 +548,38 @@ void Compute::SetNewInflowParticles() {
             _part_trace.push_back(foo);
             _part_trace[s][0] = (it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
             _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx - 1)*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[1];*/
+
             s++;
           }
           break;
         case cellNW:
-          // for (index_t i = 0; i < an_inflow; i++) {
-          for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
+          for (index_t i = 0; i < an_inflow; i++) {
+          //for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
             real_t * foo;
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = RandNumb(it_pc.Pos()[0], it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
             _part_trace[s][1] = it_pc.Pos()[1]*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy)*_geom->Mesh()[1];*/
+
             s++;
           }
-          // for (index_t i = 0; i < an_inflow; i++) {
-          for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
+          for (index_t i = 0; i < an_inflow; i++) {
+          //for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
             real_t * foo;
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = (it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
             _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx - 1)*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[1];*/
+
             s++;
           }
           break;
@@ -558,26 +590,38 @@ void Compute::SetNewInflowParticles() {
             _part_trace.push_back(foo);
             _part_trace[s][0] = RandNumb(it_pc.Pos()[0], it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
             _part_trace[s][1] = (it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy - 1)*_geom->Mesh()[1];*/
+
             s++;
           }
           break;
         case cellSW:
-          // for (index_t i = 0; i < an_inflow; i++) {
-          for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
+          for (index_t i = 0; i < an_inflow; i++) {
+          //for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
             real_t *foo;
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = RandNumb(it_pc.Pos()[0], it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
             _part_trace[s][1] = (it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy - 1)*_geom->Mesh()[1];*/
+
             s++;
           }
-          // for (index_t i = 0; i < an_inflow; i++) {
-          for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
+          for (index_t i = 0; i < an_inflow; i++) {
+          //for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
             real_t *foo;
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = (it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
             _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx - 1)*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[1];*/
+
             s++;
           }
           break;
@@ -588,46 +632,66 @@ void Compute::SetNewInflowParticles() {
             _part_trace.push_back(foo);
             _part_trace[s][0] = it_pc.Pos()[0]*_geom->Mesh()[0];
             _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx)*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[1];*/
+
             s++;
           }
           break;
         case cellNE:
-          // for (index_t i = 0; i < an_inflow; i++) {
-          for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
+          for (index_t i = 0; i < an_inflow; i++) {
+          //for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
             real_t * foo;
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = RandNumb(it_pc.Pos()[0], it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
             _part_trace[s][1] = it_pc.Pos()[1]*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy)*_geom->Mesh()[1];*/
+
             s++;
           }
-          // for (index_t i = 0; i < an_inflow; i++) {
-          for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
+          for (index_t i = 0; i < an_inflow; i++) {
+          //for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
             real_t *foo;
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = it_pc.Pos()[0]*_geom->Mesh()[0];
             _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx)*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[1];*/
+
             s++;
           }
           break;
         case cellSE:
-          // for (index_t i = 0; i < an_inflow; i++) {
-          for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
+          for (index_t i = 0; i < an_inflow; i++) {
+          //for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
             real_t *foo;
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = RandNumb(it_pc.Pos()[0], it_pc.Pos()[0] - 1)*_geom->Mesh()[0];
             _part_trace[s][1] = (it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy - 1)*_geom->Mesh()[1];*/
+
             s++;
           }
-          // for (index_t i = 0; i < an_inflow; i++) {
-          for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
+          for (index_t i = 0; i < an_inflow; i++) {
+          //for (index_t i = 0; i < (index_t)(an_inflow/2.0); i++) {
             real_t *foo;
             foo = new real_t[2];
             _part_trace.push_back(foo);
             _part_trace[s][0] = it_pc.Pos()[0]*_geom->Mesh()[0];
             _part_trace[s][1] = RandNumb(it_pc.Pos()[1], it_pc.Pos()[1] - 1)*_geom->Mesh()[1];
+
+            /*_part_trace[s][0] = (real_t)(posx)*_geom->Mesh()[0];
+            _part_trace[s][1] = (real_t)(posy - 1 + (i/(an_inflow - 1)))*_geom->Mesh()[1];*/
+
             s++;
           }
           break;
