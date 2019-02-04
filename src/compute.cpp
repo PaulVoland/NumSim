@@ -678,8 +678,8 @@ void Compute::ParticleTrace(const real_t &dt){
         test1[1] = _part_trace[i][1];
         test = Force_all(test1 , i);
         //cout << " x=" << test[0] << " y=" << test[1] << endl;
-        _part_trace[i][0] = _part_trace[i][0] +  dt*(vel_u_old + vel_u_new)/2.0 - 10*dt*dt*test[0];
-        _part_trace[i][1] = _part_trace[i][1] +  dt*(vel_v_old + vel_v_new)/2.0 - 10*dt*dt*test[1];
+        _part_trace[i][0] = _part_trace[i][0] +  dt*(vel_u_old + vel_u_new)/2.0 - 1*dt*dt*(test[0] -_param->Gx());
+        _part_trace[i][1] = _part_trace[i][1] +  dt*(vel_v_old + vel_v_new)/2.0 - 1*dt*dt*(test[1] -_param->Gy());
 
       // ############################################################
       //ShowParticleToCellDebug(_part_trace[i][0],_part_trace[i][1]);
@@ -1918,7 +1918,7 @@ string Compute::to_string_color(int a){
     multi_real_t force_all;
     multi_real_t other;
     multi_real_t x_y;
-    real_t r = 0.1;   // ############################################## Hier Cut Off Radius einstellen
+    real_t r = 1.0;   // ############################################## Hier Cut Off Radius einstellen
     multi_real_t diff = 0;
     index_t i= 0;
 
