@@ -464,7 +464,7 @@ void Compute::SetParticles() {
   index_t s = 0;
   //index_t an_inflow = 4; // should be even?!
   //index_t an_inflow = 3; // not used here
-  index_t an_cell = 9;
+  index_t an_cell = 10; // ################################################################## Hier anzahl partical anfang pro fluid zelle
   //it_pc.First();
   while (it_pc.Valid()) {
     if (_geom->Cell(it_pc).type == typeFluid || _geom->Cell(it_pc).type == typeSurf) {
@@ -505,7 +505,7 @@ void Compute::SetNewInflowParticles() {
   Iterator it_pc(_geom);
   index_t s = _part_trace.size();
   //index_t an_inflow = 4; // should be even?!
-  index_t an_inflow = 3;
+  index_t an_inflow = 5; // ############################################################################ hier Anzahl inflow Partical
   //index_t an_cell = 9; // not used here
   //it_pc.First();
     while (it_pc.Valid()) {
@@ -649,6 +649,8 @@ void Compute::ParticleTrace(const real_t &dt){
   index_t cell_number = 0;
   index_t part_crit = 1; // criterion to set fluid cell
   multi_index_t index_pos;
+  multi_real_t test;
+  multi_real_t test1;
   for (index_t i=0;i<_num_cell;i++)
     _ppc[i] = 0;
 
@@ -664,9 +666,22 @@ void Compute::ParticleTrace(const real_t &dt){
       // Calculate next Position
       //cout << "########## Before ##################" << endl;
       //ShowParticleToCellDebug(_part_trace[i][0],_part_trace[i][1]);
-      _part_trace[i][0] = _part_trace[i][0] +  dt*(vel_u_old + vel_u_new)/2.0;
-      _part_trace[i][1] = _part_trace[i][1] +  dt*(vel_v_old + vel_v_new)/2.0;
+      //_part_trace[i][0] = _part_trace[i][0] +  dt*(vel_u_old + vel_u_new)/2.0;
+      //_part_trace[i][1] = _part_trace[i][1] +  dt*(vel_v_old + vel_v_new)/2.0;
       //cout << "########## After ###################" << endl;
+      
+
+
+      // ###################### Verlet ################################################################ noch hier Taylor entwicklung wobei der einfluss Kraft mit Faktor 10 überrelaxiert
+      
+        test1[0] = _part_trace[i][0];
+        test1[1] = _part_trace[i][1];
+        test = Force_all(test1 , i);
+        //cout << " x=" << test[0] << " y=" << test[1] << endl;
+        _part_trace[i][0] = _part_trace[i][0] +  dt*(vel_u_old + vel_u_new)/2.0 - 10*dt*dt*test[0];
+        _part_trace[i][1] = _part_trace[i][1] +  dt*(vel_v_old + vel_v_new)/2.0 - 10*dt*dt*test[1];
+
+      // ############################################################
       //ShowParticleToCellDebug(_part_trace[i][0],_part_trace[i][1]);
       // calculate the index from the phys coord.
       index_pos = PhysToIndex(_part_trace[i][0],_part_trace[i][1]);
@@ -1889,6 +1904,50 @@ string Compute::to_string_color(int a){
   }
   return value;
 }
+
+  multi_real_t Compute::Force_Single(const multi_real_t ref , const multi_real_t other){
+    multi_real_t force;
+    multi_real_t diff;
+    diff[0] = other[0]-ref[0];
+    diff[1] = other[1]-ref[1];
+    force[0] = (other[0] - ref[0])/NormPowerTwo(diff);
+    force[1] = (other[1] - ref[1])/NormPowerTwo(diff);
+    return force;
+  }
+  multi_real_t Compute::Force_all(const multi_real_t radius ,const index_t pos_i){
+    multi_real_t force_all;
+    multi_real_t other;
+    multi_real_t x_y;
+    real_t r = 0.1;   // ############################################## Hier Cut Off Radius einstellen
+    multi_real_t diff = 0;
+    index_t i= 0;
+
+    for(vec_arr::iterator it = _part_trace.begin(); it != _part_trace.end(); ++it) {
+      if ( i != pos_i){
+        diff[0] = _part_trace[i][0] - radius[0];
+        diff[1] = _part_trace[i][1] - radius[1];
+        
+        if (r > Norm(diff))
+        {
+
+          other[0] = _part_trace[i][0];
+          other[1] = _part_trace[i][1];
+          x_y = Force_Single(radius , other);
+          //cout << " hier x= " << x_y[0] << " y= " << x_y[1] <<  "\n";
+          force_all[0] = force_all[0] + x_y[0];
+          force_all[1] = force_all[1] + x_y[1];
+        }
+      }
+      i++;
+    }
+  return force_all;
+  }
+  real_t Compute::NormPowerTwo(const multi_real_t vector){
+    return vector[0]*vector[0] + vector[1]*vector[1];
+  }
+  real_t Compute::Norm(const multi_real_t vector){
+    return sqrt(vector[0]*vector[0] + vector[1]*vector[1]);
+  }
 
 
 //------------------------------------------------------------------------------

@@ -148,6 +148,11 @@ private:
   // formating string 
   std::string plusminus_to_string(double x);
   std::string to_string_color(int a);
+  // force calculation for verlet 
+  multi_real_t Force_Single(const multi_real_t ref , const multi_real_t other);
+  multi_real_t Force_all(const multi_real_t radius ,const index_t pos_i);
+  real_t NormPowerTwo(const multi_real_t vector);
+  real_t Norm(const multi_real_t vector);
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP
