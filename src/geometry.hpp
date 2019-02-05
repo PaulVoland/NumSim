@@ -23,6 +23,7 @@
 //------------------------------------------------------------------------------
 /// Typedef for cell types
 typedef enum {
+  typeSurf,    // Inner surface cell between fluid and empty space
   typeFluid,   // Standard fluid cell
   typeSolid,   // Simple wall, no slip, isolated against heat transfer
   typeIn,      // Simple inflow (forced velocity)
@@ -33,8 +34,8 @@ typedef enum {
   typeOut,     // Outflow
   typeTDir_h,  // Dirichlet value for higher temperature (u,v,p treated as no slip)
   typeTDir_c,  // Dirichlet value for lower temperature (u,v,p treated as no slip)
-  typeEmpty,   // Empty cell ("air")
-  typeSurf     // Inner surface cell between fluid and empty space
+  typeEmpty   // Empty cell ("air")
+  
 } CellType_t;
 /// Typedef for cell boundary type (which boundary cells are fluid)
 //       |   NO   |

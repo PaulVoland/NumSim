@@ -95,13 +95,13 @@ int main(int argc, char **argv) {
   /* // Measuring of computational times
   ZeitGeist zg;
   zg.Start(); */
-  
+
   // Create parameter and geometry instances with default values
   Parameter param;
   // param.Load("../default.param"); // Is done by the parser now.
   Geometry geom;
   // geom.Load("../default.geom"); // Is done by the parser now.
-  
+
   // Using the ARGVParser.hpp template
   // Works with commands from terminal like: -geom ../default.geom -param ../default.param
   ARGVParser parser;
@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
 
   // Create the fluid solver
   Compute comp(&geom, &param);
-  
+
 
   // Create Iterator instance for debug purposes
   Iterator it(&geom);
@@ -201,19 +201,19 @@ int main(int argc, char **argv) {
 
     #ifdef USE_VTK
       Grid *temp1 = new Grid(&geom);
-      Grid *temp2 = new Grid(&geom);
+      //Grid *temp2 = new Grid(&geom);
       index_t count = geom.TotalSize()[0]*geom.TotalSize()[1];
       for (index_t i = 0; i < count; ++i)
       {
         Iterator it(&geom,i);
         temp1->Cell(it) = geom.Cell(it).type;
-        temp2->Cell(it) = geom.Cell(it).neighbour;
+        //temp2->Cell(it) = geom.Cell(it).neighbour;
       }
 
       // Create VTK Files in the folder VTK
       vtk.Init("VTK/field");
       vtk.AddField("Velocity", comp.GetU(), comp.GetV());
-      vtk.AddField("Type and Neighbourhood", temp1 , temp2);
+      vtk.AddScalar("Type", temp1);
       vtk.AddScalar("Pressure", comp.GetP());
       vtk.AddScalar("Temperature", comp.GetT());
       vtk.Finish();
@@ -265,7 +265,7 @@ int main(int argc, char **argv) {
     #ifdef USE_DEBUG_PRINT_TYPES
     comp.ShowType();
     #endif // USE_DEBUG_PRINT_TYPES
-    
+
     #ifdef USE_DEBUG_PRINT_PARTICLE
     comp.ShowParticle();
     #endif // USE_DEBUG_PRINT_PARTICLE
