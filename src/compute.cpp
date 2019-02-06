@@ -654,7 +654,7 @@ void Compute::ParticleTrace(const real_t &dt){
   for (index_t i=0;i<_num_cell;i++)
     _ppc[i] = 0;
 
-  
+
 // Leap Frog
   index_t i= 0;
   for(vec_arr::iterator it = _part_trace.begin(); it != _part_trace.end(); ++it) {
@@ -669,11 +669,11 @@ void Compute::ParticleTrace(const real_t &dt){
       //_part_trace[i][0] = _part_trace[i][0] +  dt*(vel_u_old + vel_u_new)/2.0;
       //_part_trace[i][1] = _part_trace[i][1] +  dt*(vel_v_old + vel_v_new)/2.0;
       //cout << "########## After ###################" << endl;
-      
+
 
 
       // ###################### Verlet ################################################################ noch hier Taylor entwicklung wobei der einfluss Kraft mit Faktor 10 überrelaxiert
-      
+
         test1[0] = _part_trace[i][0];
         test1[1] = _part_trace[i][1];
         test = Force_all(test1 , i);
@@ -717,7 +717,7 @@ void Compute::ParticleTrace(const real_t &dt){
       }
     }
       for (index_t i = 0; i < _num_cell; i++) {
-      Iterator it_cell = Iterator(_geom,i); 
+      Iterator it_cell = Iterator(_geom,i);
         if (_geom->Cell(it_cell).type == typeFluid || _geom->Cell(it_cell).type == typeEmpty
           || _geom->Cell(it_cell).type == typeSurf ) // hier sollte noch E und g abgefragt werden
         {
@@ -994,7 +994,7 @@ void Compute::CopyVelocities(){
     versuch = PhysToIndex(x,y);
     cout << "Phys: x= " << x << " y= " << y << " Index x: " << versuch[0] << " y: " << versuch[1] <<" Cell: "<<IndexToCell(versuch) << endl;
   }
-  // Options 'v' 'u' for old velocities, 'V' 'U' new Velocitys  
+  // Options 'v' 'u' for old velocities, 'V' 'U' new Velocitys
   // 'F' 'G' 'p' 'T' for the other dynamic parameter
   void Compute::ShowVelocitysPressures(char f){
     cout << "\n";
@@ -1012,27 +1012,27 @@ void Compute::CopyVelocities(){
   {
     if (f=='u')
     {
-    green("Das ist die Ausgabe für _u_alt \n"); 
-    cout << "\n"; 
+    green("Das ist die Ausgabe für _u_alt \n");
+    cout << "\n";
     string writelocation = "";
     string writevalue = "";
     bit0.SetBoundary(2);
     bit0.First();
     while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ;
       writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
       writevalue = writevalue + plusminus_to_string(_u_alt->Cell(bit0))+ "  ";
     bit0.Next();
     }
     yellow("       " +writelocation + " \n ");
     blue("     " + writevalue + "\n");
-  
+
     string writelocation1 = "";
     string writevalue1 = "";
     int counter = 0;
     int counter1 = 0;
     int counter2 = 0;
-    
+
     bit0.SetBoundary(1);
     bit2.SetBoundary(3);
     bit3.SetBoundary(0);
@@ -1048,7 +1048,7 @@ void Compute::CopyVelocities(){
         bit0.Next();
     }
     bit0.First();
-    
+
     while (bit2.Valid()){
 
       bit1.First();
@@ -1061,7 +1061,7 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
           yellow(writelocation1 +" ");
           blue(writevalue1 + "  ");
-          counter1 --;    
+          counter1 --;
         }
         bit1.Next();
       }
@@ -1072,10 +1072,10 @@ void Compute::CopyVelocities(){
         {
 
           writevalue1 = plusminus_to_string(_u_alt->Cell(init));
-          red(writevalue1 + "  "); 
+          red(writevalue1 + "  ");
         }
         init.Next();
-      }      
+      }
       if (counter2 > 1)
       {
         counter2 --;
@@ -1092,14 +1092,14 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
           blue(writevalue1 +" ");
           yellow(writelocation1 + "\n");
-          counter --;    
+          counter --;
         }
         bit0.Next();
       }
-    
+
     bit2.Next();
     }
-  
+
     writelocation = "      ";
     writevalue = "     ";
     bit0.SetBoundary(0);
@@ -1112,30 +1112,30 @@ void Compute::CopyVelocities(){
     }
     blue(" " + writevalue + "\n");
     yellow(" " +writelocation + " \n ");
-  
+
     } else if (f=='U')
     {
     green("Das ist die Ausgabe für _u \n");
-    cout << "\n";  
+    cout << "\n";
     string writelocation = "";
     string writevalue = "";
     bit0.SetBoundary(2);
     bit0.First();
     while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ;
       writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
       writevalue = writevalue + plusminus_to_string(_u->Cell(bit0))+ "  ";
     bit0.Next();
     }
     yellow("       " +writelocation + " \n ");
     blue("     " + writevalue + "\n");
-  
+
     string writelocation1 = "";
     string writevalue1 = "";
     int counter = 0;
     int counter1 = 0;
     int counter2 = 0;
-    
+
     bit0.SetBoundary(1);
     bit2.SetBoundary(3);
     bit3.SetBoundary(0);
@@ -1151,7 +1151,7 @@ void Compute::CopyVelocities(){
         bit0.Next();
     }
     bit0.First();
-    
+
     while (bit2.Valid()){
 
       bit1.First();
@@ -1164,7 +1164,7 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
           yellow(writelocation1 +" ");
           blue(writevalue1 + "  ");
-          counter1 --;    
+          counter1 --;
         }
         bit1.Next();
       }
@@ -1175,10 +1175,10 @@ void Compute::CopyVelocities(){
         {
 
           writevalue1 = plusminus_to_string(_u->Cell(init));
-          red(writevalue1 + "  "); 
+          red(writevalue1 + "  ");
         }
         init.Next();
-      }      
+      }
       if (counter2 > 1)
       {
         counter2 --;
@@ -1195,14 +1195,14 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
           blue(writevalue1 +" ");
           yellow(writelocation1 + "\n");
-          counter --;    
+          counter --;
         }
         bit0.Next();
       }
-    
+
     bit2.Next();
     }
-  
+
     writelocation = "      ";
     writevalue = "     ";
     bit0.SetBoundary(0);
@@ -1219,26 +1219,26 @@ void Compute::CopyVelocities(){
     else if (f=='v')
     {
     green("Das ist die Ausgabe für _v_alt \n");
-    cout << "\n";  
+    cout << "\n";
     string writelocation = "";
     string writevalue = "";
     bit0.SetBoundary(2);
     bit0.First();
     while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ;
       writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
       writevalue = writevalue + plusminus_to_string(_v_alt->Cell(bit0))+ "  ";
     bit0.Next();
     }
     yellow("       " +writelocation + " \n ");
     blue("     " + writevalue + "\n");
-  
+
     string writelocation1 = "";
     string writevalue1 = "";
     int counter = 0;
     int counter1 = 0;
     int counter2 = 0;
-    
+
     bit0.SetBoundary(1);
     bit2.SetBoundary(3);
     bit3.SetBoundary(0);
@@ -1254,7 +1254,7 @@ void Compute::CopyVelocities(){
         bit0.Next();
     }
     bit0.First();
-    
+
     while (bit2.Valid()){
 
       bit1.First();
@@ -1267,7 +1267,7 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
           yellow(writelocation1 +" ");
           blue(writevalue1 + "  ");
-          counter1 --;    
+          counter1 --;
         }
         bit1.Next();
       }
@@ -1278,10 +1278,10 @@ void Compute::CopyVelocities(){
         {
 
           writevalue1 = plusminus_to_string(_v_alt->Cell(init));
-          red(writevalue1 + "  "); 
+          red(writevalue1 + "  ");
         }
         init.Next();
-      }      
+      }
       if (counter2 > 1)
       {
         counter2 --;
@@ -1298,14 +1298,14 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
           blue(writevalue1 +" ");
           yellow(writelocation1 + "\n");
-          counter --;    
+          counter --;
         }
         bit0.Next();
       }
-    
+
     bit2.Next();
     }
-  
+
     writelocation = "      ";
     writevalue = "     ";
     bit0.SetBoundary(0);
@@ -1322,26 +1322,26 @@ void Compute::CopyVelocities(){
     else if (f=='V')
     {
     green("Das ist die Ausgabe für _v \n");
-    cout << "\n";  
+    cout << "\n";
     string writelocation = "";
     string writevalue = "";
     bit0.SetBoundary(2);
     bit0.First();
     while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ;
       writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
       writevalue = writevalue + plusminus_to_string(_v->Cell(bit0))+ "  ";
     bit0.Next();
     }
     yellow("       " +writelocation + " \n ");
     blue("     " + writevalue + "\n");
-  
+
     string writelocation1 = "";
     string writevalue1 = "";
     int counter = 0;
     int counter1 = 0;
     int counter2 = 0;
-    
+
     bit0.SetBoundary(1);
     bit2.SetBoundary(3);
     bit3.SetBoundary(0);
@@ -1357,7 +1357,7 @@ void Compute::CopyVelocities(){
         bit0.Next();
     }
     bit0.First();
-    
+
     while (bit2.Valid()){
 
       bit1.First();
@@ -1370,7 +1370,7 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
           yellow(writelocation1 +" ");
           blue(writevalue1 + "  ");
-          counter1 --;    
+          counter1 --;
         }
         bit1.Next();
       }
@@ -1381,10 +1381,10 @@ void Compute::CopyVelocities(){
         {
 
           writevalue1 = plusminus_to_string(_v->Cell(init));
-          red(writevalue1 + "  "); 
+          red(writevalue1 + "  ");
         }
         init.Next();
-      }      
+      }
       if (counter2 > 1)
       {
         counter2 --;
@@ -1401,14 +1401,14 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
           blue(writevalue1 +" ");
           yellow(writelocation1 + "\n");
-          counter --;    
+          counter --;
         }
         bit0.Next();
       }
-    
+
     bit2.Next();
     }
-  
+
     writelocation = "      ";
     writevalue = "     ";
     bit0.SetBoundary(0);
@@ -1425,26 +1425,26 @@ void Compute::CopyVelocities(){
     else if (f=='p')
     {
     green("Das ist die Ausgabe für _p \n");
-    cout << "\n";  
+    cout << "\n";
     string writelocation = "";
     string writevalue = "";
     bit0.SetBoundary(2);
     bit0.First();
     while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ;
       writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
       writevalue = writevalue + plusminus_to_string(_p->Cell(bit0))+ "  ";
     bit0.Next();
     }
     yellow("       " +writelocation + " \n ");
     blue("     " + writevalue + "\n");
-  
+
     string writelocation1 = "";
     string writevalue1 = "";
     int counter = 0;
     int counter1 = 0;
     int counter2 = 0;
-    
+
     bit0.SetBoundary(1);
     bit2.SetBoundary(3);
     bit3.SetBoundary(0);
@@ -1460,7 +1460,7 @@ void Compute::CopyVelocities(){
         bit0.Next();
     }
     bit0.First();
-    
+
     while (bit2.Valid()){
 
       bit1.First();
@@ -1473,7 +1473,7 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
           yellow(writelocation1 +" ");
           blue(writevalue1 + "  ");
-          counter1 --;    
+          counter1 --;
         }
         bit1.Next();
       }
@@ -1484,10 +1484,10 @@ void Compute::CopyVelocities(){
         {
 
           writevalue1 = plusminus_to_string(_p->Cell(init));
-          red(writevalue1 + "  "); 
+          red(writevalue1 + "  ");
         }
         init.Next();
-      }      
+      }
       if (counter2 > 1)
       {
         counter2 --;
@@ -1504,14 +1504,14 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
           blue(writevalue1 +" ");
           yellow(writelocation1 + "\n");
-          counter --;    
+          counter --;
         }
         bit0.Next();
       }
-    
+
     bit2.Next();
     }
-  
+
     writelocation = "      ";
     writevalue = "     ";
     bit0.SetBoundary(0);
@@ -1528,26 +1528,26 @@ void Compute::CopyVelocities(){
     else if (f=='F')
     {
       green("Das ist die Ausgabe für _F \n");
-      cout << "\n";  
+      cout << "\n";
     string writelocation = "";
     string writevalue = "";
     bit0.SetBoundary(2);
     bit0.First();
     while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ;
       writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
       writevalue = writevalue + plusminus_to_string(_F->Cell(bit0))+ "  ";
     bit0.Next();
     }
     yellow("       " +writelocation + " \n ");
     blue("     " + writevalue + "\n");
-  
+
     string writelocation1 = "";
     string writevalue1 = "";
     int counter = 0;
     int counter1 = 0;
     int counter2 = 0;
-    
+
     bit0.SetBoundary(1);
     bit2.SetBoundary(3);
     bit3.SetBoundary(0);
@@ -1563,7 +1563,7 @@ void Compute::CopyVelocities(){
         bit0.Next();
     }
     bit0.First();
-    
+
     while (bit2.Valid()){
 
       bit1.First();
@@ -1576,7 +1576,7 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
           yellow(writelocation1 +" ");
           blue(writevalue1 + "  ");
-          counter1 --;    
+          counter1 --;
         }
         bit1.Next();
       }
@@ -1587,10 +1587,10 @@ void Compute::CopyVelocities(){
         {
 
           writevalue1 = plusminus_to_string(_F->Cell(init));
-          red(writevalue1 + "  "); 
+          red(writevalue1 + "  ");
         }
         init.Next();
-      }      
+      }
       if (counter2 > 1)
       {
         counter2 --;
@@ -1607,14 +1607,14 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
           blue(writevalue1 +" ");
           yellow(writelocation1 + "\n");
-          counter --;    
+          counter --;
         }
         bit0.Next();
       }
-    
+
     bit2.Next();
     }
-  
+
     writelocation = "      ";
     writevalue = "     ";
     bit0.SetBoundary(0);
@@ -1631,26 +1631,26 @@ void Compute::CopyVelocities(){
     else if (f=='G')
     {
       green("Das ist die Ausgabe für _G \n");
-      cout << "\n";  
+      cout << "\n";
     string writelocation = "";
     string writevalue = "";
     bit0.SetBoundary(2);
     bit0.First();
     while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ;
       writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
       writevalue = writevalue + plusminus_to_string(_G->Cell(bit0))+ "  ";
     bit0.Next();
     }
     yellow("       " +writelocation + " \n ");
     blue("     " + writevalue + "\n");
-  
+
     string writelocation1 = "";
     string writevalue1 = "";
     int counter = 0;
     int counter1 = 0;
     int counter2 = 0;
-    
+
     bit0.SetBoundary(1);
     bit2.SetBoundary(3);
     bit3.SetBoundary(0);
@@ -1666,7 +1666,7 @@ void Compute::CopyVelocities(){
         bit0.Next();
     }
     bit0.First();
-    
+
     while (bit2.Valid()){
 
       bit1.First();
@@ -1679,7 +1679,7 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
           yellow(writelocation1 +" ");
           blue(writevalue1 + "  ");
-          counter1 --;    
+          counter1 --;
         }
         bit1.Next();
       }
@@ -1690,10 +1690,10 @@ void Compute::CopyVelocities(){
         {
 
           writevalue1 = plusminus_to_string(_G->Cell(init));
-          red(writevalue1 + "  "); 
+          red(writevalue1 + "  ");
         }
         init.Next();
-      }      
+      }
       if (counter2 > 1)
       {
         counter2 --;
@@ -1710,14 +1710,14 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
           blue(writevalue1 +" ");
           yellow(writelocation1 + "\n");
-          counter --;    
+          counter --;
         }
         bit0.Next();
       }
-    
+
     bit2.Next();
     }
-  
+
     writelocation = "      ";
     writevalue = "     ";
     bit0.SetBoundary(0);
@@ -1734,26 +1734,26 @@ void Compute::CopyVelocities(){
     else if (f=='T')
     {
       green("Das ist die Ausgabe für _T \n");
-      cout << "\n";  
+      cout << "\n";
     string writelocation = "";
     string writevalue = "";
     bit0.SetBoundary(2);
     bit0.First();
     while (bit0.Valid()){
-      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ; 
+      writelocation = writelocation + "(" + to_string(bit0.Pos()[0])+ "," ;
       writelocation = writelocation + to_string(bit0.Pos()[1]) + ")   |  ";
       writevalue = writevalue + plusminus_to_string(_T->Cell(bit0))+ "  ";
     bit0.Next();
     }
     yellow("       " +writelocation + " \n ");
     blue("     " + writevalue + "\n");
-  
+
     string writelocation1 = "";
     string writevalue1 = "";
     int counter = 0;
     int counter1 = 0;
     int counter2 = 0;
-    
+
     bit0.SetBoundary(1);
     bit2.SetBoundary(3);
     bit3.SetBoundary(0);
@@ -1769,7 +1769,7 @@ void Compute::CopyVelocities(){
         bit0.Next();
     }
     bit0.First();
-    
+
     while (bit2.Valid()){
 
       bit1.First();
@@ -1782,7 +1782,7 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit1.Pos()[1]) +")";
           yellow(writelocation1 +" ");
           blue(writevalue1 + "  ");
-          counter1 --;    
+          counter1 --;
         }
         bit1.Next();
       }
@@ -1793,10 +1793,10 @@ void Compute::CopyVelocities(){
         {
 
           writevalue1 = plusminus_to_string(_T->Cell(init));
-          red(writevalue1 + "  "); 
+          red(writevalue1 + "  ");
         }
         init.Next();
-      }      
+      }
       if (counter2 > 1)
       {
         counter2 --;
@@ -1813,14 +1813,14 @@ void Compute::CopyVelocities(){
           writelocation1 = writelocation1 +","+ to_string(bit0.Pos()[1]) +")";
           blue(writevalue1 +" ");
           yellow(writelocation1 + "\n");
-          counter --;    
+          counter --;
         }
         bit0.Next();
       }
-    
+
     bit2.Next();
     }
-  
+
     writelocation = "      ";
     writevalue = "     ";
     bit0.SetBoundary(0);
@@ -1834,7 +1834,7 @@ void Compute::CopyVelocities(){
     blue(" " + writevalue + "\n");
     yellow(" " +writelocation + " \n ");
     }
-  } 
+  }
   else{
     red("NOT CORRECT CHAR \n");
   }
@@ -1889,7 +1889,7 @@ string Compute::to_string_color(int a){
   if (a == 0)
   {
     value = string(ANSI_COLOR_BLUE) + to_string(a) + string(ANSI_COLOR_RESET);
-  } 
+  }
   else if ( a == 10)
   {
     value = to_string(a) ;
@@ -1918,7 +1918,8 @@ string Compute::to_string_color(int a){
     multi_real_t force_all;
     multi_real_t other;
     multi_real_t x_y;
-    real_t r = 1.0;   // ############################################## Hier Cut Off Radius einstellen
+    real_t r = 0.0;
+    //real_t r = 3.0*Norm(_geom->Mesh());// ############################################## Hier Cut Off Radius einstellen
     multi_real_t diff = 0;
     index_t i= 0;
 
@@ -1926,7 +1927,7 @@ string Compute::to_string_color(int a){
       if ( i != pos_i){
         diff[0] = _part_trace[i][0] - radius[0];
         diff[1] = _part_trace[i][1] - radius[1];
-        
+
         if (r > Norm(diff))
         {
 
